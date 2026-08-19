@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; }
+    a { color: oklch(60% 0.14 250); text-decoration: none; }
+    a:hover { color: oklch(50% 0.16 250); text-decoration: underline; }
+    input, select, textarea { font-family: 'Be Vietnam Pro', sans-serif; }
+  </style>
+  <script src="./image-slot.js"></script>
+</helmet>
+<div style="min-height:100vh;background:oklch(99% 0.004 240);font-family:'Be Vietnam Pro',sans-serif;color:oklch(20% 0.012 235);position:relative">
+
+  <sc-if value="{{isLogin}}" hint-placeholder-val="{{ true }}">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="position:absolute;top:24px;right:32px;display:flex;gap:6px;background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:999px;padding:4px">
+        <button onClick="{{ setLangVi }}" style="{{ langBtnStyleVi }}">VI</button>
+        <button onClick="{{ setLangEn }}" style="{{ langBtnStyleEn }}">EN</button>
+      </div>
+      <div style="width:100%;max-width:420px;background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:20px;padding:40px 36px;box-shadow:0 20px 50px -30px oklch(20% 0.02 50 / 0.4);text-align:center">
+        <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg, oklch(63% 0.19 42), oklch(58% 0.14 250) 62%, oklch(60% 0.16 145));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;margin:0 auto 20px">FPT</div>
+        <div style="font-weight:800;font-size:22px;letter-spacing:-0.01em;margin-bottom:8px">{{ t.loginTitle }}</div>
+        <div style="font-size:14.5px;line-height:1.6;color:oklch(46% 0.018 235);margin-bottom:28px">{{ t.loginSubtitle }}</div>
+        <button onClick="{{ doLogin }}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:oklch(20% 0.012 235);color:#fff;border:none;border-radius:12px;padding:14px 18px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">
+          <span style="width:18px;height:18px;background:#fff;border-radius:3px;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;box-sizing:border-box">
+            <span style="background:#F25022"></span><span style="background:#7FBA00"></span><span style="background:#00A4EF"></span><span style="background:#FFB900"></span>
+          </span>
+          {{ t.loginButton }}
+        </button>
+        <div style="font-size:12.5px;color:oklch(53% 0.018 235);margin-top:18px">{{ t.loginFooter }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{!isLogin}}" hint-placeholder-val="{{ false }}">
+    <div>
+
+      <sc-if value="{{isAdmin}}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid oklch(90% 0.008 235);background:#fff">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg, oklch(63% 0.19 42), oklch(58% 0.14 250) 62%, oklch(60% 0.16 145));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">FPT</div>
+            <div style="font-weight:700;font-size:15px">Avatar Frame Platform <span style="color:oklch(53% 0.018 235);font-weight:500">· Admin</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <a href="#" onClick="{{ goHome }}" style="font-size:13.5px;font-weight:600">← Về trang công khai</a>
+            <div style="width:30px;height:30px;border-radius:999px;background:oklch(90% 0.04 42);color:oklch(45% 0.14 42);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">VĐ</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{!isAdmin}}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid oklch(90% 0.008 235);background:#fff;flex-wrap:wrap;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goHome }}">
+            <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, oklch(63% 0.19 42), oklch(58% 0.14 250) 62%, oklch(60% 0.16 145));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">FPT</div>
+            <div style="font-weight:700;font-size:15.5px">Avatar Frame Platform</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="display:flex;gap:6px;background:oklch(96% 0.006 235);border:1px solid oklch(90% 0.008 235);border-radius:999px;padding:4px">
+              <button onClick="{{ setLangVi }}" style="{{ langBtnStyleVi }}">VI</button>
+              <button onClick="{{ setLangEn }}" style="{{ langBtnStyleEn }}">EN</button>
+            </div>
+            <a href="#" onClick="{{ goAdmin }}" style="font-size:13px;font-weight:600;color:oklch(45% 0.14 250)">Trang quản trị</a>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:30px;height:30px;border-radius:999px;background:oklch(90% 0.04 42);color:oklch(45% 0.14 42);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">VĐ</div>
+              <span style="font-size:13.5px;font-weight:600;color:oklch(33% 0.018 235)">Việt Đức</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isHome}}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:1080px;margin:0 auto;padding:56px 32px 80px">
+          <div style="margin-bottom:36px">
+            <div style="font-size:28px;font-weight:800;letter-spacing:-0.01em;margin-bottom:8px">{{ t.heroTitle }}</div>
+            <div style="font-size:15px;color:oklch(46% 0.018 235)">{{ t.heroSubtitle }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px">
+            <sc-for list="{{ homeCards }}" as="c" hint-placeholder-count="2">
+              <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:18px;overflow:hidden;display:flex;flex-direction:column">
+                <div style="aspect-ratio:16/9;position:relative">
+                  <image-slot id="home-banner-{{ c.slug }}" shape="rect" placeholder="Ảnh bìa campaign"></image-slot>
+                  <div style="position:absolute;top:12px;left:12px;background:#fff;color:oklch(52% 0.16 145);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;display:flex;align-items:center;gap:6px">
+                    <span style="width:6px;height:6px;border-radius:999px;background:oklch(60% 0.16 145)"></span>{{ c.statusLabel }}
+                  </div>
+                  <div style="position:absolute;top:12px;right:12px;background:oklch(63% 0.19 42);color:#fff;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px">{{ c.badge }}</div>
+                </div>
+                <div style="padding:22px;display:flex;flex-direction:column;gap:6px;flex:1">
+                  <div style="font-size:18px;font-weight:700">{{ c.title }}</div>
+                  <div style="font-size:13.5px;color:oklch(46% 0.018 235);line-height:1.55;flex:1">{{ c.description }}</div>
+                  <div style="font-size:12px;color:oklch(53% 0.018 235);margin:4px 0 12px">{{ c.dateRange }}</div>
+                  <button data-slug="{{ c.slug }}" onClick="{{ openCampaign }}" style="background:oklch(63% 0.19 42);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">{{ c.cta }}</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isCampaign}}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:1080px;margin:0 auto;padding:32px 32px 80px">
+          <a href="#" onClick="{{ goHome }}" style="font-size:13.5px;font-weight:600">{{ t2.backHome }}</a>
+          <div style="display:flex;align-items:center;gap:12px;margin:14px 0 32px">
+            <div style="background:oklch(63% 0.19 42);color:#fff;font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px">{{ campaignView.badge }}</div>
+            <div style="font-size:24px;font-weight:800;letter-spacing:-0.01em">{{ campaignView.title }}</div>
+            <div style="font-size:12.5px;color:oklch(53% 0.018 235)">{{ campaignView.dateRange }}</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:32px">
+              <div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:4px">{{ t2.stepUpload }}</div>
+                <div style="font-size:13px;color:oklch(46% 0.018 235);margin-bottom:14px">{{ t2.stepUploadHint }}</div>
+                <div style="width:160px;height:160px">
+                  <image-slot id="photo-{{ campaignView.slug }}" shape="circle" placeholder="{{ t2.photoPlaceholder }}"></image-slot>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:14px">{{ t2.stepTemplate }}</div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:320px">
+                  <sc-for list="{{ campaignView.templates }}" as="tpl" hint-placeholder-count="2">
+                    <div data-tpl-id="{{ tpl.id }}" onClick="{{ selectTemplate }}" style="{{ tpl.borderStyle }}">
+                      <image-slot id="tpl-thumb-{{ tpl.id }}" shape="rect" placeholder="{{ tpl.name }}"></image-slot>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:14px">{{ t2.stepOverlay }}</div>
+                <label style="display:block;font-size:13px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:6px">{{ campaignView.overlayLabel }}</label>
+                <select onChange="{{ setOverlayValue }}" value="{{ campaignView.overlayValue }}" style="width:100%;max-width:320px;padding:11px 14px;border:1px solid oklch(88% 0.008 235);border-radius:10px;font-size:14px;font-family:inherit;background:#fff">
+                  <sc-for list="{{ campaignView.overlayOptions }}" as="opt" hint-placeholder-count="3">
+                    <option value="{{ opt.value }}">{{ opt.label }}</option>
+                  </sc-for>
+                </select>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:18px;padding:24px;position:sticky;top:24px">
+              <div style="font-size:15px;font-weight:700;margin-bottom:14px">{{ t2.previewTitle }}</div>
+              <div style="position:relative;aspect-ratio:1/1;margin-bottom:14px">
+                <image-slot id="preview-{{ campaignView.slug }}" shape="rounded" radius="14" placeholder="Ảnh xem trước sẽ hiển thị ở đây"></image-slot>
+                <div style="position:absolute;bottom:12px;left:12px;right:12px;background:oklch(18% 0.01 235 / 0.72);color:#fff;font-size:12px;font-weight:600;padding:8px 12px;border-radius:10px;backdrop-filter:blur(4px)">{{ campaignView.previewChip }}</div>
+              </div>
+              <div style="font-size:12px;line-height:1.5;color:oklch(48% 0.018 235);margin-bottom:18px">{{ t2.previewNote }}</div>
+              <button style="width:100%;background:oklch(63% 0.19 42);color:#fff;border:none;border-radius:10px;padding:13px 16px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px">{{ campaignView.downloadButton }}</button>
+              <div style="font-size:12.5px;font-weight:700;color:oklch(38% 0.018 235);margin-bottom:10px">{{ t2.shareTitle }}</div>
+              <div style="display:flex;gap:10px">
+                <div style="width:36px;height:36px;border-radius:9px;background:oklch(94% 0.008 235);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:oklch(43% 0.018 235)">FB</div>
+                <div style="width:36px;height:36px;border-radius:9px;background:oklch(94% 0.008 235);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:oklch(43% 0.018 235)">Zalo</div>
+                <div style="width:36px;height:36px;border-radius:9px;background:oklch(94% 0.008 235);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:oklch(43% 0.018 235)">in</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isAdmin}}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:220px 1fr;max-width:1240px;margin:0 auto">
+          <div style="padding:24px 16px;display:flex;flex-direction:column;gap:4px;border-right:1px solid oklch(90% 0.008 235);min-height:calc(100vh - 65px)">
+            <div onClick="{{ setAdminTabCampaigns }}" style="{{ adminNavStyleCampaigns }}">Campaigns</div>
+            <div onClick="{{ setAdminTabTemplates }}" style="{{ adminNavStyleTemplates }}">Templates &amp; khung ảnh</div>
+            <div onClick="{{ setAdminTabAnalytics }}" style="{{ adminNavStyleAnalytics }}">Số liệu tải ảnh</div>
+          </div>
+
+          <div style="padding:28px 32px">
+
+            <sc-if value="{{adminTabCampaigns}}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+                <div style="font-size:20px;font-weight:800">Quản lý Campaign</div>
+                <button onClick="{{ openNewCampaignForm }}" style="background:oklch(63% 0.19 42);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">+ Tạo Campaign mới</button>
+              </div>
+
+              <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;overflow:hidden;margin-bottom:24px">
+                <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+                  <thead>
+                    <tr style="background:oklch(97% 0.005 235);text-align:left">
+                      <th style="padding:12px 16px;font-weight:700;color:oklch(43% 0.018 235)">Slug</th>
+                      <th style="padding:12px 16px;font-weight:700;color:oklch(43% 0.018 235)">Tên hiển thị</th>
+                      <th style="padding:12px 16px;font-weight:700;color:oklch(43% 0.018 235)">Ngôn ngữ</th>
+                      <th style="padding:12px 16px;font-weight:700;color:oklch(43% 0.018 235)">Thời gian</th>
+                      <th style="padding:12px 16px;font-weight:700;color:oklch(43% 0.018 235)">Trạng thái</th>
+                      <th style="padding:12px 16px;font-weight:700;color:oklch(43% 0.018 235)">Template</th>
+                      <th style="padding:12px 16px"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ campaignRows }}" as="row" hint-placeholder-count="2">
+                      <tr style="border-top:1px solid oklch(93% 0.007 235)">
+                        <td style="padding:12px 16px;font-family:monospace;font-size:12.5px;color:oklch(43% 0.018 235)">/c/{{ row.slug }}</td>
+                        <td style="padding:12px 16px;font-weight:600">{{ row.title }}</td>
+                        <td style="padding:12px 16px">{{ row.language }}</td>
+                        <td style="padding:12px 16px;color:oklch(46% 0.018 235)">{{ row.dateRange }}</td>
+                        <td style="padding:12px 16px">
+                          <span data-slug="{{ row.slug }}" onClick="{{ cycleStatus }}" style="cursor:pointer;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:{{ row.statusBg }};color:{{ row.statusFg }}">{{ row.statusLabel }}</span>
+                        </td>
+                        <td style="padding:12px 16px;color:oklch(46% 0.018 235)">{{ row.templateCount }}</td>
+                        <td style="padding:12px 16px;text-align:right">
+                          <button data-slug="{{ row.slug }}" onClick="{{ openEditCampaignForm }}" style="background:none;border:1px solid oklch(88% 0.008 235);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Sửa</button>
+                        </td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+
+              <sc-if value="{{campaignFormOpen}}" hint-placeholder-val="{{ false }}">
+                <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:24px;max-width:640px">
+                  <div style="font-size:15px;font-weight:700;margin-bottom:18px">Thông tin Campaign</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div>
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Slug (URL: /c/[slug])</label>
+                      <input name="slug" value="{{ campaignFormFields.slug }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Ngôn ngữ</label>
+                      <select name="language" value="{{ campaignFormFields.language }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;font-family:inherit;background:#fff">
+                        <option value="vi">Tiếng Việt</option>
+                        <option value="en">English</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Ngày bắt đầu</label>
+                      <input name="startDate" type="date" value="{{ campaignFormFields.startDate }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Ngày kết thúc</label>
+                      <input name="endDate" type="date" value="{{ campaignFormFields.endDate }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Trạng thái</label>
+                      <select name="status" value="{{ campaignFormFields.status }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;font-family:inherit;background:#fff">
+                        <option value="draft">Bản nháp</option>
+                        <option value="active">Đang chạy</option>
+                        <option value="archived">Lưu trữ</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Badge</label>
+                      <input name="badge" value="{{ campaignFormFields.badge }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                    </div>
+                  </div>
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Tiêu đề hiển thị</label>
+                    <input name="title" value="{{ campaignFormFields.title }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                  </div>
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Mô tả ngắn</label>
+                    <textarea name="description" value="{{ campaignFormFields.description }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;min-height:64px;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;font-family:inherit;box-sizing:border-box;resize:vertical"></textarea>
+                  </div>
+                  <div style="margin-bottom:18px">
+                    <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Nhãn nút CTA</label>
+                    <input name="cta" value="{{ campaignFormFields.cta }}" onChange="{{ updateDraftCampaignField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                  </div>
+                  <div style="background:oklch(97% 0.02 250);border:1px solid oklch(90% 0.03 250);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.5;color:oklch(40% 0.06 250);margin-bottom:18px">
+                    Mỗi Campaign chỉ nói một ngôn ngữ. Muốn phục vụ song ngữ cho cùng một sự kiện, tạo 2 Campaign riêng (ví dụ <span style="font-family:monospace">fpt38-vi</span> và <span style="font-family:monospace">fpt38-en</span>) dùng chung khung ảnh, khác displayConfig.
+                  </div>
+                  <div style="display:flex;gap:10px">
+                    <button onClick="{{ saveCampaignDraft }}" style="background:oklch(63% 0.19 42);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Lưu Campaign</button>
+                    <button onClick="{{ cancelCampaignForm }}" style="background:none;border:1px solid oklch(88% 0.008 235);border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Huỷ</button>
+                  </div>
+                </div>
+              </sc-if>
+            </sc-if>
+
+            <sc-if value="{{adminTabTemplates}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+                <div style="font-size:20px;font-weight:800">Template &amp; khung ảnh</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <select value="{{ templateFilterSlug }}" onChange="{{ setTemplateFilter }}" style="padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13px;font-family:inherit;background:#fff">
+                    <sc-for list="{{ campaignOptionsForFilter }}" as="opt" hint-placeholder-count="2">
+                      <option value="{{ opt.value }}">{{ opt.label }}</option>
+                    </sc-for>
+                  </select>
+                  <button onClick="{{ openNewTemplateForm }}" style="background:oklch(63% 0.19 42);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">+ Thêm Template</button>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px">
+                <sc-for list="{{ templateRows }}" as="tr" hint-placeholder-count="2">
+                  <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;overflow:hidden">
+                    <div style="aspect-ratio:1/1">
+                      <image-slot id="admin-thumb-{{ tr.id }}" shape="rect" placeholder="{{ tr.name }}"></image-slot>
+                    </div>
+                    <div style="padding:14px">
+                      <div style="font-weight:700;font-size:14px;margin-bottom:4px">{{ tr.name }}</div>
+                      <div style="font-size:12px;color:oklch(48% 0.018 235);margin-bottom:2px">Overlay: {{ tr.overlayLabel }} ({{ tr.optionCount }})</div>
+                      <div style="font-size:11.5px;color:oklch(53% 0.018 235);margin-bottom:12px;font-family:monospace">{{ tr.photoArea }}</div>
+                      <div style="display:flex;gap:8px">
+                        <button data-tpl-id="{{ tr.id }}" onClick="{{ openEditTemplateForm }}" style="flex:1;background:none;border:1px solid oklch(88% 0.008 235);border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Sửa</button>
+                        <button data-tpl-id="{{ tr.id }}" onClick="{{ deleteTemplate }}" style="background:none;border:1px solid oklch(88% 0.008 235);border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:oklch(52% 0.16 25);white-space:nowrap;flex-shrink:0">Xoá</button>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{templateFormOpen}}" hint-placeholder-val="{{ false }}">
+                <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:24px;max-width:640px">
+                  <div style="font-size:15px;font-weight:700;margin-bottom:18px">Cấu hình Template</div>
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Tên Template</label>
+                    <input name="name" value="{{ templateFormFields.name }}" onChange="{{ updateDraftTemplateField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                  </div>
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Khung ảnh (frame)</label>
+                    <div style="width:140px;height:140px">
+                      <image-slot id="tpl-form-upload" shape="rect" placeholder="Upload khung PNG"></image-slot>
+                    </div>
+                  </div>
+                  <div style="margin-bottom:14px">
+                    <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:6px">Vùng đặt ảnh cá nhân (photoArea, đơn vị %)</label>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+                      <input name="x" type="number" placeholder="x" value="{{ templateFormFields.areaX }}" onChange="{{ updateDraftTemplateArea }}" style="padding:8px 10px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13px;box-sizing:border-box"></input>
+                      <input name="y" type="number" placeholder="y" value="{{ templateFormFields.areaY }}" onChange="{{ updateDraftTemplateArea }}" style="padding:8px 10px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13px;box-sizing:border-box"></input>
+                      <input name="w" type="number" placeholder="w" value="{{ templateFormFields.areaW }}" onChange="{{ updateDraftTemplateArea }}" style="padding:8px 10px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13px;box-sizing:border-box"></input>
+                      <input name="h" type="number" placeholder="h" value="{{ templateFormFields.areaH }}" onChange="{{ updateDraftTemplateArea }}" style="padding:8px 10px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13px;box-sizing:border-box"></input>
+                    </div>
+                  </div>
+                  <div style="border-top:1px solid oklch(93% 0.007 235);margin:18px 0;padding-top:16px">
+                    <div style="font-size:13px;font-weight:700;margin-bottom:10px">Overlay chữ (textOverlays)</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:10px">
+                      <div>
+                        <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Key</label>
+                        <input name="overlayKey" value="{{ templateFormFields.overlayKey }}" onChange="{{ updateDraftTemplateField }}" placeholder="joinYear" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;font-family:monospace;box-sizing:border-box"></input>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Nhãn hiển thị (VI)</label>
+                        <input name="overlayLabel" value="{{ templateFormFields.overlayLabel }}" onChange="{{ updateDraftTemplateField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                      </div>
+                    </div>
+                    <div style="margin-bottom:14px">
+                      <label style="display:block;font-size:12.5px;font-weight:600;color:oklch(38% 0.018 235);margin-bottom:5px">Danh sách lựa chọn (phân tách bằng dấu phẩy)</label>
+                      <input id="tpl-options-input" name="overlayOptionsText" value="{{ templateFormFields.overlayOptionsText }}" onChange="{{ updateDraftTemplateField }}" style="width:100%;padding:9px 12px;border:1px solid oklch(88% 0.008 235);border-radius:8px;font-size:13.5px;box-sizing:border-box"></input>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:10px">
+                    <button onClick="{{ saveTemplateDraft }}" style="background:oklch(63% 0.19 42);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Lưu Template</button>
+                    <button onClick="{{ cancelTemplateForm }}" style="background:none;border:1px solid oklch(88% 0.008 235);border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Huỷ</button>
+                  </div>
+                </div>
+              </sc-if>
+            </sc-if>
+
+            <sc-if value="{{adminTabAnalytics}}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:20px;font-weight:800;margin-bottom:20px">Số liệu tải ảnh</div>
+
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px">
+                <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:20px">
+                  <div style="font-size:12.5px;color:oklch(48% 0.018 235);font-weight:600;margin-bottom:6px">Tổng lượt tải</div>
+                  <div style="font-size:28px;font-weight:800">{{ totalDownloads }}</div>
+                </div>
+                <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:20px">
+                  <div style="font-size:12.5px;color:oklch(48% 0.018 235);font-weight:600;margin-bottom:6px">Campaign đang chạy</div>
+                  <div style="font-size:28px;font-weight:800">{{ activeCampaignCount }}</div>
+                </div>
+                <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:20px">
+                  <div style="font-size:12.5px;color:oklch(48% 0.018 235);font-weight:600;margin-bottom:6px">Campaign nhiều lượt tải nhất</div>
+                  <div style="font-size:17px;font-weight:700;margin-top:6px">{{ topCampaignName }}</div>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:22px;margin-bottom:20px">
+                <div style="font-size:14px;font-weight:700;margin-bottom:16px">Lượt tải theo Campaign</div>
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <sc-for list="{{ byCampaignBars }}" as="b" hint-placeholder-count="2">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="font-weight:600">{{ b.name }}</span><span style="color:oklch(48% 0.018 235)">{{ b.value }}</span></div>
+                      <div style="background:oklch(95% 0.006 235);border-radius:6px;height:10px;overflow:hidden">
+                        <div style="height:100%;background:oklch(63% 0.19 42);border-radius:6px;width:{{ b.pct }}%"></div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:22px;margin-bottom:20px">
+                <div style="font-size:14px;font-weight:700;margin-bottom:16px">Lượt tải theo đơn vị</div>
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <sc-for list="{{ byUnitBars }}" as="b" hint-placeholder-count="6">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="font-weight:600">{{ b.name }}</span><span style="color:oklch(48% 0.018 235)">{{ b.value }}</span></div>
+                      <div style="background:oklch(95% 0.006 235);border-radius:6px;height:10px;overflow:hidden">
+                        <div style="height:100%;background:oklch(60% 0.14 250);border-radius:6px;width:{{ b.pct }}%"></div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:#fff;border:1px solid oklch(90% 0.008 235);border-radius:14px;padding:22px;margin-bottom:20px">
+                <div style="font-size:14px;font-weight:700;margin-bottom:16px">Lượt tải theo ngày (7 ngày gần nhất)</div>
+                <div style="display:flex;align-items:flex-end;gap:10px;height:120px">
+                  <sc-for list="{{ byDayBars }}" as="b" hint-placeholder-count="7">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+                      <div style="width:100%;background:oklch(63% 0.19 42);border-radius:6px 6px 0 0;height:{{ b.pct }}%"></div>
+                      <div style="font-size:11px;color:oklch(48% 0.018 235)">{{ b.day }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:oklch(97% 0.02 85);border:1px solid oklch(90% 0.04 85);border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.5;color:oklch(42% 0.08 85)">
+                Nguồn: Google Analytics 4 (event <span style="font-family:monospace">avatar_download</span>, tham số campaign_slug &amp; unit). Cần rà soát với chính sách bảo mật dữ liệu nội bộ FPT trước khi bật ở production — nằm ngoài phạm vi MVP hiện tại.
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 1440, &quot;height&quot;: 1024},
+  &quot;defaultLang&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;vi&quot;, &quot;options&quot;: [&quot;vi&quot;, &quot;en&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Behavior&quot;},
+  &quot;showSecondCampaign&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Behavior&quot;}
+}">
+class Component extends DCLogic {
+  state = {
+    view: 'login',
+    lang: (this.props && this.props.defaultLang) || 'vi',
+    adminTab: (this.props && this.props.adminDefaultTab) || 'campaigns',
+    templateFilterSlug: 'fpt38',
+  };
+
+  T = {
+    vi: {
+      loginTitle: 'Avatar Frame Platform',
+      loginSubtitle: 'Đăng nhập bằng tài khoản FPT để tạo avatar sự kiện.',
+      loginButton: 'Đăng nhập với tài khoản FPT',
+      loginFooter: 'Chỉ dành cho nhân viên FPT · Xác thực qua Azure AD',
+      heroTitle: 'Chọn chiến dịch đang diễn ra',
+      heroSubtitle: 'Các chiến dịch avatar đang mở — chọn một chiến dịch để bắt đầu.',
+      statusActive: 'Đang diễn ra',
+    },
+    en: {
+      loginTitle: 'Avatar Frame Platform',
+      loginSubtitle: 'Sign in with your FPT account to create an event avatar.',
+      loginButton: 'Sign in with FPT account',
+      loginFooter: 'FPT employees only · Authenticated via Azure AD',
+      heroTitle: 'Choose a running campaign',
+      heroSubtitle: 'These avatar campaigns are open now — pick one to get started.',
+      statusActive: 'Live now',
+    },
+  };
+
+  campaigns = [
+    {
+      slug: 'fpt38', status: 'active',
+      startDate: '10/08/2026', endDate: '10/09/2026',
+      title: 'FPT tròn 38 tuổi', titleEn: 'FPT Turns 38',
+      description: 'Tạo avatar kỷ niệm hành trình 38 năm và chia sẻ lên mạng xã hội của bạn.',
+      descriptionEn: 'Create your anniversary avatar and share it on social media.',
+      cta: 'Tạo avatar ngay', ctaEn: 'Create your avatar', badge: '38',
+      language: 'vi',
+      templates: [
+        { id: 'fpt38-orange', name: 'Khung cam chuẩn', photoArea: { x: 20, y: 15, w: 60, h: 60 },
+          overlayKey: 'joinYear', overlayLabel: 'Năm gia nhập FPT', overlayLabelEn: 'Year you joined FPT',
+          overlayOptions: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(1988 + i)).reverse() },
+        { id: 'fpt38-mono', name: 'Khung tối giản trắng', photoArea: { x: 22, y: 18, w: 56, h: 56 },
+          overlayKey: 'joinYear', overlayLabel: 'Năm gia nhập FPT', overlayLabelEn: 'Year you joined FPT',
+          overlayOptions: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(1988 + i)).reverse() },
+      ],
+    },
+    {
+      slug: 'techweek-2026', status: 'active',
+      startDate: '20/08/2026', endDate: '28/08/2026',
+      title: 'Ngày hội Công nghệ FPT 2026', titleEn: 'FPT Tech Week 2026',
+      description: 'Ghép avatar cùng khung Tech Week và cho biết đơn vị bạn đang công tác.',
+      descriptionEn: 'Make your Tech Week avatar and show which unit you belong to.',
+      cta: 'Tạo avatar ngay', ctaEn: 'Create your avatar', badge: 'Tech Week',
+      language: 'vi',
+      templates: [
+        { id: 'tw-blue', name: 'Khung công nghệ xanh', photoArea: { x: 18, y: 20, w: 64, h: 64 },
+          overlayKey: 'unit', overlayLabel: 'Đơn vị công tác', overlayLabelEn: 'Business unit',
+          overlayOptions: ['FPT Software', 'FPT Telecom', 'FPT IS', 'FPT Education', 'FPT Retail', 'Khác'] },
+        { id: 'tw-dynamic', name: 'Khung năng động', photoArea: { x: 20, y: 20, w: 60, h: 60 },
+          overlayKey: 'unit', overlayLabel: 'Đơn vị công tác', overlayLabelEn: 'Business unit',
+          overlayOptions: ['FPT Software', 'FPT Telecom', 'FPT IS', 'FPT Education', 'FPT Retail', 'Khác'] },
+      ],
+    },
+  ];
+
+  T2 = {
+    vi: {
+      backHome: '← Trang chủ', stepUpload: '1. Tải ảnh của bạn', stepUploadHint: 'Chọn một ảnh chân dung rõ mặt, định dạng JPG hoặc PNG.',
+      stepTemplate: '2. Chọn khung', stepOverlay: '3. Điền thông tin',
+      previewTitle: 'Xem trước', previewNote: 'Ảnh chính thức được máy chủ tự ghép lại từ ảnh gốc bạn tải lên — hệ thống không nhận ảnh đã ghép sẵn từ trình duyệt.',
+      downloadButton: 'Tải xuống ảnh chính thức', shareTitle: 'Chia sẻ lên',
+      photoPlaceholder: 'Kéo & thả ảnh của bạn',
+    },
+    en: {
+      backHome: '← Home', stepUpload: '1. Upload your photo', stepUploadHint: 'Choose a clear portrait photo, JPG or PNG.',
+      stepTemplate: '2. Choose a frame', stepOverlay: '3. Fill in your info',
+      previewTitle: 'Preview', previewNote: 'The final image is composited server-side from your original photo — the system never accepts a pre-composited image from the browser.',
+      downloadButton: 'Download official image', shareTitle: 'Share to',
+      photoPlaceholder: 'Drag & drop your photo',
+    },
+  };
+
+  statusMeta = {
+    active: { label: 'Đang chạy', bg: 'oklch(93% 0.05 145)', fg: 'oklch(45% 0.13 145)' },
+    draft: { label: 'Bản nháp', bg: 'oklch(93% 0.06 85)', fg: 'oklch(48% 0.13 85)' },
+    archived: { label: 'Lưu trữ', bg: 'oklch(92% 0.01 55)', fg: 'oklch(46% 0.018 235)' },
+  };
+
+  analytics = {
+    byCampaign: [
+      { name: 'FPT tròn 38 tuổi', value: 18420 },
+      { name: 'Ngày hội Công nghệ FPT 2026', value: 6310 },
+    ],
+    byUnit: [
+      { name: 'FPT Software', value: 9100 },
+      { name: 'FPT Telecom', value: 4200 },
+      { name: 'FPT IS', value: 3800 },
+      { name: 'FPT Education', value: 2600 },
+      { name: 'FPT Retail', value: 1900 },
+      { name: 'Khác', value: 2130 },
+    ],
+    byDay: [
+      { day: '12/08', value: 1180 }, { day: '13/08', value: 1540 }, { day: '14/08', value: 2010 },
+      { day: '15/08', value: 2960 }, { day: '16/08', value: 4120 }, { day: '17/08', value: 3870 },
+      { day: '18/08', value: 3040 },
+    ],
+  };
+
+  ensureCampaignDefaults(slug) {
+    const c = this.campaigns.find(x => x.slug === slug);
+    if (!c) return;
+    const sel = this.state.templateSelections || {};
+    const ov = this.state.overlayValues || {};
+    if (!sel[slug]) sel[slug] = c.templates[0].id;
+    if (!ov[slug]) ov[slug] = c.templates[0].overlayOptions[0];
+    this.setState({ templateSelections: { ...sel }, overlayValues: { ...ov } });
+  }
+
+  renderVals() {
+    const lang = this.state.lang;
+    const t = this.T[lang];
+    const t2 = this.T2[lang];
+    const view = this.state.view;
+    const showSecond = this.props.showSecondCampaign ?? true;
+    const visibleCampaigns = this.campaigns.filter(c => showSecond || c.slug === 'fpt38');
+
+    const homeCards = visibleCampaigns.map(c => ({
+      slug: c.slug,
+      title: lang === 'vi' ? c.title : c.titleEn,
+      description: lang === 'vi' ? c.description : c.descriptionEn,
+      cta: lang === 'vi' ? c.cta : c.ctaEn,
+      badge: c.badge,
+      statusLabel: t.statusActive,
+      dateRange: c.startDate + ' – ' + c.endDate,
+    }));
+
+    const activeStyle = { background: 'oklch(63% 0.19 42)', color: '#fff', border: 'none', borderRadius: 999, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
+    const inactiveStyle = { background: 'transparent', color: 'oklch(46% 0.018 235)', border: 'none', borderRadius: 999, padding: '6px 14px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
+
+    let campaignView = null;
+    if (view === 'campaign' && this.state.activeSlug) {
+      const c = this.campaigns.find(x => x.slug === this.state.activeSlug);
+      if (c) {
+        const sel = (this.state.templateSelections || {})[c.slug] || c.templates[0].id;
+        const selectedTemplate = c.templates.find(tp => tp.id === sel) || c.templates[0];
+        const overlayVal = (this.state.overlayValues || {})[c.slug] || selectedTemplate.overlayOptions[0];
+        campaignView = {
+          slug: c.slug,
+          title: lang === 'vi' ? c.title : c.titleEn,
+          badge: c.badge,
+          dateRange: c.startDate + ' – ' + c.endDate,
+          overlayLabel: lang === 'vi' ? selectedTemplate.overlayLabel : selectedTemplate.overlayLabelEn,
+          overlayValue: overlayVal,
+          downloadButton: t2.downloadButton,
+          templates: c.templates.map(tp => ({
+            id: tp.id, name: tp.name, selected: tp.id === sel,
+            borderStyle: tp.id === sel
+              ? { border: '3px solid oklch(63% 0.19 42)', borderRadius: 12, cursor: 'pointer', overflow: 'hidden', aspectRatio: '1/1' }
+              : { border: '1px solid oklch(90% 0.008 235)', borderRadius: 12, cursor: 'pointer', overflow: 'hidden', aspectRatio: '1/1' },
+          })),
+          overlayOptions: selectedTemplate.overlayOptions.map(o => ({ value: o, label: o })),
+          previewChip: (lang === 'vi' ? selectedTemplate.overlayLabel : selectedTemplate.overlayLabelEn) + ': ' + overlayVal,
+        };
+      }
+    }
+
+    return {
+      isLogin: view === 'login',
+      isHome: view === 'home',
+      isAdmin: view === 'admin',
+      isCampaign: view === 'campaign',
+      t, t2,
+      homeCards,
+      campaignView,
+      langBtnStyleVi: lang === 'vi' ? activeStyle : inactiveStyle,
+      langBtnStyleEn: lang === 'en' ? activeStyle : inactiveStyle,
+      setLangVi: () => this.setState({ lang: 'vi' }),
+      setLangEn: () => this.setState({ lang: 'en' }),
+      doLogin: () => this.setState({ view: 'home' }),
+      goHome: () => this.setState({ view: 'home' }),
+      openCampaign: (e) => {
+        const slug = e.currentTarget.dataset.slug;
+        this.ensureCampaignDefaults(slug);
+        this.setState({ view: 'campaign', activeSlug: slug });
+      },
+      selectTemplate: (e) => {
+        const id = e.currentTarget.dataset.tplId;
+        const slug = this.state.activeSlug;
+        const c = this.campaigns.find(x => x.slug === slug);
+        const tpl = c.templates.find(x => x.id === id);
+        const sel = { ...(this.state.templateSelections || {}) };
+        const ov = { ...(this.state.overlayValues || {}) };
+        sel[slug] = id;
+        ov[slug] = tpl.overlayOptions[0];
+        this.setState({ templateSelections: sel, overlayValues: ov });
+      },
+      setOverlayValue: (e) => {
+        const ov = { ...(this.state.overlayValues || {}) };
+        ov[this.state.activeSlug] = e.target.value;
+        this.setState({ overlayValues: ov });
+      },
+      goAdmin: () => this.setState({ view: 'admin' }),
+      ...this.adminVals(),
+    };
+  }
+
+  adminVals() {
+    const tab = this.state.adminTab;
+    const campaignRows = this.campaigns.map(c => ({
+      slug: c.slug, title: c.title, language: c.language.toUpperCase(),
+      dateRange: c.startDate + ' – ' + c.endDate,
+      statusLabel: this.statusMeta[c.status].label,
+      statusBg: this.statusMeta[c.status].bg, statusFg: this.statusMeta[c.status].fg,
+      templateCount: c.templates.length + ' template',
+    }));
+
+    const draft = this.state.draftCampaign || {};
+    const campaignFormFields = {
+      slug: draft.slug || '', title: draft.title || '', description: draft.description || '',
+      cta: draft.cta || '', badge: draft.badge || '', language: draft.language || 'vi',
+      status: draft.status || 'draft', startDate: draft.startDate || '', endDate: draft.endDate || '',
+    };
+
+    const filterSlug = this.state.templateFilterSlug || this.campaigns[0].slug;
+    const filterCampaign = this.campaigns.find(c => c.slug === filterSlug) || this.campaigns[0];
+    const campaignOptionsForFilter = this.campaigns.map(c => ({ value: c.slug, label: c.title }));
+    const templateRows = filterCampaign.templates.map(tp => ({
+      id: tp.id, name: tp.name, overlayLabel: tp.overlayLabel, optionCount: tp.overlayOptions.length + ' lựa chọn',
+      photoArea: 'x:' + tp.photoArea.x + '% y:' + tp.photoArea.y + '% ' + tp.photoArea.w + '×' + tp.photoArea.h + '%',
+    }));
+
+    const draftTpl = this.state.draftTemplate || {};
+    const templateFormFields = {
+      name: draftTpl.name || '', overlayKey: draftTpl.overlayKey || '',
+      overlayLabel: draftTpl.overlayLabel || '', overlayLabelEn: draftTpl.overlayLabelEn || '',
+      overlayOptionsText: draftTpl.overlayOptions ? draftTpl.overlayOptions.join(', ') : '',
+      areaX: draftTpl.photoArea ? draftTpl.photoArea.x : 20, areaY: draftTpl.photoArea ? draftTpl.photoArea.y : 20,
+      areaW: draftTpl.photoArea ? draftTpl.photoArea.w : 60, areaH: draftTpl.photoArea ? draftTpl.photoArea.h : 60,
+    };
+
+    const maxCampaignVal = Math.max(...this.analytics.byCampaign.map(x => x.value));
+    const maxUnitVal = Math.max(...this.analytics.byUnit.map(x => x.value));
+    const maxDayVal = Math.max(...this.analytics.byDay.map(x => x.value));
+    const totalDownloads = this.analytics.byCampaign.reduce((a, x) => a + x.value, 0);
+
+    return {
+      adminTabCampaigns: tab === 'campaigns', adminTabTemplates: tab === 'templates', adminTabAnalytics: tab === 'analytics',
+      adminTabStyle: (name) => tab === name,
+      setAdminTabCampaigns: () => this.setState({ adminTab: 'campaigns' }),
+      setAdminTabTemplates: () => this.setState({ adminTab: 'templates' }),
+      setAdminTabAnalytics: () => this.setState({ adminTab: 'analytics' }),
+      adminNavStyleCampaigns: this.navStyle(tab === 'campaigns'),
+      adminNavStyleTemplates: this.navStyle(tab === 'templates'),
+      adminNavStyleAnalytics: this.navStyle(tab === 'analytics'),
+
+      campaignRows,
+      campaignFormOpen: !!this.state.campaignFormOpen,
+      campaignFormFields,
+      openNewCampaignForm: () => this.setState({ campaignFormOpen: true, editingCampaignSlug: null, draftCampaign: { language: 'vi', status: 'draft' } }),
+      openEditCampaignForm: (e) => {
+        const slug = e.currentTarget.dataset.slug;
+        const c = this.campaigns.find(x => x.slug === slug);
+        this.setState({ campaignFormOpen: true, editingCampaignSlug: slug, draftCampaign: { ...c } });
+      },
+      updateDraftCampaignField: (e) => {
+        const d = { ...(this.state.draftCampaign || {}) };
+        d[e.target.name] = e.target.value;
+        this.setState({ draftCampaign: d });
+      },
+      cancelCampaignForm: () => this.setState({ campaignFormOpen: false }),
+      saveCampaignDraft: () => {
+        const d = this.state.draftCampaign || {};
+        const editing = this.state.editingCampaignSlug;
+        if (editing) {
+          const idx = this.campaigns.findIndex(x => x.slug === editing);
+          this.campaigns[idx] = { ...this.campaigns[idx], ...d };
+        } else {
+          this.campaigns.push({
+            slug: d.slug || 'campaign-' + (this.campaigns.length + 1), status: d.status || 'draft',
+            startDate: d.startDate || '—', endDate: d.endDate || '—',
+            title: d.title || 'Campaign mới', titleEn: d.title || 'New campaign',
+            description: d.description || '', descriptionEn: d.description || '',
+            cta: d.cta || 'Tạo avatar ngay', ctaEn: 'Create your avatar', badge: d.badge || 'NEW',
+            language: d.language || 'vi', templates: [],
+          });
+        }
+        this.setState({ campaignFormOpen: false });
+      },
+      cycleStatus: (e) => {
+        const slug = e.currentTarget.dataset.slug;
+        const order = ['draft', 'active', 'archived'];
+        const idx = this.campaigns.findIndex(x => x.slug === slug);
+        const cur = order.indexOf(this.campaigns[idx].status);
+        this.campaigns[idx].status = order[(cur + 1) % order.length];
+        this.forceUpdate();
+      },
+
+      templateFilterSlug: filterSlug,
+      campaignOptionsForFilter,
+      setTemplateFilter: (e) => this.setState({ templateFilterSlug: e.target.value }),
+      templateRows,
+      templateFormOpen: !!this.state.templateFormOpen,
+      templateFormFields,
+      openNewTemplateForm: () => this.setState({ templateFormOpen: true, editingTemplateId: null, draftTemplate: { photoArea: { x: 20, y: 20, w: 60, h: 60 }, overlayOptions: [] } }),
+      openEditTemplateForm: (e) => {
+        const id = e.currentTarget.dataset.tplId;
+        const tpl = filterCampaign.templates.find(x => x.id === id);
+        this.setState({ templateFormOpen: true, editingTemplateId: id, draftTemplate: { ...tpl } });
+      },
+      updateDraftTemplateField: (e) => {
+        const d = { ...(this.state.draftTemplate || {}) };
+        d[e.target.name] = e.target.value;
+        this.setState({ draftTemplate: d });
+      },
+      updateDraftTemplateArea: (e) => {
+        const d = { ...(this.state.draftTemplate || {}) };
+        d.photoArea = { ...(d.photoArea || {}), [e.target.name]: Number(e.target.value) };
+        this.setState({ draftTemplate: d });
+      },
+      cancelTemplateForm: () => this.setState({ templateFormOpen: false }),
+      saveTemplateDraft: () => {
+        const d = this.state.draftTemplate || {};
+        const options = (document.getElementById('tpl-options-input') ? document.getElementById('tpl-options-input').value : templateFormFields.overlayOptionsText)
+          .split(',').map(s => s.trim()).filter(Boolean);
+        const newTpl = {
+          id: this.state.editingTemplateId || (filterCampaign.slug + '-' + Date.now()),
+          name: d.name || 'Template mới', photoArea: d.photoArea || { x: 20, y: 20, w: 60, h: 60 },
+          overlayKey: d.overlayKey || 'field1', overlayLabel: d.overlayLabel || '', overlayLabelEn: d.overlayLabelEn || '',
+          overlayOptions: options.length ? options : ['—'],
+        };
+        const idx = filterCampaign.templates.findIndex(x => x.id === this.state.editingTemplateId);
+        if (idx >= 0) filterCampaign.templates[idx] = newTpl; else filterCampaign.templates.push(newTpl);
+        this.setState({ templateFormOpen: false });
+      },
+      deleteTemplate: (e) => {
+        const id = e.currentTarget.dataset.tplId;
+        filterCampaign.templates = filterCampaign.templates.filter(x => x.id !== id);
+        this.forceUpdate();
+      },
+
+      byCampaignBars: this.analytics.byCampaign.map(x => ({ name: x.name, value: x.value.toLocaleString('vi-VN'), pct: Math.round(x.value / maxCampaignVal * 100) })),
+      byUnitBars: this.analytics.byUnit.map(x => ({ name: x.name, value: x.value.toLocaleString('vi-VN'), pct: Math.round(x.value / maxUnitVal * 100) })),
+      byDayBars: this.analytics.byDay.map(x => ({ day: x.day, pct: Math.round(x.value / maxDayVal * 100) })),
+      totalDownloads: totalDownloads.toLocaleString('vi-VN'),
+      activeCampaignCount: this.campaigns.filter(c => c.status === 'active').length,
+      topCampaignName: this.analytics.byCampaign[0].name,
+    };
+  }
+
+  navStyle(active) {
+    return active
+      ? { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'oklch(96% 0.04 42)', color: 'oklch(45% 0.15 42)', fontWeight: 700, fontSize: 13.5, cursor: 'pointer' }
+      : { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'transparent', color: 'oklch(43% 0.018 235)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer' };
+  }
+}
+
+</script>
+</body>
+</html>
