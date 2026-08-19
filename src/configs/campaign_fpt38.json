@@ -1,0 +1,21 @@
+{
+  "campaign_id": "fpt_38_anniversary",
+  "status": "active",
+  "language_support": ["vi", "en"],
+  "content": {
+    "vi": {
+      "title": "Tự hào FPT 38 năm",
+      "instruction": "Tải ảnh của bạn lên và điều chỉnh để tạo Avatar",
+      "button_download": "Tải Avatar về máy"
+    },
+    "en": {
+      "title": "Proud of FPT 38 Years",
+      "instruction": "Upload your photo and adjust to create Avatar",
+      "button_download": "Download Avatar"
+    }
+  },
+  "assets": {
+    "frame_url": "/assets/frames/fpt-38-frame.png",
+    "overlay_z_index": 10
+  }
+}
