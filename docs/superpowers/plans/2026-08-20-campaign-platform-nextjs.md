@@ -1569,15 +1569,57 @@ Gate confirmed: <link/date of Team hạ tầng curl confirmation to login.micros
 ## Task 11: Public UI — home page listing active campaigns
 
 **Files:**
+- Create: `src/lib/base-url.ts` (absolute-URL helper for server-side `fetch` calls)
 - Create: `src/app/page.tsx`
 - Create: `src/app/campaigns-client.ts` (thin fetch helper, testable independent of React)
+- Test: `tests/lib/base-url.test.ts`
 - Test: `tests/app/campaigns-client.test.ts`
 
 **Interfaces:**
 - Consumes: `GET /api/campaigns` (Task 5).
+- Produces: `export function getBaseUrl(): string` in `src/lib/base-url.ts` — returns `""` when called in the browser (a relative URL resolves fine there) and an absolute origin when called in a Server Component (no `window`, so a relative `fetch` URL has nothing to resolve against).
 - Produces: `export async function fetchActiveCampaigns(): Promise<Campaign[]>` in `campaigns-client.ts`, used by `page.tsx`.
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the failing test for `getBaseUrl`**
+
+```ts
+// tests/lib/base-url.test.ts
+import { describe, it, expect } from "vitest";
+import { getBaseUrl } from "../../src/lib/base-url";
+
+describe("getBaseUrl", () => {
+  it("returns an absolute origin for server-side calls (no window in this test environment)", () => {
+    expect(getBaseUrl()).toBe(process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000");
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run tests/lib/base-url.test.ts`
+Expected: FAIL — module not found.
+
+- [ ] **Step 3: Implement `getBaseUrl`**
+
+```ts
+// src/lib/base-url.ts
+export function getBaseUrl(): string {
+  // Server Components run with no `window` — a relative fetch URL fails
+  // there because there is no browser origin to resolve it against, so
+  // an absolute one is built from an env var (falling back to localhost
+  // for local dev). In the browser, `window` exists and a relative URL
+  // is kept so it still works behind any reverse-proxy path/port.
+  if (typeof window !== "undefined") return "";
+  return process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run tests/lib/base-url.test.ts`
+Expected: PASS
+
+- [ ] **Step 5: Write the failing test for `fetchActiveCampaigns`**
 
 ```ts
 // tests/app/campaigns-client.test.ts
@@ -1587,13 +1629,13 @@ import { fetchActiveCampaigns } from "../../src/app/campaigns-client";
 afterEach(() => vi.restoreAllMocks());
 
 describe("fetchActiveCampaigns", () => {
-  it("returns the parsed array from GET /api/campaigns", async () => {
+  it("fetches from an absolute /api/campaigns URL (safe to call from a Server Component)", async () => {
     global.fetch = vi.fn().mockResolvedValue({ json: async () => [{ slug: "fpt38" }] });
 
     const campaigns = await fetchActiveCampaigns();
 
     expect(campaigns).toEqual([{ slug: "fpt38" }]);
-    expect(global.fetch).toHaveBeenCalledWith("/api/campaigns", expect.any(Object));
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:3000/api/campaigns", expect.any(Object));
   });
 
   it("returns an empty array (not an error) when the API returns none", async () => {
@@ -1606,15 +1648,17 @@ describe("fetchActiveCampaigns", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 6: Run test to verify it fails**
 
 Run: `npx vitest run tests/app/campaigns-client.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement `campaigns-client.ts`**
+- [ ] **Step 7: Implement `campaigns-client.ts`**
 
 ```ts
 // src/app/campaigns-client.ts
+import { getBaseUrl } from "@/lib/base-url";
+
 export interface Campaign {
   slug: string;
   displayConfig: { title: string; description: string; ctaLabel: string; badge?: string };
@@ -1622,22 +1666,28 @@ export interface Campaign {
 }
 
 export async function fetchActiveCampaigns(): Promise<Campaign[]> {
-  const res = await fetch("/api/campaigns", { cache: "no-store" });
+  const res = await fetch(`${getBaseUrl()}/api/campaigns`, { cache: "no-store" });
   return res.json();
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 8: Run test to verify it passes**
 
 Run: `npx vitest run tests/app/campaigns-client.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Implement `src/app/page.tsx` (empty-state shown when the array is empty, per spec §8)**
+- [ ] **Step 9: Implement `src/app/page.tsx` (empty-state shown when the array is empty, per spec §8; static metadata for SEO)**
 
 ```tsx
 // src/app/page.tsx
+import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchActiveCampaigns } from "./campaigns-client";
+
+export const metadata: Metadata = {
+  title: "Avatar sự kiện FPT",
+  description: "Tạo avatar cá nhân theo khung ảnh của các chiến dịch sự kiện FPT đang diễn ra.",
+};
 
 export default async function HomePage() {
   const campaigns = await fetchActiveCampaigns();
@@ -1658,10 +1708,10 @@ export default async function HomePage() {
 }
 ```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add src/app/page.tsx src/app/campaigns-client.ts tests/app/campaigns-client.test.ts
+git add src/lib/base-url.ts src/app/page.tsx src/app/campaigns-client.ts tests/lib/base-url.test.ts tests/app/campaigns-client.test.ts
 git commit -m "feat: add public home page listing all currently-active campaigns"
 ```
 
@@ -1670,13 +1720,15 @@ git commit -m "feat: add public home page listing all currently-active campaigns
 ## Task 12: Public UI — campaign page with browser preview compositor
 
 **Files:**
-- Create: `src/app/c/[slug]/page.tsx`
+- Create: `src/app/c/[slug]/page.tsx` (Server Component — fetches campaign + templates)
+- Create: `src/app/c/[slug]/campaign-compositor.tsx` (Client Component — interactive selection, overlay inputs, canvas)
 - Create: `src/lib/compositing/browser-compositor.ts`
 - Test: `tests/lib/compositing/browser-compositor.test.ts`
 
 **Interfaces:**
-- Consumes: `resolveOverlayDraws` (Task 3), `GET /api/campaigns/:slug` (Task 5).
+- Consumes: `resolveOverlayDraws` (Task 3), `GET /api/campaigns/:slug` (Task 5), `getBaseUrl` (Task 11).
 - Produces: `export async function renderPreview(canvas: HTMLCanvasElement, frameImg: HTMLImageElement, photoImg: HTMLImageElement, photoArea: {x:number;y:number;w:number;h:number}, overlays: TextOverlay[], overlayValues: Record<string,string>): Promise<void>` — the browser half of the shared compositing approach (spec §7 step 1).
+- Produces: `export function CampaignCompositor({ templates }: { templates: Template[] })` — the Client Component `page.tsx` renders, so all `fetch`/DOM-dependent state stays out of the Server Component.
 
 - [ ] **Step 1: Write the failing test using a jsdom canvas stub**
 
@@ -1773,10 +1825,10 @@ export async function renderPreview(
 Run: `npx vitest run tests/lib/compositing/browser-compositor.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Implement `src/app/c/[slug]/page.tsx`**
+- [ ] **Step 5: Implement `src/app/c/[slug]/campaign-compositor.tsx` — the Client Component holding all interactive state**
 
 ```tsx
-// src/app/c/[slug]/page.tsx
+// src/app/c/[slug]/campaign-compositor.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -1786,27 +1838,20 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Template {
+export interface Template {
   id: string;
   name: string;
   frameImageKey: string;
   overlayConfig: { photoArea: { x: number; y: number; w: number; h: number }; textOverlays: TextOverlay[] };
 }
 
-export default function CampaignPage({ params }: { params: { slug: string } }) {
-  const [templates, setTemplates] = useState<Template[]>([]);
+export function CampaignCompositor({ templates }: { templates: Template[] }) {
   const [selected, setSelected] = useState<Template | null>(null);
   const [overlayValues, setOverlayValues] = useState<Record<string, string>>({});
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameImgRef = useRef<HTMLImageElement | null>(null);
   const photoImgRef = useRef<HTMLImageElement | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/campaigns/${params.slug}`)
-      .then(res => res.json())
-      .then(data => setTemplates(data.templates ?? []));
-  }, [params.slug]);
 
   // Loads frame + photo images only when the selection actually changes —
   // kept out of the render effect below so typing into an overlay input
@@ -1874,11 +1919,39 @@ export default function CampaignPage({ params }: { params: { slug: string } }) {
 }
 ```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Implement `src/app/c/[slug]/page.tsx` as a Server Component — fetches once during render, ships no client-side fetch waterfall**
+
+```tsx
+// src/app/c/[slug]/page.tsx
+import { getBaseUrl } from "@/lib/base-url";
+import { CampaignCompositor, type Template } from "./campaign-compositor";
+
+async function fetchCampaign(slug: string): Promise<{ templates: Template[] } | null> {
+  const res = await fetch(`${getBaseUrl()}/api/campaigns/${slug}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export default async function CampaignPage({ params }: { params: { slug: string } }) {
+  const campaign = await fetchCampaign(params.slug);
+
+  if (!campaign) {
+    return <p>Không tìm thấy chiến dịch này.</p>;
+  }
+
+  return <CampaignCompositor templates={campaign.templates} />;
+}
+```
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/app/c src/lib/compositing/browser-compositor.ts tests/lib/compositing/browser-compositor.test.ts
-git commit -m "feat: add public campaign page with browser preview using shared overlay resolver"
+git commit -m "feat: add public campaign page with browser preview using shared overlay resolver
+
+Splits fetch (Server Component page.tsx) from interactive state (Client
+Component campaign-compositor.tsx) so the initial template list is
+fetched during render instead of a client-side useEffect waterfall."
 ```
 
 ---
