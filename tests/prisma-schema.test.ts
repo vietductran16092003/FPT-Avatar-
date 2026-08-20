@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { Prisma } from "@prisma/client";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 describe("Prisma schema", () => {
   it("defines Campaign with displayConfig and no joinYears field", () => {
@@ -14,10 +16,8 @@ describe("Prisma schema", () => {
   });
 
   it("indexes Campaign on status + startDate + endDate for the active-campaign lookup", () => {
-    const campaignModel = Prisma.dmmf.datamodel.models.find(m => m.name === "Campaign")!;
-    const index = campaignModel.uniqueIndexes.concat(
-      (campaignModel as any).indexes ?? []
-    ).find((idx: any) => JSON.stringify(idx.fields) === JSON.stringify(["status", "startDate", "endDate"]));
-    expect(index).toBeDefined();
+    const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf-8");
+    const campaignBlock = schema.slice(schema.indexOf("model Campaign"), schema.indexOf("model Template"));
+    expect(campaignBlock).toContain("@@index([status, startDate, endDate])");
   });
 });
