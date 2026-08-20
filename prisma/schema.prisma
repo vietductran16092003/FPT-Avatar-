@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String            @id @default(cuid())
+  email     String            @unique
+  name      String?
+  role      String            @default("user")
+  createdAt DateTime          @default(now())
+  avatars   GeneratedAvatar[]
+}
+
+model Campaign {
+  id            String            @id @default(cuid())
+  slug          String            @unique
+  status        String            @default("draft")
+  startDate     DateTime
+  endDate       DateTime
+  language      String            @default("vi")
+  displayConfig Json
+  templates     Template[]
+  avatars       GeneratedAvatar[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Matches the exact filter GET /api/campaigns uses (status + date-range
+  // lookup on every public home-page load) — without this, Postgres falls
+  // back to a full table scan of Campaign on that hot path.
+  @@index([status, startDate, endDate])
+}
+
+model Template {
+  id            String            @id @default(cuid())
+  campaignId    String
+  // Deleting a Campaign cascades to its Templates. If any of those
+  // Templates still has a GeneratedAvatar, the cascade fails with a
+  // foreign-key violation (GeneratedAvatar.templateId has no onDelete
+  // override, so Prisma's default Restrict applies) instead of silently
+  // deleting a Template that generation history still points to.
+  campaign      Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name          String
+  frameImageKey String
+  overlayConfig Json
+  avatars       GeneratedAvatar[]
+  createdAt     DateTime          @default(now())
+}
+
+model GeneratedAvatar {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id])
+  templateId      String
+  template        Template @relation(fields: [templateId], references: [id])
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  overlayValues   Json
+  resultImageKey  String
+  createdAt       DateTime @default(now())
+}
