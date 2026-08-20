@@ -13,7 +13,7 @@ Spec này bám sát đúng nội dung [Báo cáo kiến trúc hệ thống — A
 3. **Mô hình dữ liệu:** `textOverlays` tổng quát ngay từ Task đầu tiên (Campaign/Template/User/GeneratedAvatar theo đúng §3.2 báo cáo), không làm 4 field cứng rồi tổng quát hóa sau.
 4. **Điều kiện chặn cứng:** các gate tổ chức trong báo cáo (§5, §7) được giữ nguyên là gate chờ duyệt — plan phải đánh dấu rõ task nào bị chặn bởi gate nào, không giả định đã duyệt.
 
-**Phạm vi bản này:** kiến trúc nền tảng (schema, storage interface, auth, API surface cho Campaign/Template, luồng tạo avatar 2 bước, trang public liệt kê nhiều Campaign active, trang admin CRUD Campaign/Template). Không bao gồm: notification bell, analytics dashboard chi tiết (kế thừa từ demo, sẽ là spec nối tiếp), retention/cleanup job (chờ gate), GA4 (ngoài phạm vi MVP theo báo cáo §6).
+**Phạm vi bản này:** kiến trúc nền tảng (schema, storage interface, auth, API surface cho Campaign/Template, luồng tạo avatar 2 bước, trang public liệt kê nhiều Campaign active, trang admin CRUD Campaign/Template). Không bao gồm: notification bell, analytics dashboard chi tiết (kế thừa từ demo, sẽ là spec nối tiếp), retention/cleanup job (chờ gate), GA4 (ngoài phạm vi MVP theo báo cáo §6). **UI string trong các trang Task 11-13 hard-code tiếng Việt** — field `language: "vi"|"en"` trên Campaign được lưu và hiển thị trong form admin, nhưng dịch động giao diện theo `campaign.language` (như `COMPONENT_DEFS`/`i18n.js` của demo cũ) chưa được implement ở bản này; toast phản hồi hành động (lưu/lỗi) cũng chưa có, chỉ có thông báo lỗi tĩnh trong form — cả hai là spec nối tiếp, không phải đã hoàn chỉnh.
 
 ## 2. Ngăn xếp công nghệ (theo báo cáo §3.1, không đổi)
 
