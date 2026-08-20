@@ -18,6 +18,7 @@ describe("Prisma schema", () => {
   it("indexes Campaign on status + startDate + endDate for the active-campaign lookup", () => {
     const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf-8");
     const campaignBlock = schema.slice(schema.indexOf("model Campaign"), schema.indexOf("model Template"));
-    expect(campaignBlock).toContain("@@index([status, startDate, endDate])");
+    // This test checks the schema source only; actual index creation in the database is verified when migrations run against a real Postgres instance.
+    expect(campaignBlock).toMatch(/@@index\(\s*\[\s*status\s*,\s*startDate\s*,\s*endDate\s*\]\s*\)/);
   });
 });
