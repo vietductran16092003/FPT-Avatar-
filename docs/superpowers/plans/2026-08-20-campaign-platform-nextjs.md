@@ -1,4 +1,4 @@
-# Campaign Platform (Next.js) Implementation Plan
+﻿# Campaign Platform (Next.js) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,7 +6,7 @@
 
 **Architecture:** One Next.js 14 (App Router, TypeScript) app. Prisma + PostgreSQL for `User`/`Campaign`/`Template`/`GeneratedAvatar`. A single `ImageStorage` interface with a MinIO adapter (dev/K8s) and an Azure Blob adapter (Azure), selected by `STORAGE_PROVIDER` env var. One shared overlay-compositing function consumed by a browser Canvas preview and a `node-canvas` server compositor, so preview and official result never diverge. NextAuth.js + Azure AD provider for admin login (blocked on an infra gate — see Task 10).
 
-**Tech Stack:** Next.js 14 (App Router, TypeScript, NextNode runtime), Prisma + PostgreSQL, `node-canvas`, `@aws-sdk/client-s3` (MinIO-compatible) + `@azure/storage-blob`, NextAuth.js (`next-auth`) with Azure AD provider, Vitest + Testing Library + Supertest-style route handler tests, Docker.
+**Tech Stack:** Next.js 14 (App Router, TypeScript, NextNode runtime), Tailwind CSS + shadcn/ui (Radix-based components copied into `src/components/ui/`), Prisma + PostgreSQL, `node-canvas`, `@aws-sdk/client-s3` (MinIO-compatible) + `@azure/storage-blob`, NextAuth.js (`next-auth`) with Azure AD provider, Vitest + Testing Library + Supertest-style route handler tests, Docker.
 
 **Spec:** [docs/superpowers/specs/2026-08-20-campaign-platform-nextjs-design.md](../specs/2026-08-20-campaign-platform-nextjs-design.md)
 
@@ -21,6 +21,7 @@
 - No field is hard-coded onto `Campaign` or `Template` for a specific event concept (e.g. no `joinYears` column) — all per-event text fields live in `Template.overlayConfig.textOverlays[]` (spec §3).
 - A task whose spec section carries a ⛔ organizational gate (spec §10) is marked **⛔ CHẶN bởi gate: ...** at the top of the task and must not be executed until that gate is confirmed — this plan does not implement around it silently.
 - One Docker image must run on both K8s and Azure Container Apps, differing only by env vars (spec §9) — actual K8s/Azure Container Apps manifests are out of scope for this plan (spec §11) and are not tasks here.
+- All interactive UI elements (form fields, buttons in a submitting state) use shadcn/ui components (`Button`, `Input`, `Select`, `Label`) instead of raw unstyled HTML tags, and every form field has a real `<Label>` associated via `htmlFor`/`id` — not a placeholder standing in for a label.
 
 ---
 
@@ -39,10 +40,12 @@
 - [ ] **Step 1: Scaffold the Next.js app**
 
 ```bash
-npx create-next-app@14 . --typescript --app --no-tailwind --no-eslint --src-dir --import-alias "@/*" --use-npm
+npx create-next-app@14 . --typescript --app --tailwind --no-eslint --src-dir --import-alias "@/*" --use-npm
 npm install prisma @prisma/client
 npm install -D vitest @vitejs/plugin-react
 npx prisma init --datasource-provider postgresql
+npx shadcn-ui@latest init -d
+npx shadcn-ui@latest add button input select label card
 ```
 
 - [ ] **Step 2: Write `prisma/schema.prisma`**
@@ -1779,6 +1782,9 @@ Expected: PASS
 import { useEffect, useRef, useState } from "react";
 import { renderPreview } from "@/lib/compositing/browser-compositor";
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Template {
   id: string;
@@ -1791,7 +1797,10 @@ export default function CampaignPage({ params }: { params: { slug: string } }) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selected, setSelected] = useState<Template | null>(null);
   const [overlayValues, setOverlayValues] = useState<Record<string, string>>({});
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameImgRef = useRef<HTMLImageElement | null>(null);
+  const photoImgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     fetch(`/api/campaigns/${params.slug}`)
@@ -1799,30 +1808,67 @@ export default function CampaignPage({ params }: { params: { slug: string } }) {
       .then(data => setTemplates(data.templates ?? []));
   }, [params.slug]);
 
+  // Loads frame + photo images only when the selection actually changes —
+  // kept out of the render effect below so typing into an overlay input
+  // does not re-fetch the frame image on every keystroke.
   useEffect(() => {
-    if (!selected || !canvasRef.current) return;
+    if (!selected) return;
     const frameImg = new Image();
-    const photoImg = new Image();
     frameImg.src = selected.frameImageKey;
-    frameImg.onload = () => {
-      renderPreview(canvasRef.current!, frameImg, photoImg, selected.overlayConfig.photoArea, selected.overlayConfig.textOverlays, overlayValues);
-    };
-  }, [selected, overlayValues]);
+    frameImgRef.current = frameImg;
+  }, [selected]);
+
+  useEffect(() => {
+    if (!photoUrl) return;
+    const photoImg = new Image();
+    photoImg.src = photoUrl;
+    photoImgRef.current = photoImg;
+  }, [photoUrl]);
+
+  useEffect(() => {
+    if (!selected || !canvasRef.current || !frameImgRef.current || !photoImgRef.current) return;
+    renderPreview(canvasRef.current, frameImgRef.current, photoImgRef.current, selected.overlayConfig.photoArea, selected.overlayConfig.textOverlays, overlayValues);
+  }, [selected, overlayValues, photoUrl]);
 
   return (
-    <div>
-      <select onChange={e => setSelected(templates.find(t => t.id === e.target.value) ?? null)}>
-        <option value="">Chọn khung</option>
-        {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-      </select>
-      {selected?.overlayConfig.textOverlays.map(overlay => (
-        <input
-          key={overlay.key}
-          placeholder={overlay.placeholder}
-          onChange={e => setOverlayValues(v => ({ ...v, [overlay.key]: e.target.value }))}
+    <div className="mx-auto flex max-w-xl flex-col gap-4 p-6">
+      <div className="space-y-2">
+        <Label htmlFor="template-select">Chọn khung</Label>
+        <Select onValueChange={id => setSelected(templates.find(t => t.id === id) ?? null)}>
+          <SelectTrigger id="template-select">
+            <SelectValue placeholder="Chọn khung" />
+          </SelectTrigger>
+          <SelectContent>
+            {templates.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="photo-input">Ảnh cá nhân</Label>
+        <Input
+          id="photo-input"
+          type="file"
+          accept="image/*"
+          onChange={e => {
+            const file = e.target.files?.[0];
+            if (file) setPhotoUrl(URL.createObjectURL(file));
+          }}
         />
+      </div>
+
+      {selected?.overlayConfig.textOverlays.map(overlay => (
+        <div key={overlay.key} className="space-y-2">
+          <Label htmlFor={`overlay-${overlay.key}`}>{overlay.label}</Label>
+          <Input
+            id={`overlay-${overlay.key}`}
+            placeholder={overlay.placeholder}
+            onChange={e => setOverlayValues(v => ({ ...v, [overlay.key]: e.target.value }))}
+          />
+        </div>
       ))}
-      <canvas ref={canvasRef} width={800} height={800} />
+
+      <canvas ref={canvasRef} width={800} height={800} className="w-full rounded-md border" />
     </div>
   );
 }
@@ -1892,6 +1938,10 @@ Expected: FAIL — module not found.
 "use client";
 
 import { useState, FormEvent } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CampaignDraft {
   slug: string;
@@ -1907,9 +1957,19 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
   const [startDate, setStartDate] = useState(initial?.startDate ?? "");
   const [endDate, setEndDate] = useState(initial?.endDate ?? "");
   const [language, setLanguage] = useState<"vi" | "en">(initial?.language ?? "vi");
+  const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!slug || !title || !startDate || !endDate) {
+      setError("Vui lòng điền đủ Slug, Tiêu đề, Ngày bắt đầu và Ngày kết thúc.");
+      return;
+    }
+    if (startDate > endDate) {
+      setError("Ngày bắt đầu phải trước ngày kết thúc.");
+      return;
+    }
+    setError(null);
     onSubmit({
       slug,
       startDate,
@@ -1920,28 +1980,37 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Slug
-        <input value={slug} onChange={e => setSlug(e.target.value)} />
-      </label>
-      <label>
-        Tiêu đề
-        <input value={title} onChange={e => setTitle(e.target.value)} />
-      </label>
-      <label>
-        Ngày bắt đầu
-        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-      </label>
-      <label>
-        Ngày kết thúc
-        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-      </label>
-      <select value={language} onChange={e => setLanguage(e.target.value as "vi" | "en")}>
-        <option value="vi">Tiếng Việt</option>
-        <option value="en">English</option>
-      </select>
-      <button type="submit">Lưu</button>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <div className="space-y-2">
+        <Label htmlFor="campaign-slug">Slug</Label>
+        <Input id="campaign-slug" value={slug} onChange={e => setSlug(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="campaign-title">Tiêu đề</Label>
+        <Input id="campaign-title" value={title} onChange={e => setTitle(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="campaign-start">Ngày bắt đầu</Label>
+        <Input id="campaign-start" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="campaign-end">Ngày kết thúc</Label>
+        <Input id="campaign-end" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="campaign-language">Ngôn ngữ</Label>
+        <Select value={language} onValueChange={v => setLanguage(v as "vi" | "en")}>
+          <SelectTrigger id="campaign-language">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="vi">Tiếng Việt</SelectItem>
+            <SelectItem value="en">English</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button type="submit">Lưu</Button>
     </form>
   );
 }
@@ -1963,22 +2032,37 @@ import { CampaignForm } from "./campaign-form";
 
 export default function AdminCampaignsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/campaigns").then(res => res.json()).then(setCampaigns);
   }, []);
 
   async function handleCreate(draft: any) {
-    await fetch("/api/admin/campaigns", { method: "POST", body: JSON.stringify(draft) });
-    const res = await fetch("/api/admin/campaigns");
-    setCampaigns(await res.json());
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/admin/campaigns", { method: "POST", body: JSON.stringify(draft) });
+      if (!res.ok) {
+        setSubmitError("Không tạo được Campaign. Vui lòng thử lại.");
+        return;
+      }
+      const listRes = await fetch("/api/admin/campaigns");
+      setCampaigns(await listRes.json());
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <div>
-      <h1>Quản lý Campaign</h1>
-      <ul>{campaigns.map(c => <li key={c.slug}>{c.slug} — {c.status}</li>)}</ul>
-      <CampaignForm onSubmit={handleCreate} />
+    <div className="mx-auto flex max-w-xl flex-col gap-6 p-6">
+      <h1 className="text-2xl font-semibold">Quản lý Campaign</h1>
+      <ul className="space-y-1">{campaigns.map(c => <li key={c.slug}>{c.slug} — {c.status}</li>)}</ul>
+      {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
+      <fieldset disabled={submitting} aria-busy={submitting}>
+        <CampaignForm onSubmit={handleCreate} />
+      </fieldset>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-# Thiết kế: Nền tảng Avatar sự kiện FPT — kiến trúc Next.js theo báo cáo gốc
+﻿# Thiết kế: Nền tảng Avatar sự kiện FPT — kiến trúc Next.js theo báo cáo gốc
 
 > Ngày: 20/08/2026 · Trạng thái: Dự thảo, chờ duyệt
 
@@ -20,6 +20,7 @@ Spec này bám sát đúng nội dung [Báo cáo kiến trúc hệ thống — A
 | Lớp | Công nghệ |
 |---|---|
 | Giao diện + API | Next.js 14 (App Router, TypeScript), Route Handlers |
+| UI component | Tailwind CSS + shadcn/ui (component dựa trên Radix UI, copy vào `src/components/ui/`, không phải dependency ngoài) |
 | CSDL | PostgreSQL qua Prisma ORM |
 | Lưu trữ ảnh | Interface chung `ImageStorage` (upload/getPublicUrl/delete), adapter MinIO (dev) hoặc Azure Blob (prod) chọn qua biến môi trường |
 | Xác thực | NextAuth.js + Azure AD provider (SSO) |
