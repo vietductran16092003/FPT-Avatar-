@@ -3,6 +3,22 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
 
+export async function GET(_req: Request, { params }: { params: { slug: string } }) {
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
+
+  const campaign = await prisma.campaign.findUnique({
+    where: { slug: params.slug },
+    include: { templates: true },
+  });
+
+  if (!campaign) {
+    return NextResponse.json({ error: `Campaign "${params.slug}" not found` }, { status: 404 });
+  }
+
+  return NextResponse.json(campaign);
+}
+
 export async function PATCH(req: Request, { params }: { params: { slug: string } }) {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
