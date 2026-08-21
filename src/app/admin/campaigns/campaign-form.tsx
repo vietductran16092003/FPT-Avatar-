@@ -21,7 +21,7 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
   const [title, setTitle] = useState(initial?.displayConfig.title ?? "");
   const [badge, setBadge] = useState(initial?.displayConfig.badge ?? "");
   const [description, setDescription] = useState(initial?.displayConfig.description ?? "");
-  const [ctaLabel, setCtaLabel] = useState(initial?.displayConfig.ctaLabel ?? "");
+  const [ctaLabel, setCtaLabel] = useState(initial?.displayConfig.ctaLabel ?? "Tạo avatar ngay");
   const [startDate, setStartDate] = useState(initial?.startDate ?? "");
   const [endDate, setEndDate] = useState(initial?.endDate ?? "");
   const [language, setLanguage] = useState<"vi" | "en">(initial?.language ?? "vi");
