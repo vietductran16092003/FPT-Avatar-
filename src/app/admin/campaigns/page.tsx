@@ -80,7 +80,7 @@ export default function AdminCampaignsPage() {
     <div className="flex max-w-4xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Quản lý Campaign</h1>
-        {!editing && (
+        {editing === null && (
           <Button type="button" onClick={() => setEditing(undefined as any)}>
             + Campaign mới
           </Button>
