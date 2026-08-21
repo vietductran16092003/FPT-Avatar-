@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
 
+const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
+
 interface TemplateOverlayConfig {
   photoArea: { x: number; y: number; w: number; h: number };
   textOverlays: TextOverlay[];
@@ -68,7 +70,16 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
             id="template-frame"
             type="file"
             accept="image/png"
-            onChange={e => setFrameImage(e.target.files?.[0] ?? null)}
+            onChange={e => {
+              const file = e.target.files?.[0] ?? null;
+              if (file && file.size > MAX_FRAME_IMAGE_BYTES) {
+                setError("File ảnh khung vượt quá 5MB, vui lòng chọn file nhỏ hơn.");
+                e.target.value = "";
+                return;
+              }
+              setError(null);
+              setFrameImage(file);
+            }}
           />
         </div>
       </div>

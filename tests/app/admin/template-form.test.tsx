@@ -73,4 +73,19 @@ describe("TemplateForm", () => {
       }),
     }));
   });
+
+  it("rejects a frame image over 5MB with a visible error and does not stage it", async () => {
+    const onSubmit = vi.fn();
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung to");
+
+    const oversized = new File([new Uint8Array(6 * 1024 * 1024)], "big.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), oversized);
+
+    expect(screen.getByRole("alert").textContent).toMatch(/5MB/);
+
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });
