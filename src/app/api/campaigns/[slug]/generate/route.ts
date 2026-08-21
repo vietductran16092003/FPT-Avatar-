@@ -21,7 +21,7 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     return NextResponse.json({ error: "Template not found" }, { status: 404 });
   }
 
-  const overlayConfig = template.overlayConfig as {
+  const overlayConfig = template.overlayConfig as unknown as {
     photoArea: { x: number; y: number; w: number; h: number };
     textOverlays: Parameters<typeof validateOverlayValues>[0];
   };
