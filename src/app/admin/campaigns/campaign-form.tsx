@@ -24,11 +24,11 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!slug || !title) {
-      setError("Vui lòng điền đủ Slug và Tiêu đề.");
+    if (!slug || !title || !startDate || !endDate) {
+      setError("Vui lòng điền đủ Slug, Tiêu đề, Ngày bắt đầu và Ngày kết thúc.");
       return;
     }
-    if (startDate && endDate && startDate > endDate) {
+    if (startDate > endDate) {
       setError("Ngày bắt đầu phải trước ngày kết thúc.");
       return;
     }
