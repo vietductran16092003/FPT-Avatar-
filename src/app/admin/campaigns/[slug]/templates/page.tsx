@@ -69,6 +69,7 @@ export default function AdminTemplatesPage() {
   }
 
   async function handleDelete(id: string) {
+    if (!window.confirm("Xóa khung này? Không thể hoàn tác.")) return;
     await fetch(`/api/admin/campaigns/${slug}/templates/${id}`, { method: "DELETE" });
     loadTemplates();
   }

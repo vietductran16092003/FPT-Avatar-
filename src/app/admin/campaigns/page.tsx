@@ -72,6 +72,7 @@ export default function AdminCampaignsPage() {
   }
 
   async function handleDelete(slug: string) {
+    if (!window.confirm(`Xóa campaign "${slug}"? Không thể hoàn tác.`)) return;
     await fetch(`/api/admin/campaigns/${slug}`, { method: "DELETE" });
     loadCampaigns();
   }
