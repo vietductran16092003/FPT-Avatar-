@@ -46,8 +46,28 @@ describe("AdminCampaignsPage delete confirmation", () => {
   });
 });
 
+describe("AdminCampaignsPage create errors", () => {
+  it("shows the server's duplicate-slug message when creation fails with a conflict", async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Campaign slug "fpt38" already exists' }) });
+
+    render(<AdminCampaignsPage />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "+ Campaign mới" })).toBeTruthy());
+
+    await userEvent.click(screen.getByRole("button", { name: "+ Campaign mới" }));
+    await userEvent.type(screen.getByLabelText("Slug"), "fpt38");
+    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
+    await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
+    await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toContain('Campaign slug "fpt38" already exists'));
+  });
+});
+
 describe("AdminCampaignsPage status pill", () => {
-  it("PATCHes the opposite status when the pill is clicked", async () => {
+  it("cycles active to archived when the pill is clicked", async () => {
     mockCampaignsFetch();
 
     render(<AdminCampaignsPage />);
@@ -59,7 +79,47 @@ describe("AdminCampaignsPage status pill", () => {
       "/api/admin/campaigns/fpt38",
       expect.objectContaining({
         method: "PATCH",
+        body: JSON.stringify({ status: "archived" }),
+      }),
+    ));
+  });
+
+  it("cycles archived to draft when the pill is clicked", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ slug: "fpt38", status: "archived", language: "vi", startDate: "2026-08-13", endDate: "2026-09-13", displayConfig: { title: "FPT 38" }, _count: { templates: 1 } }],
+    });
+
+    render(<AdminCampaignsPage />);
+    await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
+
+    await userEvent.click(screen.getByText("Lưu trữ"));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      "/api/admin/campaigns/fpt38",
+      expect.objectContaining({
+        method: "PATCH",
         body: JSON.stringify({ status: "draft" }),
+      }),
+    ));
+  });
+
+  it("cycles draft to active when the pill is clicked", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ slug: "fpt38", status: "draft", language: "vi", startDate: "2026-08-13", endDate: "2026-09-13", displayConfig: { title: "FPT 38" }, _count: { templates: 1 } }],
+    });
+
+    render(<AdminCampaignsPage />);
+    await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
+
+    await userEvent.click(screen.getByText("Nháp"));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      "/api/admin/campaigns/fpt38",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ status: "active" }),
       }),
     ));
   });

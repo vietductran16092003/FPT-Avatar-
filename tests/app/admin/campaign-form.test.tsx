@@ -94,6 +94,35 @@ describe("CampaignForm", () => {
     }));
   });
 
+  it("submits archived status when selected from the status dropdown", async () => {
+    const onSubmit = vi.fn();
+    render(<CampaignForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
+    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
+    await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
+    await userEvent.click(screen.getByLabelText("Trạng thái"));
+    await userEvent.click(screen.getByText("Lưu trữ"));
+    await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ status: "archived" }));
+  });
+
+  it("rejects a slug that is not lowercase kebab-case", async () => {
+    const onSubmit = vi.fn();
+    render(<CampaignForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Slug"), "Tech Week 2026");
+    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
+    await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
+    await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert").textContent).toContain("chữ thường, số và dấu gạch ngang");
+  });
+
   it("pre-fills Badge, Mô tả and Nhãn CTA from initial when editing", async () => {
     const onSubmit = vi.fn();
     render(

@@ -36,7 +36,8 @@ export default function AdminCampaignsPage() {
         body: JSON.stringify(draft),
       });
       if (!res.ok) {
-        setSubmitError("Không tạo được Campaign. Vui lòng thử lại.");
+        const data = await res.json().catch(() => null);
+        setSubmitError(data?.error ?? "Không tạo được Campaign. Vui lòng thử lại.");
         return;
       }
       loadCampaigns();
@@ -77,8 +78,10 @@ export default function AdminCampaignsPage() {
     loadCampaigns();
   }
 
+  const STATUS_CYCLE = ["draft", "active", "archived"];
+
   async function handleCycleStatus(slug: string, currentStatus: string) {
-    const nextStatus = currentStatus === "active" ? "draft" : "active";
+    const nextStatus = STATUS_CYCLE[(STATUS_CYCLE.indexOf(currentStatus) + 1) % STATUS_CYCLE.length];
     const res = await fetch(`/api/admin/campaigns/${slug}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -130,10 +133,14 @@ export default function AdminCampaignsPage() {
                     onClick={() => handleCycleStatus(c.slug, c.status)}
                     className={cn(
                       "inline-flex items-center rounded-full px-3 py-1 text-[11.5px] font-bold transition-opacity hover:opacity-80",
-                      c.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800",
+                      c.status === "active"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : c.status === "archived"
+                          ? "bg-slate-100 text-slate-600"
+                          : "bg-amber-100 text-amber-800",
                     )}
                   >
-                    {c.status === "active" ? "Hoạt động" : "Nháp"}
+                    {c.status === "active" ? "Hoạt động" : c.status === "archived" ? "Lưu trữ" : "Nháp"}
                   </button>
                 </td>
                 <td className="px-4 py-3 tabular-nums">{c._count?.templates ?? "—"}</td>

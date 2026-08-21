@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface CampaignDraft {
   slug: string;
-  status: "draft" | "active";
+  status: "draft" | "active" | "archived";
   startDate: string;
   endDate: string;
   language: "vi" | "en";
@@ -17,7 +17,7 @@ interface CampaignDraft {
 
 export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: CampaignDraft) => void; initial?: CampaignDraft }) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [status, setStatus] = useState<"draft" | "active">(initial?.status ?? "draft");
+  const [status, setStatus] = useState<"draft" | "active" | "archived">(initial?.status ?? "draft");
   const [title, setTitle] = useState(initial?.displayConfig.title ?? "");
   const [badge, setBadge] = useState(initial?.displayConfig.badge ?? "");
   const [description, setDescription] = useState(initial?.displayConfig.description ?? "");
@@ -31,6 +31,10 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
     e.preventDefault();
     if (!slug || !title || !startDate || !endDate) {
       setError("Vui lòng điền đủ Slug, Tiêu đề, Ngày bắt đầu và Ngày kết thúc.");
+      return;
+    }
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
+      setError("Slug chỉ được chứa chữ thường, số và dấu gạch ngang (VD: techweek-2026).");
       return;
     }
     if (startDate > endDate) {
@@ -82,13 +86,14 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
         </div>
         <div className="space-y-2">
           <Label htmlFor="campaign-status">Trạng thái</Label>
-          <Select value={status} onValueChange={v => setStatus(v as "draft" | "active")}>
+          <Select value={status} onValueChange={v => setStatus(v as "draft" | "active" | "archived")}>
             <SelectTrigger id="campaign-status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="draft">Nháp</SelectItem>
               <SelectItem value="active">Hoạt động</SelectItem>
+              <SelectItem value="archived">Lưu trữ</SelectItem>
             </SelectContent>
           </Select>
         </div>
