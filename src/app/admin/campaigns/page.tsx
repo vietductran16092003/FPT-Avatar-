@@ -79,11 +79,15 @@ export default function AdminCampaignsPage() {
 
   async function handleCycleStatus(slug: string, currentStatus: string) {
     const nextStatus = currentStatus === "active" ? "draft" : "active";
-    await fetch(`/api/admin/campaigns/${slug}`, {
+    const res = await fetch(`/api/admin/campaigns/${slug}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: nextStatus }),
     });
+    if (!res.ok) {
+      setSubmitError("Không đổi được trạng thái. Vui lòng thử lại.");
+      return;
+    }
     loadCampaigns();
   }
 

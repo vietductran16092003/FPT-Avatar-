@@ -88,4 +88,20 @@ describe("TemplateForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("clears a previously staged valid file when a later oversized file is rejected", async () => {
+    const onSubmit = vi.fn();
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung to");
+
+    const valid = new File(["ok"], "small.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), valid);
+
+    const oversized = new File([new Uint8Array(6 * 1024 * 1024)], "big.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), oversized);
+
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

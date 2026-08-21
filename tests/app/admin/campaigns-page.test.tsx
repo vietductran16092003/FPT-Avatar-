@@ -63,4 +63,20 @@ describe("AdminCampaignsPage status pill", () => {
       }),
     ));
   });
+
+  it("shows an error and does not reload when the PATCH fails", async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ slug: "fpt38", status: "active", language: "vi", startDate: "2026-08-13", endDate: "2026-09-13", displayConfig: { title: "FPT 38" }, _count: { templates: 1 } }],
+      })
+      .mockResolvedValueOnce({ ok: false });
+
+    render(<AdminCampaignsPage />);
+    await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
+
+    await userEvent.click(screen.getByText("Hoạt động"));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+  });
 });

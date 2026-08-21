@@ -74,6 +74,7 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
               const file = e.target.files?.[0] ?? null;
               if (file && file.size > MAX_FRAME_IMAGE_BYTES) {
                 setError("File ảnh khung vượt quá 5MB, vui lòng chọn file nhỏ hơn.");
+                setFrameImage(null);
                 e.target.value = "";
                 return;
               }
