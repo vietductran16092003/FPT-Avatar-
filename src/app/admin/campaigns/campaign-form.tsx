@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface CampaignDraft {
   slug: string;
+  status: "draft" | "active";
   startDate: string;
   endDate: string;
   language: "vi" | "en";
@@ -16,6 +17,7 @@ interface CampaignDraft {
 
 export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: CampaignDraft) => void; initial?: CampaignDraft }) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [status, setStatus] = useState<"draft" | "active">(initial?.status ?? "draft");
   const [title, setTitle] = useState(initial?.displayConfig.title ?? "");
   const [startDate, setStartDate] = useState(initial?.startDate ?? "");
   const [endDate, setEndDate] = useState(initial?.endDate ?? "");
@@ -35,10 +37,11 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
     setError(null);
     onSubmit({
       slug,
+      status,
       startDate,
       endDate,
       language,
-      displayConfig: { title, description: "", ctaLabel: "Tạo avatar ngay" },
+      displayConfig: { title, description: initial?.displayConfig.description ?? "", ctaLabel: initial?.displayConfig.ctaLabel ?? "Tạo avatar ngay" },
     });
   }
 
@@ -47,7 +50,7 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="space-y-2">
         <Label htmlFor="campaign-slug">Slug</Label>
-        <Input id="campaign-slug" value={slug} onChange={e => setSlug(e.target.value)} />
+        <Input id="campaign-slug" value={slug} onChange={e => setSlug(e.target.value)} readOnly={!!initial} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="campaign-title">Tiêu đề</Label>
@@ -73,7 +76,19 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
           </SelectContent>
         </Select>
       </div>
-      <Button type="submit">Lưu</Button>
+      <div className="space-y-2">
+        <Label htmlFor="campaign-status">Trạng thái</Label>
+        <Select value={status} onValueChange={v => setStatus(v as "draft" | "active")}>
+          <SelectTrigger id="campaign-status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="draft">Nháp</SelectItem>
+            <SelectItem value="active">Hoạt động</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button type="submit">{initial ? "Cập nhật" : "Lưu"}</Button>
     </form>
   );
 }

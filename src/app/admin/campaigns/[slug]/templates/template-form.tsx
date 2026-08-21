@@ -7,24 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
 
+interface TemplateOverlayConfig {
+  photoArea: { x: number; y: number; w: number; h: number };
+  textOverlays: TextOverlay[];
+}
+
 interface TemplateDraft {
   name: string;
-  frameImage: File;
-  overlayConfig: {
-    photoArea: { x: number; y: number; w: number; h: number };
-    textOverlays: TextOverlay[];
-  };
+  frameImage: File | null;
+  overlayConfig: TemplateOverlayConfig;
+}
+
+interface TemplateInitial {
+  name: string;
+  overlayConfig: TemplateOverlayConfig;
 }
 
 function emptyOverlay(): TextOverlay {
   return { key: "", label: "", labelEn: "", type: "text", x: 50, y: 50, fontSize: 20, color: "#ffffff" };
 }
 
-export function TemplateForm({ onSubmit }: { onSubmit: (draft: TemplateDraft) => void }) {
-  const [name, setName] = useState("");
+export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: TemplateDraft) => void; initial?: TemplateInitial }) {
+  const [name, setName] = useState(initial?.name ?? "");
   const [frameImage, setFrameImage] = useState<File | null>(null);
-  const [photoArea, setPhotoArea] = useState({ x: 20, y: 20, w: 60, h: 60 });
-  const [overlays, setOverlays] = useState<TextOverlay[]>([]);
+  const [photoArea, setPhotoArea] = useState(initial?.overlayConfig.photoArea ?? { x: 20, y: 20, w: 60, h: 60 });
+  const [overlays, setOverlays] = useState<TextOverlay[]>(initial?.overlayConfig.textOverlays ?? []);
   const [error, setError] = useState<string | null>(null);
 
   function updateOverlay(index: number, patch: Partial<TextOverlay>) {
@@ -37,7 +44,7 @@ export function TemplateForm({ onSubmit }: { onSubmit: (draft: TemplateDraft) =>
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!name || !frameImage) {
+    if (!name || (!initial && !frameImage)) {
       setError("Vui lòng điền Tên khung và chọn Ảnh khung.");
       return;
     }
@@ -55,7 +62,7 @@ export function TemplateForm({ onSubmit }: { onSubmit: (draft: TemplateDraft) =>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="template-frame">Ảnh khung (PNG)</Label>
+        <Label htmlFor="template-frame">Ảnh khung (PNG){initial && " (để trống nếu giữ ảnh cũ)"}</Label>
         <Input
           id="template-frame"
           type="file"
@@ -155,7 +162,7 @@ export function TemplateForm({ onSubmit }: { onSubmit: (draft: TemplateDraft) =>
         ))}
       </div>
 
-      <Button type="submit">Lưu khung</Button>
+      <Button type="submit">{initial ? "Cập nhật khung" : "Lưu khung"}</Button>
     </form>
   );
 }

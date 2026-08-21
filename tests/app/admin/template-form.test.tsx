@@ -46,4 +46,31 @@ describe("TemplateForm", () => {
     expect(screen.getByRole("alert")).toBeTruthy();
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("pre-fills from initial and submits without requiring a new frame image", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <TemplateForm
+        onSubmit={onSubmit}
+        initial={{
+          name: "Khung cam chuẩn",
+          overlayConfig: {
+            photoArea: { x: 18, y: 14, w: 64, h: 64 },
+            textOverlays: [{ key: "joinYear", label: "Năm gia nhập", labelEn: "Join year", type: "select", options: ["2020"], x: 50, y: 85, fontSize: 24, color: "#ffffff" }],
+          },
+        }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Tên khung") as HTMLInputElement).value).toBe("Khung cam chuẩn");
+    await userEvent.click(screen.getByRole("button", { name: "Cập nhật khung" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      name: "Khung cam chuẩn",
+      frameImage: null,
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.arrayContaining([expect.objectContaining({ key: "joinYear" })]),
+      }),
+    }));
+  });
 });

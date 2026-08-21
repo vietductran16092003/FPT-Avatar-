@@ -9,6 +9,7 @@ export default function AdminTemplatesPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
   const [templates, setTemplates] = useState<any[]>([]);
+  const [editing, setEditing] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -27,13 +28,13 @@ export default function AdminTemplatesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  async function handleCreate(draft: { name: string; frameImage: File; overlayConfig: unknown }) {
+  async function handleCreate(draft: { name: string; frameImage: File | null; overlayConfig: unknown }) {
     setSubmitting(true);
     setSubmitError(null);
     try {
       const form = new FormData();
       form.set("name", draft.name);
-      form.set("frameImage", draft.frameImage);
+      form.set("frameImage", draft.frameImage!);
       form.set("overlayConfig", JSON.stringify(draft.overlayConfig));
 
       const res = await fetch(`/api/admin/campaigns/${slug}/templates`, { method: "POST", body: form });
@@ -41,6 +42,26 @@ export default function AdminTemplatesPage() {
         setSubmitError("Không tạo được khung. Vui lòng thử lại.");
         return;
       }
+      loadTemplates();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleUpdate(draft: { name: string; frameImage: File | null; overlayConfig: unknown }) {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch(`/api/admin/campaigns/${slug}/templates/${editing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: draft.name, overlayConfig: draft.overlayConfig }),
+      });
+      if (!res.ok) {
+        setSubmitError("Không cập nhật được khung. Vui lòng thử lại.");
+        return;
+      }
+      setEditing(null);
       loadTemplates();
     } finally {
       setSubmitting(false);
@@ -58,19 +79,34 @@ export default function AdminTemplatesPage() {
 
       <ul className="space-y-1">
         {templates.map(t => (
-          <li key={t.id} className="flex items-center justify-between">
+          <li key={t.id} className="flex items-center justify-between gap-2">
             <span>{t.name}</span>
-            <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(t.id)}>
-              Xóa
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditing(t)}>
+                Sửa
+              </Button>
+              <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(t.id)}>
+                Xóa
+              </Button>
+            </div>
           </li>
         ))}
       </ul>
 
       {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
 
+      {editing && (
+        <Button type="button" variant="ghost" className="self-start" onClick={() => setEditing(null)}>
+          Hủy sửa, tạo khung mới
+        </Button>
+      )}
+
       <fieldset disabled={submitting} aria-busy={submitting}>
-        <TemplateForm onSubmit={handleCreate} />
+        <TemplateForm
+          key={editing?.id ?? "new"}
+          initial={editing ? { name: editing.name, overlayConfig: editing.overlayConfig } : undefined}
+          onSubmit={editing ? handleUpdate : handleCreate}
+        />
       </fieldset>
     </div>
   );
