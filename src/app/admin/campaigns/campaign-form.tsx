@@ -48,47 +48,49 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <div className="space-y-2">
-        <Label htmlFor="campaign-slug">Slug</Label>
-        <Input id="campaign-slug" value={slug} onChange={e => setSlug(e.target.value)} readOnly={!!initial} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="campaign-slug">Slug</Label>
+          <Input id="campaign-slug" value={slug} onChange={e => setSlug(e.target.value)} readOnly={!!initial} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-title">Tiêu đề</Label>
+          <Input id="campaign-title" value={title} onChange={e => setTitle(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-start">Ngày bắt đầu</Label>
+          <Input id="campaign-start" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-end">Ngày kết thúc</Label>
+          <Input id="campaign-end" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-language">Ngôn ngữ</Label>
+          <Select value={language} onValueChange={v => setLanguage(v as "vi" | "en")}>
+            <SelectTrigger id="campaign-language">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="vi">Tiếng Việt</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-status">Trạng thái</Label>
+          <Select value={status} onValueChange={v => setStatus(v as "draft" | "active")}>
+            <SelectTrigger id="campaign-status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Nháp</SelectItem>
+              <SelectItem value="active">Hoạt động</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="campaign-title">Tiêu đề</Label>
-        <Input id="campaign-title" value={title} onChange={e => setTitle(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="campaign-start">Ngày bắt đầu</Label>
-        <Input id="campaign-start" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="campaign-end">Ngày kết thúc</Label>
-        <Input id="campaign-end" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="campaign-language">Ngôn ngữ</Label>
-        <Select value={language} onValueChange={v => setLanguage(v as "vi" | "en")}>
-          <SelectTrigger id="campaign-language">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="vi">Tiếng Việt</SelectItem>
-            <SelectItem value="en">English</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="campaign-status">Trạng thái</Label>
-        <Select value={status} onValueChange={v => setStatus(v as "draft" | "active")}>
-          <SelectTrigger id="campaign-status">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="draft">Nháp</SelectItem>
-            <SelectItem value="active">Hoạt động</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <Button type="submit">{initial ? "Cập nhật" : "Lưu"}</Button>
+      <Button type="submit" className="w-fit">{initial ? "Cập nhật" : "Lưu"}</Button>
     </form>
   );
 }
