@@ -7,7 +7,7 @@ export async function GET() {
   if (!auth.ok) return auth.response;
 
   const campaigns = await prisma.campaign.findMany({
-    select: { slug: true, displayConfig: true, _count: { select: { avatars: true } } },
+    select: { slug: true, status: true, displayConfig: true, _count: { select: { avatars: true } } },
   });
 
   const result = campaigns
@@ -15,6 +15,7 @@ export async function GET() {
       slug: c.slug,
       title: (c.displayConfig as { title?: string })?.title || c.slug,
       count: c._count.avatars,
+      status: c.status,
     }))
     .sort((a, b) => b.count - a.count);
 

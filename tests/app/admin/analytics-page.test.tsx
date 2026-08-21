@@ -44,4 +44,20 @@ describe("AdminAnalyticsPage", () => {
 
     await waitFor(() => expect(screen.getByText("Không tải được dữ liệu. Vui lòng thử lại.")).toBeTruthy());
   });
+
+  it("renders KPI cards for total downloads, active campaigns, and the top campaign", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { slug: "techweek-2026", title: "Tech Week", count: 12, status: "draft" },
+        { slug: "fpt38", title: "FPT tròn 38 tuổi", count: 5, status: "active" },
+      ],
+    });
+
+    render(<AdminAnalyticsPage />);
+
+    await waitFor(() => expect(screen.getByText("17")).toBeTruthy()); // 12 + 5 total downloads
+    expect(screen.getByText("1")).toBeTruthy(); // 1 active campaign
+    expect(screen.getByText("Tech Week")).toBeTruthy(); // top campaign (highest count, already sorted first)
+  });
 });

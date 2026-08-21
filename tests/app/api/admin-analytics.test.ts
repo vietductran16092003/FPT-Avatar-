@@ -12,33 +12,33 @@ import { prisma } from "../../../src/lib/prisma";
 import { requireAdmin } from "../../../src/lib/require-admin";
 
 describe("GET /api/admin/analytics", () => {
-  it("returns each campaign's generated-avatar count, sorted descending", async () => {
+  it("returns each campaign's generated-avatar count and status, sorted descending by count", async () => {
     (prisma.campaign.findMany as any).mockResolvedValue([
-      { slug: "fpt38", displayConfig: { title: "FPT tròn 38 tuổi" }, _count: { avatars: 5 } },
-      { slug: "techweek-2026", displayConfig: { title: "Tech Week" }, _count: { avatars: 12 } },
+      { slug: "fpt38", status: "active", displayConfig: { title: "FPT tròn 38 tuổi" }, _count: { avatars: 5 } },
+      { slug: "techweek-2026", status: "draft", displayConfig: { title: "Tech Week" }, _count: { avatars: 12 } },
     ]);
 
     const res = await GET();
     const body = await res.json();
 
     expect(body).toEqual([
-      { slug: "techweek-2026", title: "Tech Week", count: 12 },
-      { slug: "fpt38", title: "FPT tròn 38 tuổi", count: 5 },
+      { slug: "techweek-2026", title: "Tech Week", count: 12, status: "draft" },
+      { slug: "fpt38", title: "FPT tròn 38 tuổi", count: 5, status: "active" },
     ]);
     expect(prisma.campaign.findMany).toHaveBeenCalledWith({
-      select: { slug: true, displayConfig: true, _count: { select: { avatars: true } } },
+      select: { slug: true, status: true, displayConfig: true, _count: { select: { avatars: true } } },
     });
   });
 
   it("falls back to the slug when displayConfig has no title", async () => {
     (prisma.campaign.findMany as any).mockResolvedValue([
-      { slug: "no-title-campaign", displayConfig: {}, _count: { avatars: 0 } },
+      { slug: "no-title-campaign", status: "draft", displayConfig: {}, _count: { avatars: 0 } },
     ]);
 
     const res = await GET();
     const body = await res.json();
 
-    expect(body).toEqual([{ slug: "no-title-campaign", title: "no-title-campaign", count: 0 }]);
+    expect(body).toEqual([{ slug: "no-title-campaign", title: "no-title-campaign", count: 0, status: "draft" }]);
   });
 
   it("returns 401 when requireAdmin fails", async () => {
