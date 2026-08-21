@@ -10,7 +10,7 @@ vi.mock("../../../src/lib/prisma", () => ({
   },
 }));
 vi.mock("../../../src/lib/notifications", () => ({
-  createNotification: vi.fn(),
+  createNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { GET, POST } from "../../../src/app/api/admin/campaigns/route";

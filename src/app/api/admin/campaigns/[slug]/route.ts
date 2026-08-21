@@ -33,7 +33,7 @@ export async function PATCH(req: Request, { params }: { params: { slug: string }
   const body = await req.json();
   const campaign = await prisma.campaign.update({ where: { slug: params.slug }, data: body });
   const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
-  await createNotification(`Đã cập nhật campaign "${title}".`, "campaign-update");
+  createNotification(`Đã cập nhật campaign "${title}".`, "campaign-update").catch(err => console.error("notification failed", err));
   return NextResponse.json(campaign);
 }
 
@@ -44,7 +44,7 @@ export async function DELETE(_req: Request, { params }: { params: { slug: string
   try {
     const campaign = await prisma.campaign.delete({ where: { slug: params.slug } });
     const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
-    await createNotification(`Đã xoá campaign "${title}".`, "campaign-delete");
+    createNotification(`Đã xoá campaign "${title}".`, "campaign-delete").catch(err => console.error("notification failed", err));
     return NextResponse.json(campaign);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {

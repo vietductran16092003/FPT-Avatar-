@@ -18,7 +18,7 @@ vi.mock("../../../src/lib/compositing/server-compositor", () => ({
   compositeAvatar: vi.fn().mockResolvedValue(Buffer.from("png-bytes")),
 }));
 vi.mock("../../../src/lib/notifications", () => ({
-  createNotification: vi.fn(),
+  createNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { POST } from "../../../src/app/api/campaigns/[slug]/generate/route";

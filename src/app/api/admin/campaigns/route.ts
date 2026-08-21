@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       },
     });
     const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
-    await createNotification(`Đã tạo campaign mới "${title}".`, "campaign-create");
+    createNotification(`Đã tạo campaign mới "${title}".`, "campaign-create").catch(err => console.error("notification failed", err));
     return NextResponse.json(campaign);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {

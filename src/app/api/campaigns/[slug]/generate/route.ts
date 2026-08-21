@@ -59,7 +59,7 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
   });
 
   const campaignTitle = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
-  await createNotification(`Có lượt tải avatar mới: ${campaignTitle} – ${template.name}.`, "download");
+  createNotification(`Có lượt tải avatar mới: ${campaignTitle} – ${template.name}.`, "download").catch(err => console.error("notification failed", err));
 
   return NextResponse.json({ resultUrl: storage.getPublicUrl(resultKey) });
 }
