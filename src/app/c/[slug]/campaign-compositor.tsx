@@ -5,7 +5,7 @@ import { renderPreview } from "@/lib/compositing/browser-compositor";
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export interface Template {
   id: string;
@@ -44,15 +44,25 @@ export function CampaignCompositor({ templates }: { templates: Template[] }) {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 p-6">
       <div className="space-y-2">
-        <Label htmlFor="template-select">Chọn khung</Label>
-        <Select onValueChange={id => setSelected(templates.find(t => t.id === id) ?? null)}>
-          <SelectTrigger id="template-select">
-            <SelectValue placeholder="Chọn khung" />
-          </SelectTrigger>
-          <SelectContent>
-            {templates.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <Label>Chọn khung</Label>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {templates.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setSelected(t)}
+              className={cn(
+                "flex flex-col overflow-hidden rounded-xl border-2 bg-card text-left transition-colors",
+                selected?.id === t.id ? "border-primary" : "border-border hover:border-primary/50",
+              )}
+            >
+              <div className="relative aspect-square bg-gradient-to-br from-primary/20 to-secondary/10">
+                <div className="absolute inset-[8%] rounded-lg border-[6px] border-primary/60" />
+              </div>
+              <div className="truncate p-2 text-center text-xs font-semibold">{t.name}</div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">
