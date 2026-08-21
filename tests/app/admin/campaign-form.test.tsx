@@ -85,6 +85,7 @@ describe("CampaignForm", () => {
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.type(screen.getByLabelText("Badge"), "38");
     await userEvent.type(screen.getByLabelText("Mô tả"), "Tạo avatar kỷ niệm");
+    await userEvent.clear(screen.getByLabelText("Nhãn nút CTA"));
     await userEvent.type(screen.getByLabelText("Nhãn nút CTA"), "Bắt đầu ngay");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
 
