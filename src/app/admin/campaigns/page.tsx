@@ -77,6 +77,16 @@ export default function AdminCampaignsPage() {
     loadCampaigns();
   }
 
+  async function handleCycleStatus(slug: string, currentStatus: string) {
+    const nextStatus = currentStatus === "active" ? "draft" : "active";
+    await fetch(`/api/admin/campaigns/${slug}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus }),
+    });
+    loadCampaigns();
+  }
+
   return (
     <div className="flex max-w-4xl flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -111,14 +121,16 @@ export default function AdminCampaignsPage() {
                   {String(c.startDate).slice(0, 10)} – {String(c.endDate).slice(0, 10)}
                 </td>
                 <td className="px-4 py-3">
-                  <span
+                  <button
+                    type="button"
+                    onClick={() => handleCycleStatus(c.slug, c.status)}
                     className={cn(
-                      "inline-flex items-center rounded-full px-3 py-1 text-[11.5px] font-bold",
+                      "inline-flex items-center rounded-full px-3 py-1 text-[11.5px] font-bold transition-opacity hover:opacity-80",
                       c.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800",
                     )}
                   >
                     {c.status === "active" ? "Hoạt động" : "Nháp"}
-                  </span>
+                  </button>
                 </td>
                 <td className="px-4 py-3 tabular-nums">{c._count?.templates ?? "—"}</td>
                 <td className="px-4 py-3">

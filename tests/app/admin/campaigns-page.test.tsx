@@ -45,3 +45,22 @@ describe("AdminCampaignsPage delete confirmation", () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/admin/campaigns/fpt38", expect.objectContaining({ method: "DELETE" })));
   });
 });
+
+describe("AdminCampaignsPage status pill", () => {
+  it("PATCHes the opposite status when the pill is clicked", async () => {
+    mockCampaignsFetch();
+
+    render(<AdminCampaignsPage />);
+    await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
+
+    await userEvent.click(screen.getByText("Hoạt động"));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      "/api/admin/campaigns/fpt38",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ status: "draft" }),
+      }),
+    ));
+  });
+});
