@@ -10,6 +10,7 @@ interface AnalyticsRow {
 
 export default function AdminAnalyticsPage() {
   const [rows, setRows] = useState<AnalyticsRow[] | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/analytics")
@@ -18,7 +19,7 @@ export default function AdminAnalyticsPage() {
         return res.json();
       })
       .then(data => setRows(Array.isArray(data) ? data : []))
-      .catch(() => setRows([]));
+      .catch(() => setError(true));
   }, []);
 
   const max = Math.max(1, ...(rows ?? []).map(r => r.count));
@@ -30,8 +31,9 @@ export default function AdminAnalyticsPage() {
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 text-sm font-bold text-foreground">Lượt tạo avatar theo Campaign</div>
 
-        {rows === null && <p className="text-sm text-muted-foreground">Đang tải…</p>}
-        {rows !== null && rows.length === 0 && <p className="text-sm text-muted-foreground">Chưa có dữ liệu.</p>}
+        {error && <p className="text-sm text-destructive">Không tải được dữ liệu. Vui lòng thử lại.</p>}
+        {!error && rows === null && <p className="text-sm text-muted-foreground">Đang tải…</p>}
+        {!error && rows !== null && rows.length === 0 && <p className="text-sm text-muted-foreground">Chưa có dữ liệu.</p>}
 
         <div className="flex flex-col gap-3">
           {rows?.map(row => {

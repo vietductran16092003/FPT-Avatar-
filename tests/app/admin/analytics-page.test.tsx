@@ -36,4 +36,12 @@ describe("AdminAnalyticsPage", () => {
 
     await waitFor(() => expect(screen.getByText("Chưa có dữ liệu.")).toBeTruthy());
   });
+
+  it("shows an error message when the fetch fails", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) });
+
+    render(<AdminAnalyticsPage />);
+
+    await waitFor(() => expect(screen.getByText("Không tải được dữ liệu. Vui lòng thử lại.")).toBeTruthy());
+  });
 });

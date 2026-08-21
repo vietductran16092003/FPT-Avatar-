@@ -119,7 +119,7 @@ export default function AdminCampaignsPage() {
                     {c.status === "active" ? "Hoạt động" : "Nháp"}
                   </span>
                 </td>
-                <td className="px-4 py-3 tabular-nums">{c.templates?.length ?? "—"}</td>
+                <td className="px-4 py-3 tabular-nums">{c._count?.templates ?? "—"}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <Link href={`/admin/campaigns/${c.slug}/templates`} className="text-sm text-primary underline-offset-4 hover:underline">

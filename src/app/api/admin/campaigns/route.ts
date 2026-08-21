@@ -6,7 +6,9 @@ import { requireAdmin } from "@/lib/require-admin";
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
-  const campaigns = await prisma.campaign.findMany();
+  const campaigns = await prisma.campaign.findMany({
+    include: { _count: { select: { templates: true } } },
+  });
   return NextResponse.json(campaigns);
 }
 
