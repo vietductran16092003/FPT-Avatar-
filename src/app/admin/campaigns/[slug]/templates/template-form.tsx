@@ -53,7 +53,7 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-border bg-background p-4">
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
       <div className="space-y-2">
@@ -63,12 +63,14 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
 
       <div className="space-y-2">
         <Label htmlFor="template-frame">Ảnh khung (PNG){initial && " (để trống nếu giữ ảnh cũ)"}</Label>
-        <Input
-          id="template-frame"
-          type="file"
-          accept="image/png"
-          onChange={e => setFrameImage(e.target.files?.[0] ?? null)}
-        />
+        <div className="rounded-xl border-2 border-dashed border-border bg-muted/40 p-4 text-center">
+          <Input
+            id="template-frame"
+            type="file"
+            accept="image/png"
+            onChange={e => setFrameImage(e.target.files?.[0] ?? null)}
+          />
+        </div>
       </div>
 
       <fieldset className="space-y-2">
