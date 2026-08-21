@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
 import { getStorage } from "@/lib/storage";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET(_req: Request, { params }: { params: { slug: string } }) {
   const auth = await requireAdmin();
@@ -31,6 +32,8 @@ export async function PATCH(req: Request, { params }: { params: { slug: string }
   if (!auth.ok) return auth.response;
   const body = await req.json();
   const campaign = await prisma.campaign.update({ where: { slug: params.slug }, data: body });
+  const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
+  await createNotification(`Đã cập nhật campaign "${title}".`, "campaign-update");
   return NextResponse.json(campaign);
 }
 
@@ -40,6 +43,8 @@ export async function DELETE(_req: Request, { params }: { params: { slug: string
 
   try {
     const campaign = await prisma.campaign.delete({ where: { slug: params.slug } });
+    const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
+    await createNotification(`Đã xoá campaign "${title}".`, "campaign-delete");
     return NextResponse.json(campaign);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {

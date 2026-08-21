@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -28,6 +29,8 @@ export async function POST(req: Request) {
         displayConfig: body.displayConfig,
       },
     });
+    const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
+    await createNotification(`Đã tạo campaign mới "${title}".`, "campaign-create");
     return NextResponse.json(campaign);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
