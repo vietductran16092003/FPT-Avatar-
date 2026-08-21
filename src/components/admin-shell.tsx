@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [{ id: "campaigns", label: "Campaign", href: "/admin/campaigns" }];
+const NAV_ITEMS = [
+  { id: "campaigns", label: "Campaign", href: "/admin/campaigns" },
+  { id: "analytics", label: "Thống kê", href: "/admin/analytics" },
+];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
