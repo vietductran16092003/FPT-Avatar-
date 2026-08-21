@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { CampaignForm } from "./campaign-form";
 
 export default function AdminCampaignsPage() {
@@ -41,7 +42,16 @@ export default function AdminCampaignsPage() {
   return (
     <div className="flex max-w-xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">Quản lý Campaign</h1>
-      <ul className="space-y-1">{campaigns.map(c => <li key={c.slug}>{c.slug} — {c.status}</li>)}</ul>
+      <ul className="space-y-1">
+        {campaigns.map(c => (
+          <li key={c.slug} className="flex items-center justify-between">
+            <span>{c.slug} — {c.status}</span>
+            <Link href={`/admin/campaigns/${c.slug}/templates`} className="text-sm text-primary underline-offset-4 hover:underline">
+              Quản lý khung
+            </Link>
+          </li>
+        ))}
+      </ul>
       {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
       <fieldset disabled={submitting} aria-busy={submitting}>
         <CampaignForm onSubmit={handleCreate} />
