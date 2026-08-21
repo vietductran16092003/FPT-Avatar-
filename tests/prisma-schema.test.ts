@@ -21,4 +21,9 @@ describe("Prisma schema", () => {
     // This test checks the schema source only; actual index creation in the database is verified when migrations run against a real Postgres instance.
     expect(campaignBlock).toMatch(/@@index\(\s*\[\s*status\s*,\s*startDate\s*,\s*endDate\s*\]\s*\)/);
   });
+
+  it("defines Notification with message, type, read and createdAt", () => {
+    const fields = Prisma.dmmf.datamodel.models.find(m => m.name === "Notification")!.fields.map(f => f.name);
+    expect(fields).toEqual(expect.arrayContaining(["id", "message", "type", "read", "createdAt"]));
+  });
 });

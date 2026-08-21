@@ -63,3 +63,13 @@ model GeneratedAvatar {
   resultImageKey  String
   createdAt       DateTime @default(now())
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
