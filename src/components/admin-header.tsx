@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { signOut } from "next-auth/react";
+import { NotificationBell } from "@/components/notification-bell";
 
 export function AdminHeader() {
   return (
@@ -21,13 +22,16 @@ export function AdminHeader() {
           <span className="font-medium text-muted-foreground">· Admin</span>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => signOut({ callbackUrl: "/admin/login" })}
-        className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-      >
-        Đăng xuất
-      </button>
+      <div className="flex items-center gap-3">
+        <NotificationBell />
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/admin/login" })}
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
+          Đăng xuất
+        </button>
+      </div>
     </header>
   );
 }
