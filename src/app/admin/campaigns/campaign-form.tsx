@@ -12,13 +12,16 @@ interface CampaignDraft {
   startDate: string;
   endDate: string;
   language: "vi" | "en";
-  displayConfig: { title: string; description: string; ctaLabel: string };
+  displayConfig: { title: string; description: string; ctaLabel: string; badge?: string };
 }
 
 export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: CampaignDraft) => void; initial?: CampaignDraft }) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [status, setStatus] = useState<"draft" | "active">(initial?.status ?? "draft");
   const [title, setTitle] = useState(initial?.displayConfig.title ?? "");
+  const [badge, setBadge] = useState(initial?.displayConfig.badge ?? "");
+  const [description, setDescription] = useState(initial?.displayConfig.description ?? "");
+  const [ctaLabel, setCtaLabel] = useState(initial?.displayConfig.ctaLabel ?? "");
   const [startDate, setStartDate] = useState(initial?.startDate ?? "");
   const [endDate, setEndDate] = useState(initial?.endDate ?? "");
   const [language, setLanguage] = useState<"vi" | "en">(initial?.language ?? "vi");
@@ -41,7 +44,7 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
       startDate,
       endDate,
       language,
-      displayConfig: { title, description: initial?.displayConfig.description ?? "", ctaLabel: initial?.displayConfig.ctaLabel ?? "Tạo avatar ngay" },
+      displayConfig: { title, description, ctaLabel, badge: badge || undefined },
     });
   }
 
@@ -88,6 +91,24 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
               <SelectItem value="active">Hoạt động</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-badge">Badge</Label>
+          <Input id="campaign-badge" placeholder="VD: 38" value={badge} onChange={e => setBadge(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-cta">Nhãn nút CTA</Label>
+          <Input id="campaign-cta" value={ctaLabel} onChange={e => setCtaLabel(e.target.value)} />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="campaign-description">Mô tả</Label>
+          <textarea
+            id="campaign-description"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            rows={3}
+            className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          />
         </div>
       </div>
       <Button type="submit" className="w-fit">{initial ? "Cập nhật" : "Lưu"}</Button>

@@ -74,4 +74,43 @@ describe("CampaignForm", () => {
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ slug: "fpt38", status: "active" }));
   });
+
+  it("submits Badge, Mô tả and Nhãn CTA entered by the admin", async () => {
+    const onSubmit = vi.fn();
+    render(<CampaignForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
+    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
+    await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
+    await userEvent.type(screen.getByLabelText("Badge"), "38");
+    await userEvent.type(screen.getByLabelText("Mô tả"), "Tạo avatar kỷ niệm");
+    await userEvent.type(screen.getByLabelText("Nhãn nút CTA"), "Bắt đầu ngay");
+    await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      displayConfig: expect.objectContaining({ badge: "38", description: "Tạo avatar kỷ niệm", ctaLabel: "Bắt đầu ngay" }),
+    }));
+  });
+
+  it("pre-fills Badge, Mô tả and Nhãn CTA from initial when editing", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <CampaignForm
+        onSubmit={onSubmit}
+        initial={{
+          slug: "fpt38",
+          status: "active",
+          startDate: "2026-08-13",
+          endDate: "2026-09-13",
+          language: "vi",
+          displayConfig: { title: "FPT tròn 38 tuổi", description: "Mô tả cũ", ctaLabel: "CTA cũ", badge: "38" },
+        }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Badge") as HTMLInputElement).value).toBe("38");
+    expect((screen.getByLabelText("Mô tả") as HTMLTextAreaElement).value).toBe("Mô tả cũ");
+    expect((screen.getByLabelText("Nhãn nút CTA") as HTMLInputElement).value).toBe("CTA cũ");
+  });
 });
