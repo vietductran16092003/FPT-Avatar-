@@ -39,7 +39,7 @@ export default function AdminCampaignsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6 p-6">
+    <div className="flex max-w-xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">Quản lý Campaign</h1>
       <ul className="space-y-1">{campaigns.map(c => <li key={c.slug}>{c.slug} — {c.status}</li>)}</ul>
       {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
