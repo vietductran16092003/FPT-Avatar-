@@ -8,6 +8,11 @@ vi.mock("../../../src/lib/prisma", () => ({
     campaign: { findUnique: vi.fn() },
   },
 }));
+vi.mock("../../../src/lib/storage", () => ({
+  getStorage: () => ({
+    getPublicUrl: (key: string) => `http://storage/${key}`,
+  }),
+}));
 
 import { GET } from "../../../src/app/api/admin/campaigns/[slug]/route";
 import { prisma } from "../../../src/lib/prisma";
@@ -41,5 +46,18 @@ describe("GET /api/admin/campaigns/:slug", () => {
     const res = await GET(new Request("http://x"), { params: { slug: "fpt38" } });
 
     expect(res.status).toBe(401);
+  });
+
+  it("adds a computed frameImageUrl to each template", async () => {
+    (prisma.campaign.findUnique as any).mockResolvedValue({
+      slug: "fpt38",
+      templates: [{ id: "t1", name: "Khung cam", frameImageKey: "frames/fpt38-orange.png" }],
+    });
+
+    const res = await GET(new Request("http://x"), { params: { slug: "fpt38" } });
+    const body = await res.json();
+
+    expect(body.templates[0].frameImageUrl).toBe("http://storage/frames/fpt38-orange.png");
+    expect(body.templates[0].name).toBe("Khung cam"); // existing fields still present
   });
 });

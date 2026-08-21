@@ -89,7 +89,11 @@ export default function AdminTemplatesPage() {
         {templates.map(t => (
           <div key={t.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <div className="relative aspect-square bg-gradient-to-br from-primary/20 to-secondary/10">
-              <div className="absolute inset-[8%] rounded-lg border-[6px] border-primary/60" />
+              {t.frameImageUrl ? (
+                <img src={t.frameImageUrl} alt={t.name} className="h-full w-full object-contain" />
+              ) : (
+                <div className="absolute inset-[8%] rounded-lg border-[6px] border-primary/60" />
+              )}
             </div>
             <div className="p-3">
               <div className="mb-1 truncate text-sm font-bold">{t.name}</div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
+import { getStorage } from "@/lib/storage";
 
 export async function GET(_req: Request, { params }: { params: { slug: string } }) {
   const auth = await requireAdmin();
@@ -16,7 +17,13 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     return NextResponse.json({ error: `Campaign "${params.slug}" not found` }, { status: 404 });
   }
 
-  return NextResponse.json(campaign);
+  const storage = getStorage();
+  const templates = campaign.templates.map(t => ({
+    ...t,
+    frameImageUrl: storage.getPublicUrl(t.frameImageKey),
+  }));
+
+  return NextResponse.json({ ...campaign, templates });
 }
 
 export async function PATCH(req: Request, { params }: { params: { slug: string } }) {
