@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/storage";
 import { compositeAvatar } from "@/lib/compositing/server-compositor";
 import { validateOverlayValues } from "@/lib/compositing/validate-overlay-values";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: Request, { params }: { params: { slug: string } }) {
   const form = await req.formData();
@@ -46,14 +47,19 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
   const resultKey = `results/${template.id}-${Date.now()}.png`;
   await storage.upload(resultKey, resultBuffer, "image/png");
 
+  const campaign = await prisma.campaign.findUniqueOrThrow({ where: { slug: params.slug } });
+
   await prisma.generatedAvatar.create({
     data: {
-      campaignId: (await prisma.campaign.findUniqueOrThrow({ where: { slug: params.slug } })).id,
+      campaignId: campaign.id,
       templateId: template.id,
       overlayValues,
       resultImageKey: resultKey,
     },
   });
+
+  const campaignTitle = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
+  await createNotification(`Có lượt tải avatar mới: ${campaignTitle} – ${template.name}.`, "download");
 
   return NextResponse.json({ resultUrl: storage.getPublicUrl(resultKey) });
 }
