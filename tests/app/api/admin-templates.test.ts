@@ -7,7 +7,7 @@ vi.mock("../../../src/lib/require-admin", () => ({
 vi.mock("../../../src/lib/prisma", () => ({
   prisma: {
     campaign: { findUniqueOrThrow: vi.fn().mockResolvedValue({ id: "c1" }) },
-    template: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    template: { create: vi.fn(), updateMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
   },
 }));
 vi.mock("../../../src/lib/storage", () => ({
@@ -51,7 +51,8 @@ describe("admin templates API", () => {
   });
 
   it("PATCH updates an existing template's overlayConfig", async () => {
-    (prisma.template.update as any).mockResolvedValue({ id: "t1" });
+    (prisma.template.updateMany as any).mockResolvedValue({ count: 1 });
+    (prisma.template.findUnique as any).mockResolvedValue({ id: "t1" });
 
     const res = await PATCH(
       new Request("http://x", { method: "PATCH", body: JSON.stringify({ overlayConfig: { photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] } }) }),
@@ -59,25 +60,41 @@ describe("admin templates API", () => {
     );
 
     expect(res.status).toBe(200);
-    expect(prisma.template.update).toHaveBeenCalled();
+    expect(prisma.template.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "t1", campaign: { slug: "fpt38" } },
+    }));
+  });
+
+  it("PATCH returns 404 when the template does not belong to the campaign", async () => {
+    (prisma.template.updateMany as any).mockResolvedValue({ count: 0 });
+
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ overlayConfig: { photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] } }) }),
+      { params: { slug: "fpt38", id: "nope" } },
+    );
+
+    expect(res.status).toBe(404);
   });
 
   it("DELETE removes a template by id", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({ id: "t1" });
     (prisma.template.delete as any).mockResolvedValue({ id: "t1" });
 
     const res = await DELETE(new Request("http://x", { method: "DELETE" }), { params: { slug: "fpt38", id: "t1" } });
 
     expect(res.status).toBe(200);
+    expect(prisma.template.findFirst).toHaveBeenCalledWith({ where: { id: "t1", campaign: { slug: "fpt38" } } });
     expect(prisma.template.delete).toHaveBeenCalledWith({ where: { id: "t1" } });
   });
 
   it("DELETE returns 404 when the template does not exist", async () => {
-    (prisma.template.delete as any).mockRejectedValue(prismaError("P2025"));
+    (prisma.template.findFirst as any).mockResolvedValue(null);
     const res = await DELETE(new Request("http://x", { method: "DELETE" }), { params: { slug: "fpt38", id: "nope" } });
     expect(res.status).toBe(404);
   });
 
   it("DELETE returns 409 when the template still has generated avatars", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({ id: "t1" });
     (prisma.template.delete as any).mockRejectedValue(prismaError("P2003"));
     const res = await DELETE(new Request("http://x", { method: "DELETE" }), { params: { slug: "fpt38", id: "t1" } });
     expect(res.status).toBe(409);

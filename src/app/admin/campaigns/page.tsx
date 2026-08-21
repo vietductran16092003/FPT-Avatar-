@@ -9,14 +9,24 @@ export default function AdminCampaignsPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/campaigns").then(res => res.json()).then(setCampaigns);
+    fetch("/api/admin/campaigns")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load campaigns");
+        return res.json();
+      })
+      .then(data => setCampaigns(Array.isArray(data) ? data : []))
+      .catch(() => setCampaigns([]));
   }, []);
 
   async function handleCreate(draft: any) {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch("/api/admin/campaigns", { method: "POST", body: JSON.stringify(draft) });
+      const res = await fetch("/api/admin/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
       if (!res.ok) {
         setSubmitError("Không tạo được Campaign. Vui lòng thử lại.");
         return;
