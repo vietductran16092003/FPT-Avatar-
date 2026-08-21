@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { CampaignForm } from "./campaign-form";
 
 export default function AdminCampaignsPage() {
@@ -76,39 +77,83 @@ export default function AdminCampaignsPage() {
   }
 
   return (
-    <div className="flex max-w-xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Quản lý Campaign</h1>
+    <div className="flex max-w-4xl flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Quản lý Campaign</h1>
+        {!editing && (
+          <Button type="button" onClick={() => setEditing(undefined as any)}>
+            + Campaign mới
+          </Button>
+        )}
+      </div>
 
-      <ul className="space-y-1">
-        {campaigns.map(c => (
-          <li key={c.slug} className="flex items-center justify-between gap-2">
-            <span>{c.slug} — {c.status}</span>
-            <div className="flex items-center gap-2">
-              <Link href={`/admin/campaigns/${c.slug}/templates`} className="text-sm text-primary underline-offset-4 hover:underline">
-                Quản lý khung
-              </Link>
-              <Button type="button" variant="outline" size="sm" onClick={() => setEditing(c)}>
-                Sửa
-              </Button>
-              <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(c.slug)}>
-                Xóa
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="overflow-auto rounded-2xl border border-border bg-card shadow-sm">
+        <table className="w-full min-w-[720px] border-collapse text-[13.5px]">
+          <thead>
+            <tr className="bg-muted text-left">
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Slug</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Tiêu đề</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Ngôn ngữ</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Thời gian</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Trạng thái</th>
+              <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Số khung</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {campaigns.map(c => (
+              <tr key={c.slug} className="border-t border-border">
+                <td className="px-4 py-3 font-mono text-xs">/c/{c.slug}</td>
+                <td className="px-4 py-3 font-semibold">{c.displayConfig?.title ?? c.slug}</td>
+                <td className="px-4 py-3 uppercase">{c.language}</td>
+                <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                  {String(c.startDate).slice(0, 10)} – {String(c.endDate).slice(0, 10)}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-full px-3 py-1 text-[11.5px] font-bold",
+                      c.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800",
+                    )}
+                  >
+                    {c.status === "active" ? "Hoạt động" : "Nháp"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 tabular-nums">{c.templates?.length ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/admin/campaigns/${c.slug}/templates`} className="text-sm text-primary underline-offset-4 hover:underline">
+                      Quản lý khung
+                    </Link>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditing(c)}>
+                      Sửa
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(c.slug)}>
+                      Xóa
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
 
-      {editing && (
-        <Button type="button" variant="ghost" className="self-start" onClick={() => setEditing(null)}>
-          Hủy sửa, tạo Campaign mới
-        </Button>
+      {editing !== null && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-sm font-bold">{editing ? "Sửa Campaign" : "Campaign mới"}</div>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(null)}>
+              Đóng
+            </Button>
+          </div>
+          <fieldset disabled={submitting} aria-busy={submitting}>
+            <CampaignForm key={editing?.slug ?? "new"} initial={editing ?? undefined} onSubmit={editing ? handleUpdate : handleCreate} />
+          </fieldset>
+        </div>
       )}
-
-      <fieldset disabled={submitting} aria-busy={submitting}>
-        <CampaignForm key={editing?.slug ?? "new"} initial={editing ?? undefined} onSubmit={editing ? handleUpdate : handleCreate} />
-      </fieldset>
     </div>
   );
 }
