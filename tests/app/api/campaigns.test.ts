@@ -10,8 +10,8 @@ import { prisma } from "../../../src/lib/prisma";
 describe("GET /api/campaigns", () => {
   it("returns every active campaign currently within its date range as an array", async () => {
     (prisma.campaign.findMany as any).mockResolvedValue([
-      { id: "1", slug: "fpt38", status: "active" },
-      { id: "2", slug: "techweek-2026", status: "active" },
+      { id: "1", slug: "fpt38", status: "active", _count: { templates: 1 } },
+      { id: "2", slug: "techweek-2026", status: "active", _count: { templates: 2 } },
     ]);
 
     const res = await GET();
@@ -25,6 +25,7 @@ describe("GET /api/campaigns", () => {
         startDate: expect.objectContaining({ lte: expect.any(Date) }),
         endDate: expect.objectContaining({ gte: expect.any(Date) }),
       }),
+      include: { _count: { select: { templates: true } } },
     }));
   });
 });

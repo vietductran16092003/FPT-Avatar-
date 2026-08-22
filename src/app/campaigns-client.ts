@@ -7,6 +7,7 @@ export interface Campaign {
   endDate: string;
   displayConfig: { title: string; description: string; ctaLabel: string; badge?: string };
   language: "vi" | "en";
+  _count: { templates: number };
 }
 
 export async function fetchActiveCampaigns(): Promise<Campaign[]> {

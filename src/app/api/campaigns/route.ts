@@ -11,6 +11,7 @@ export async function GET() {
       startDate: { lte: now },
       endDate: { gte: now },
     },
+    include: { _count: { select: { templates: true } } },
   });
   return NextResponse.json(campaigns);
 }
