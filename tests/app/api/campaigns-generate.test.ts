@@ -30,7 +30,7 @@ const overlays = [
   { key: "joinYear", label: "L", labelEn: "L", type: "select", options: ["2021"], x: 10, y: 10, fontSize: 10, color: "#fff" },
 ];
 
-function multipartRequest(overlayValues: object | string, templateId = "tpl1", photoBytes: Uint8Array = Buffer.from("photo-bytes")) {
+function multipartRequest(overlayValues: object | string, templateId = "tpl1", photoBytes: BlobPart = Buffer.from("photo-bytes")) {
   const form = new FormData();
   form.set("templateId", templateId);
   form.set("overlayValues", typeof overlayValues === "string" ? overlayValues : JSON.stringify(overlayValues));

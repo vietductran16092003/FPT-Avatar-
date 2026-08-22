@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
   const name = form.get("name") as string;
   const frameImage = form.get("frameImage") as File;
 
-  let overlayConfig: unknown;
+  let overlayConfig: Prisma.InputJsonValue;
   try {
     overlayConfig = JSON.parse(form.get("overlayConfig") as string);
   } catch {
