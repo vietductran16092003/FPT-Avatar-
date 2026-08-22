@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { TemplateForm } from "../../../src/app/admin/campaigns/[slug]/templates/template-form";
+import { TemplateForm } from "../../../src/app/admin/campaigns/template-form";
 
 afterEach(() => {
   cleanup();
@@ -112,5 +112,111 @@ describe("TemplateForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Thêm trường overlay" }));
 
     expect(screen.getByText("Tự do")).toBeTruthy();
+  });
+
+  it("adds a text overlay with default position when a text preset checkbox is ticked", async () => {
+    const onSubmit = vi.fn();
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
+    const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), file);
+
+    await userEvent.click(screen.getByLabelText("Câu châm ngôn"));
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.arrayContaining([
+          expect.objectContaining({ key: "slogan", type: "text", label: "Câu châm ngôn" }),
+        ]),
+      }),
+    }));
+  });
+
+  it("adds a select overlay with year options when the join-year preset is ticked", async () => {
+    const onSubmit = vi.fn();
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
+    const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), file);
+
+    await userEvent.click(screen.getByLabelText("Năm gia nhập FPT"));
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+
+    const currentYear = String(new Date().getFullYear());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.arrayContaining([
+          expect.objectContaining({ key: "joinYear", type: "select", options: expect.arrayContaining([currentYear, "1988"]) }),
+        ]),
+      }),
+    }));
+  });
+
+  it("removes an untouched preset overlay immediately when its checkbox is unticked", async () => {
+    const onSubmit = vi.fn();
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
+    const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), file);
+
+    const checkbox = screen.getByLabelText("Chữ ký / Tên hiển thị");
+    await userEvent.click(checkbox);
+    await userEvent.click(checkbox);
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.not.arrayContaining([expect.objectContaining({ key: "signature" })]),
+      }),
+    }));
+  });
+
+  it("asks for confirmation before removing a preset overlay the admin has edited, and keeps it if cancelled", async () => {
+    const onSubmit = vi.fn();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
+    const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), file);
+
+    const checkbox = screen.getByLabelText("Câu châm ngôn");
+    await userEvent.click(checkbox);
+    // Edit the auto-added overlay's font size so it no longer matches the preset default.
+    const fontSizeInputs = screen.getAllByLabelText("Cỡ chữ");
+    await userEvent.clear(fontSizeInputs[0]);
+    await userEvent.type(fontSizeInputs[0], "40");
+
+    await userEvent.click(checkbox);
+    expect(window.confirm).toHaveBeenCalled();
+    expect((checkbox as HTMLInputElement).checked).toBe(true);
+
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.arrayContaining([expect.objectContaining({ key: "slogan", fontSize: 40 })]),
+      }),
+    }));
+  });
+
+  it("pre-checks a preset checkbox when initial overlays already contain a matching key", () => {
+    render(
+      <TemplateForm
+        onSubmit={vi.fn()}
+        initial={{
+          name: "Khung có sẵn",
+          overlayConfig: {
+            photoArea: { x: 20, y: 20, w: 60, h: 60 },
+            textOverlays: [{ key: "unit", label: "Đơn vị công tác", labelEn: "Business unit", type: "select", options: ["FPT Software"], x: 50, y: 50, fontSize: 20, color: "#ffffff" }],
+          },
+        }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Đơn vị công tác") as HTMLInputElement).checked).toBe(true);
   });
 });

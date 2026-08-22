@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
+import { COMPONENT_PRESETS, type ComponentPreset } from "@/lib/component-presets";
 
 const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -29,6 +30,36 @@ function emptyOverlay(): TextOverlay {
   return { key: "", label: "", labelEn: "", type: "text", x: 50, y: 50, fontSize: 20, color: "#ffffff" };
 }
 
+function presetOverlay(preset: ComponentPreset): TextOverlay {
+  return {
+    key: preset.key,
+    label: preset.label,
+    labelEn: preset.labelEn,
+    type: preset.type,
+    options: preset.options,
+    placeholder: preset.placeholder,
+    x: 50,
+    y: 50,
+    fontSize: 20,
+    color: "#ffffff",
+  };
+}
+
+function overlaysMatch(a: TextOverlay, b: TextOverlay): boolean {
+  return (
+    a.key === b.key &&
+    a.label === b.label &&
+    a.labelEn === b.labelEn &&
+    a.type === b.type &&
+    a.x === b.x &&
+    a.y === b.y &&
+    a.fontSize === b.fontSize &&
+    a.color === b.color &&
+    a.placeholder === b.placeholder &&
+    JSON.stringify(a.options ?? []) === JSON.stringify(b.options ?? [])
+  );
+}
+
 export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: TemplateDraft) => void; initial?: TemplateInitial }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [frameImage, setFrameImage] = useState<File | null>(null);
@@ -41,6 +72,20 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
   }
 
   function removeOverlay(index: number) {
+    setOverlays(list => list.filter((_, i) => i !== index));
+  }
+
+  function togglePreset(preset: ComponentPreset) {
+    const index = overlays.findIndex(o => o.key === preset.key);
+    if (index === -1) {
+      setOverlays(list => [...list, presetOverlay(preset)]);
+      return;
+    }
+    const current = overlays[index];
+    const isUnmodified = overlaysMatch(current, presetOverlay(preset));
+    if (!isUnmodified && !window.confirm(`Trường "${preset.label}" đã được chỉnh sửa. Xoá trường này khỏi khung?`)) {
+      return;
+    }
     setOverlays(list => list.filter((_, i) => i !== index));
   }
 
@@ -104,6 +149,23 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
             <Label htmlFor="photo-area-h">Cao</Label>
             <Input id="photo-area-h" type="number" value={photoArea.h} onChange={e => setPhotoArea(a => ({ ...a, h: Number(e.target.value) }))} />
           </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-2 rounded-xl border border-border p-3">
+        <legend className="px-1 text-sm font-medium">Thêm nhanh trường phổ biến</legend>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {COMPONENT_PRESETS.map(preset => (
+            <label key={preset.key} htmlFor={`preset-${preset.key}`} className="flex items-center gap-2 text-sm">
+              <input
+                id={`preset-${preset.key}`}
+                type="checkbox"
+                checked={overlays.some(o => o.key === preset.key)}
+                onChange={() => togglePreset(preset)}
+              />
+              {preset.label}
+            </label>
+          ))}
         </div>
       </fieldset>
 
