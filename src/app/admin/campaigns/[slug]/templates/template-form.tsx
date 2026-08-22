@@ -133,7 +133,7 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
               <Label htmlFor={`overlay-type-${index}`}>Loại</Label>
               <Select value={overlay.type} onValueChange={v => updateOverlay(index, { type: v as "text" | "select" })}>
                 <SelectTrigger id={`overlay-type-${index}`}>
-                  <SelectValue />
+                  <SelectValue>{(v: string) => ({ text: "Tự do", select: "Danh sách chọn" }[v] ?? v)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="text">Tự do</SelectItem>

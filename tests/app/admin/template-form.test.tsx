@@ -104,4 +104,13 @@ describe("TemplateForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("displays the selected overlay type label, not its raw value", async () => {
+    const onSubmit = vi.fn();
+    render(<TemplateForm onSubmit={onSubmit} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Thêm trường overlay" }));
+
+    expect(screen.getByText("Tự do")).toBeTruthy();
+  });
 });

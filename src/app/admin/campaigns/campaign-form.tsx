@@ -76,7 +76,7 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
           <Label htmlFor="campaign-language">Ngôn ngữ</Label>
           <Select value={language} onValueChange={v => setLanguage(v as "vi" | "en")}>
             <SelectTrigger id="campaign-language">
-              <SelectValue />
+              <SelectValue>{(v: string) => ({ vi: "Tiếng Việt", en: "English" }[v] ?? v)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="vi">Tiếng Việt</SelectItem>
@@ -88,7 +88,7 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
           <Label htmlFor="campaign-status">Trạng thái</Label>
           <Select value={status} onValueChange={v => setStatus(v as "draft" | "active" | "archived")}>
             <SelectTrigger id="campaign-status">
-              <SelectValue />
+              <SelectValue>{(v: string) => ({ draft: "Nháp", active: "Hoạt động", archived: "Lưu trữ" }[v] ?? v)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="draft">Nháp</SelectItem>

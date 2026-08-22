@@ -143,4 +143,23 @@ describe("CampaignForm", () => {
     expect((screen.getByLabelText("Mô tả") as HTMLTextAreaElement).value).toBe("Mô tả cũ");
     expect((screen.getByLabelText("Nhãn nút CTA") as HTMLInputElement).value).toBe("CTA cũ");
   });
+
+  it("displays the selected status and language labels, not their raw values", () => {
+    render(
+      <CampaignForm
+        onSubmit={vi.fn()}
+        initial={{
+          slug: "fpt38",
+          status: "archived",
+          startDate: "2026-08-13",
+          endDate: "2026-09-13",
+          language: "en",
+          displayConfig: { title: "T", description: "", ctaLabel: "CTA" },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Lưu trữ")).toBeTruthy();
+    expect(screen.getByText("English")).toBeTruthy();
+  });
 });
