@@ -1,8 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { SessionProvider } from "next-auth/react";
 import { AdminHeader } from "@/components/admin-header";
 import { AdminShell } from "@/components/admin-shell";
+import { AdminLangProvider } from "@/lib/admin-i18n";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,9 +16,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <AdminHeader />
-      <AdminShell>{children}</AdminShell>
-    </div>
+    <SessionProvider>
+      <AdminLangProvider>
+        <div className="flex min-h-screen flex-col">
+          <AdminHeader />
+          <AdminShell>{children}</AdminShell>
+        </div>
+      </AdminLangProvider>
+    </SessionProvider>
   );
 }

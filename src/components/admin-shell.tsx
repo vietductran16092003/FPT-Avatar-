@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { id: "campaigns", label: "Campaign", href: "/admin/campaigns" },
-  { id: "analytics", label: "Thống kê", href: "/admin/analytics" },
-];
+import { useAdminLang } from "@/lib/admin-i18n";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useAdminLang();
+
+  const NAV_ITEMS = [
+    { id: "campaigns", label: t("adminCampaigns"), href: "/admin/campaigns" },
+    { id: "analytics", label: t("adminAnalytics"), href: "/admin/analytics" },
+  ];
 
   return (
     <div className="grid flex-1 grid-cols-[220px_1fr]">
@@ -24,7 +26,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "block rounded-md px-3 py-2 text-sm font-semibold transition-colors",
                 active
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-[#FDE9D6] text-[#C25A00]"
                   : "text-foreground hover:bg-muted"
               )}
             >
