@@ -4,14 +4,26 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
 import { getStorage } from "@/lib/storage";
 
+const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
+
 export async function POST(req: Request, { params }: { params: { slug: string } }) {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
 
   const form = await req.formData();
   const name = form.get("name") as string;
-  const overlayConfig = JSON.parse(form.get("overlayConfig") as string);
   const frameImage = form.get("frameImage") as File;
+
+  let overlayConfig: unknown;
+  try {
+    overlayConfig = JSON.parse(form.get("overlayConfig") as string);
+  } catch {
+    return NextResponse.json({ error: "Invalid overlayConfig JSON" }, { status: 400 });
+  }
+
+  if (!frameImage || frameImage.size > MAX_FRAME_IMAGE_BYTES) {
+    return NextResponse.json({ error: "Frame image missing or exceeds 5MB" }, { status: 400 });
+  }
 
   let campaign;
   try {

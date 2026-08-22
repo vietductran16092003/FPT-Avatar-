@@ -7,9 +7,14 @@ export async function PATCH(req: Request, { params }: { params: { slug: string; 
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
   const body = await req.json();
+
+  const data: Prisma.TemplateUpdateManyMutationInput = {};
+  if (body.name !== undefined) data.name = body.name;
+  if (body.overlayConfig !== undefined) data.overlayConfig = body.overlayConfig;
+
   const result = await prisma.template.updateMany({
     where: { id: params.id, campaign: { slug: params.slug } },
-    data: body,
+    data,
   });
   if (result.count === 0) {
     return NextResponse.json({ error: `Template "${params.id}" not found in campaign "${params.slug}"` }, { status: 404 });
