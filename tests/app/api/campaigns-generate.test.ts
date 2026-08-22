@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../../../src/lib/prisma", () => ({
   prisma: {
     template: { findFirst: vi.fn() },
-    campaign: { findUniqueOrThrow: vi.fn() },
+    campaign: { findUnique: vi.fn() },
     generatedAvatar: { create: vi.fn() },
   },
 }));
@@ -30,11 +30,11 @@ const overlays = [
   { key: "joinYear", label: "L", labelEn: "L", type: "select", options: ["2021"], x: 10, y: 10, fontSize: 10, color: "#fff" },
 ];
 
-function multipartRequest(overlayValues: object, templateId = "tpl1") {
+function multipartRequest(overlayValues: object | string, templateId = "tpl1", photoBytes: Uint8Array = Buffer.from("photo-bytes")) {
   const form = new FormData();
   form.set("templateId", templateId);
-  form.set("overlayValues", JSON.stringify(overlayValues));
-  form.set("photo", new Blob([Buffer.from("photo-bytes")], { type: "image/png" }), "photo.png");
+  form.set("overlayValues", typeof overlayValues === "string" ? overlayValues : JSON.stringify(overlayValues));
+  form.set("photo", new Blob([photoBytes], { type: "image/png" }), "photo.png");
   return new Request("http://x/api/campaigns/fpt38/generate", { method: "POST", body: form });
 }
 
@@ -42,15 +42,16 @@ describe("POST /api/campaigns/:slug/generate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (compositeAvatar as any).mockResolvedValue(Buffer.from("png-bytes"));
+    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "active", displayConfig: { title: "FPT tròn 38 tuổi" } });
   });
 
   it("re-composites server-side and stores the result, ignoring any client-sent layout", async () => {
     (prisma.template.findFirst as any).mockResolvedValue({
       id: "tpl1",
+      name: "Khung cam chuẩn",
       frameImageKey: "frames/tpl1.png",
       overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
     });
-    (prisma.campaign.findUniqueOrThrow as any).mockResolvedValue({ id: "c1", slug: "fpt38" });
     (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
 
     global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
@@ -92,7 +93,6 @@ describe("POST /api/campaigns/:slug/generate", () => {
       frameImageKey: "frames/tpl1.png",
       overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
     });
-    (prisma.campaign.findUniqueOrThrow as any).mockResolvedValue({ id: "c1", slug: "fpt38", displayConfig: { title: "FPT tròn 38 tuổi" } });
     (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
     global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
 
@@ -110,5 +110,41 @@ describe("POST /api/campaigns/:slug/generate", () => {
     await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
 
     expect(createNotification).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when the campaign does not exist", async () => {
+    (prisma.campaign.findUnique as any).mockResolvedValue(null);
+
+    const res = await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "nope" } });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 404 when the campaign is not active (draft)", async () => {
+    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "draft", displayConfig: {} });
+
+    const res = await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(404);
+    expect(prisma.template.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when the photo exceeds 10MB", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+
+    const oversizedPhoto = new Uint8Array(10 * 1024 * 1024 + 1);
+    const res = await POST(multipartRequest({ joinYear: "2021" }, "tpl1", oversizedPhoto), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when overlayValues is not valid JSON", async () => {
+    const res = await POST(multipartRequest("{not-json"), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
   });
 });

@@ -5,11 +5,28 @@ import { compositeAvatar } from "@/lib/compositing/server-compositor";
 import { validateOverlayValues } from "@/lib/compositing/validate-overlay-values";
 import { createNotification } from "@/lib/notifications";
 
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
 export async function POST(req: Request, { params }: { params: { slug: string } }) {
   const form = await req.formData();
   const templateId = form.get("templateId") as string;
-  const overlayValues = JSON.parse(form.get("overlayValues") as string) as Record<string, string>;
   const photoFile = form.get("photo") as File;
+
+  let overlayValues: Record<string, string>;
+  try {
+    overlayValues = JSON.parse(form.get("overlayValues") as string);
+  } catch {
+    return NextResponse.json({ error: "Invalid overlayValues JSON" }, { status: 400 });
+  }
+
+  const campaign = await prisma.campaign.findUnique({ where: { slug: params.slug } });
+  if (!campaign || campaign.status !== "active") {
+    return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+  }
+
+  if (!photoFile || photoFile.size > MAX_PHOTO_BYTES) {
+    return NextResponse.json({ error: "Photo file missing or exceeds 10MB" }, { status: 400 });
+  }
 
   // Template, frame, and overlayConfig always come from the DB, scoped to
   // the campaign in the URL — the client cannot point this route at a
@@ -46,8 +63,6 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
 
   const resultKey = `results/${template.id}-${Date.now()}.png`;
   await storage.upload(resultKey, resultBuffer, "image/png");
-
-  const campaign = await prisma.campaign.findUniqueOrThrow({ where: { slug: params.slug } });
 
   await prisma.generatedAvatar.create({
     data: {
