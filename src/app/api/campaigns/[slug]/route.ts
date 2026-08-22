@@ -7,7 +7,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     include: { templates: true },
   });
 
-  if (!campaign) {
+  if (!campaign || campaign.status !== "active") {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 
