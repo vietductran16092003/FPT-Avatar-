@@ -17,7 +17,7 @@ describe("COMPONENT_PRESETS", () => {
 
   it("unit is a select with the fixed FPT business unit list", () => {
     const unit = COMPONENT_PRESETS.find(p => p.key === "unit")!;
-    expect(unit.options).toEqual(["FPT Software", "FPT Telecom", "FPT IS", "FPT Education", "FPT Retail", "KhÃ¡c"]);
+    expect(unit.options).toEqual(["FPT Software", "FPT Telecom", "FPT IS", "FPT Education", "FPT Retail", "Khác"]);
   });
 
   it("slogan and signature are free-text presets with placeholders, no options", () => {
@@ -27,6 +27,6 @@ describe("COMPONENT_PRESETS", () => {
     expect(slogan.options).toBeUndefined();
     expect(slogan.placeholder).toBe("VD: Dream Big, Move Fast");
     expect(signature.type).toBe("text");
-    expect(signature.placeholder).toBe("VD: Nguyá»…n VÄƒn A");
+    expect(signature.placeholder).toBe("VD: Nguyễn Văn A");
   });
 });
