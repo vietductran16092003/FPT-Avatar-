@@ -3,7 +3,6 @@
  */
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import "@testing-library/jest-dom/vitest";
 import HomePage from "../../src/app/page";
 
 afterEach(() => {
@@ -38,6 +37,6 @@ describe("HomePage", () => {
 
     render(await HomePage());
 
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/c/fpt38");
+    expect(screen.getByRole("link").getAttribute("href")).toBe("/c/fpt38");
   });
 });
