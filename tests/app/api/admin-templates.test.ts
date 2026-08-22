@@ -127,6 +127,38 @@ describe("admin templates API", () => {
     expect(res.status).toBe(400);
   });
 
+  it("POST returns 400 when overlayConfig is missing entirely", async () => {
+    const form = new FormData();
+    form.set("name", "Khung to");
+    form.set("frameImage", new Blob([Buffer.from("png")], { type: "image/png" }), "frame.png");
+
+    const res = await POST(new Request("http://x", { method: "POST", body: form }), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("POST returns 400 when overlayConfig parses to a non-object (null)", async () => {
+    const form = new FormData();
+    form.set("name", "Khung to");
+    form.set("overlayConfig", "null");
+    form.set("frameImage", new Blob([Buffer.from("png")], { type: "image/png" }), "frame.png");
+
+    const res = await POST(new Request("http://x", { method: "POST", body: form }), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("POST returns 400 when frameImage is not a file", async () => {
+    const form = new FormData();
+    form.set("name", "Khung to");
+    form.set("overlayConfig", JSON.stringify({ photoArea: { x: 10, y: 10, w: 50, h: 50 }, textOverlays: [] }));
+    form.set("frameImage", "not-a-file");
+
+    const res = await POST(new Request("http://x", { method: "POST", body: form }), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
   it("PATCH ignores fields outside the whitelist, such as campaignId", async () => {
     (prisma.template.updateMany as any).mockResolvedValue({ count: 1 });
     (prisma.template.findUnique as any).mockResolvedValue({ id: "t1" });

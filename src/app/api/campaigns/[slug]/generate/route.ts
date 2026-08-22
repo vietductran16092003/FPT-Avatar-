@@ -4,27 +4,37 @@ import { getStorage } from "@/lib/storage";
 import { compositeAvatar } from "@/lib/compositing/server-compositor";
 import { validateOverlayValues } from "@/lib/compositing/validate-overlay-values";
 import { createNotification } from "@/lib/notifications";
+import { isCampaignPubliclyVisible } from "@/lib/campaign-visibility";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 export async function POST(req: Request, { params }: { params: { slug: string } }) {
   const form = await req.formData();
   const templateId = form.get("templateId") as string;
-  const photoFile = form.get("photo") as File;
+  const photoFile = form.get("photo");
+  const overlayValuesRaw = form.get("overlayValues");
+
+  if (typeof overlayValuesRaw !== "string") {
+    return NextResponse.json({ error: "Missing overlayValues" }, { status: 400 });
+  }
 
   let overlayValues: Record<string, string>;
   try {
-    overlayValues = JSON.parse(form.get("overlayValues") as string);
+    const parsed = JSON.parse(overlayValuesRaw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return NextResponse.json({ error: "Invalid overlayValues JSON" }, { status: 400 });
+    }
+    overlayValues = parsed;
   } catch {
     return NextResponse.json({ error: "Invalid overlayValues JSON" }, { status: 400 });
   }
 
   const campaign = await prisma.campaign.findUnique({ where: { slug: params.slug } });
-  if (!campaign || campaign.status !== "active") {
+  if (!campaign || !isCampaignPubliclyVisible(campaign)) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 
-  if (!photoFile || photoFile.size > MAX_PHOTO_BYTES) {
+  if (!(photoFile instanceof File) || photoFile.size > MAX_PHOTO_BYTES) {
     return NextResponse.json({ error: "Photo file missing or exceeds 10MB" }, { status: 400 });
   }
 

@@ -42,7 +42,7 @@ describe("POST /api/campaigns/:slug/generate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (compositeAvatar as any).mockResolvedValue(Buffer.from("png-bytes"));
-    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "active", displayConfig: { title: "FPT tròn 38 tuổi" } });
+    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "active", startDate: new Date("2020-01-01"), endDate: new Date("2099-01-01"), displayConfig: { title: "FPT tròn 38 tuổi" } });
   });
 
   it("re-composites server-side and stores the result, ignoring any client-sent layout", async () => {
@@ -121,7 +121,16 @@ describe("POST /api/campaigns/:slug/generate", () => {
   });
 
   it("returns 404 when the campaign is not active (draft)", async () => {
-    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "draft", displayConfig: {} });
+    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "draft", startDate: new Date("2020-01-01"), endDate: new Date("2099-01-01"), displayConfig: {} });
+
+    const res = await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(404);
+    expect(prisma.template.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when the campaign is active but outside its date range", async () => {
+    (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "active", startDate: new Date("2099-01-01"), endDate: new Date("2099-06-01"), displayConfig: {} });
 
     const res = await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
 
@@ -144,6 +153,40 @@ describe("POST /api/campaigns/:slug/generate", () => {
 
   it("returns 400 when overlayValues is not valid JSON", async () => {
     const res = await POST(multipartRequest("{not-json"), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when overlayValues is missing entirely", async () => {
+    const form = new FormData();
+    form.set("templateId", "tpl1");
+    form.set("photo", new Blob([Buffer.from("photo-bytes")], { type: "image/png" }), "photo.png");
+    const req = new Request("http://x/api/campaigns/fpt38/generate", { method: "POST", body: form });
+
+    const res = await POST(req, { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when overlayValues parses to a non-object (null)", async () => {
+    const res = await POST(multipartRequest("null"), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when photo is not a file", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    const form = new FormData();
+    form.set("templateId", "tpl1");
+    form.set("overlayValues", JSON.stringify({ joinYear: "2021" }));
+    form.set("photo", "not-a-file");
+    const req = new Request("http://x/api/campaigns/fpt38/generate", { method: "POST", body: form });
+
+    const res = await POST(req, { params: { slug: "fpt38" } });
 
     expect(res.status).toBe(400);
   });

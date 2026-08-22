@@ -12,16 +12,25 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
 
   const form = await req.formData();
   const name = form.get("name") as string;
-  const frameImage = form.get("frameImage") as File;
+  const frameImage = form.get("frameImage");
+  const overlayConfigRaw = form.get("overlayConfig");
+
+  if (typeof overlayConfigRaw !== "string") {
+    return NextResponse.json({ error: "Missing overlayConfig" }, { status: 400 });
+  }
 
   let overlayConfig: Prisma.InputJsonValue;
   try {
-    overlayConfig = JSON.parse(form.get("overlayConfig") as string);
+    const parsed = JSON.parse(overlayConfigRaw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return NextResponse.json({ error: "Invalid overlayConfig JSON" }, { status: 400 });
+    }
+    overlayConfig = parsed;
   } catch {
     return NextResponse.json({ error: "Invalid overlayConfig JSON" }, { status: 400 });
   }
 
-  if (!frameImage || frameImage.size > MAX_FRAME_IMAGE_BYTES) {
+  if (!(frameImage instanceof File) || frameImage.size > MAX_FRAME_IMAGE_BYTES) {
     return NextResponse.json({ error: "Frame image missing or exceeds 5MB" }, { status: 400 });
   }
 
