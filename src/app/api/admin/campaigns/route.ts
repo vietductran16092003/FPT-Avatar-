@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
 import { createNotification } from "@/lib/notifications";
 
+const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
@@ -17,6 +19,10 @@ export async function POST(req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
   const body = await req.json();
+
+  if (typeof body.slug !== "string" || !SLUG_PATTERN.test(body.slug)) {
+    return NextResponse.json({ error: "Slug must be lowercase kebab-case (e.g. techweek-2026)" }, { status: 400 });
+  }
 
   try {
     const campaign = await prisma.campaign.create({

@@ -31,7 +31,15 @@ export async function PATCH(req: Request, { params }: { params: { slug: string }
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
   const body = await req.json();
-  const campaign = await prisma.campaign.update({ where: { slug: params.slug }, data: body });
+
+  const data: Prisma.CampaignUpdateInput = {};
+  if (body.status !== undefined) data.status = body.status;
+  if (body.startDate !== undefined) data.startDate = new Date(body.startDate);
+  if (body.endDate !== undefined) data.endDate = new Date(body.endDate);
+  if (body.language !== undefined) data.language = body.language;
+  if (body.displayConfig !== undefined) data.displayConfig = body.displayConfig;
+
+  const campaign = await prisma.campaign.update({ where: { slug: params.slug }, data });
   const title = (campaign.displayConfig as { title?: string })?.title ?? campaign.slug;
   createNotification(`Đã cập nhật campaign "${title}".`, "campaign-update").catch(err => console.error("notification failed", err));
   return NextResponse.json(campaign);

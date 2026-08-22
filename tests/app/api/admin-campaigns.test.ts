@@ -124,4 +124,25 @@ describe("admin campaigns API", () => {
 
     expect(createNotification).not.toHaveBeenCalled();
   });
+
+  it("POST rejects a slug that is not lowercase kebab-case", async () => {
+    const res = await POST(new Request("http://x", {
+      method: "POST",
+      body: JSON.stringify({ slug: "Tech Week!", startDate: "2026-01-01", endDate: "2026-02-01", language: "vi", displayConfig: { title: "T" } }),
+    }));
+
+    expect(res.status).toBe(400);
+    expect(prisma.campaign.create).not.toHaveBeenCalled();
+  });
+
+  it("PATCH ignores fields outside the whitelist, such as slug", async () => {
+    (prisma.campaign.update as any).mockResolvedValue({ slug: "fpt38", displayConfig: { title: "FPT 38" } });
+
+    await PATCH(new Request("http://x", { method: "PATCH", body: JSON.stringify({ status: "active", slug: "hacked-slug" }) }), { params: { slug: "fpt38" } });
+
+    expect(prisma.campaign.update).toHaveBeenCalledWith({
+      where: { slug: "fpt38" },
+      data: { status: "active" },
+    });
+  });
 });
