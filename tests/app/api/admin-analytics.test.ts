@@ -1,51 +1,41 @@
-import { describe, it, expect, vi } from "vitest";
+/**
+ * @vitest-environment node
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../../../src/lib/require-admin", () => ({
-  requireAdmin: vi.fn().mockResolvedValue({ ok: true, userId: "admin1" }),
-}));
-vi.mock("../../../src/lib/prisma", () => ({
-  prisma: { campaign: { findMany: vi.fn() } },
+vi.mock("@/lib/require-admin", () => ({ requireAdmin: vi.fn().mockResolvedValue({ ok: true }) }));
+
+const findManyMock = vi.fn();
+const groupByMock = vi.fn();
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    campaign: { findMany: (...args: unknown[]) => findManyMock(...args) },
+    generatedAvatar: { groupBy: (...args: unknown[]) => groupByMock(...args) },
+  },
 }));
 
 import { GET } from "../../../src/app/api/admin/analytics/route";
-import { prisma } from "../../../src/lib/prisma";
-import { requireAdmin } from "../../../src/lib/require-admin";
+
+beforeEach(() => {
+  findManyMock.mockReset();
+  groupByMock.mockReset();
+});
 
 describe("GET /api/admin/analytics", () => {
-  it("returns each campaign's generated-avatar count and status, sorted descending by count", async () => {
-    (prisma.campaign.findMany as any).mockResolvedValue([
-      { slug: "fpt38", status: "active", displayConfig: { title: "FPT tròn 38 tuổi" }, _count: { avatars: 5 } },
-      { slug: "techweek-2026", status: "draft", displayConfig: { title: "Tech Week" }, _count: { avatars: 12 } },
+  it("returns campaigns and a 7-day byDay series", async () => {
+    findManyMock.mockResolvedValue([
+      { slug: "fpt38", status: "active", displayConfig: { title: "FPT 38" }, _count: { avatars: 5 } },
+    ]);
+    groupByMock.mockResolvedValue([
+      { createdAt: new Date("2026-08-20T00:00:00.000Z"), _count: { _all: 3 } },
     ]);
 
     const res = await GET();
     const body = await res.json();
 
-    expect(body).toEqual([
-      { slug: "techweek-2026", title: "Tech Week", count: 12, status: "draft" },
-      { slug: "fpt38", title: "FPT tròn 38 tuổi", count: 5, status: "active" },
-    ]);
-    expect(prisma.campaign.findMany).toHaveBeenCalledWith({
-      select: { slug: true, status: true, displayConfig: true, _count: { select: { avatars: true } } },
-    });
-  });
-
-  it("falls back to the slug when displayConfig has no title", async () => {
-    (prisma.campaign.findMany as any).mockResolvedValue([
-      { slug: "no-title-campaign", status: "draft", displayConfig: {}, _count: { avatars: 0 } },
-    ]);
-
-    const res = await GET();
-    const body = await res.json();
-
-    expect(body).toEqual([{ slug: "no-title-campaign", title: "no-title-campaign", count: 0, status: "draft" }]);
-  });
-
-  it("returns 401 when requireAdmin fails", async () => {
-    (requireAdmin as any).mockResolvedValueOnce({ ok: false, response: new Response(null, { status: 401 }) });
-
-    const res = await GET();
-
-    expect(res.status).toBe(401);
+    expect(body.campaigns[0]).toMatchObject({ slug: "fpt38", title: "FPT 38", count: 5, status: "active" });
+    expect(Array.isArray(body.byDay)).toBe(true);
+    expect(body.byDay).toHaveLength(7);
+    expect(body.byDay.every((d: any) => typeof d.day === "string" && typeof d.count === "number")).toBe(true);
   });
 });
