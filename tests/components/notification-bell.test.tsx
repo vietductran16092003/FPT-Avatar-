@@ -89,4 +89,43 @@ describe("NotificationBell", () => {
 
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
+
+  it("hides the mark-all-read and clear-all buttons and shows the demo-matching empty copy when there are no notifications", async () => {
+    mockNotificationsFetch([]);
+
+    render(<NotificationBell />);
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    await userEvent.click(screen.getByLabelText("Thông báo"));
+
+    expect(screen.getByText("Chưa có thông báo nào.")).toBeTruthy();
+    expect(screen.queryByText("Đánh dấu đã đọc")).toBeNull();
+    expect(screen.queryByText("Xoá tất cả")).toBeNull();
+  });
+
+  it("shows a relative time for a recently created notification", async () => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    mockNotificationsFetch([
+      { id: "n1", message: "A", type: "campaign-create", read: false, createdAt: fiveMinutesAgo },
+    ]);
+
+    render(<NotificationBell />);
+    await waitFor(() => expect(screen.getByText("1")).toBeTruthy());
+    await userEvent.click(screen.getByLabelText("Thông báo"));
+
+    expect(screen.getByText("5 phút trước")).toBeTruthy();
+  });
+
+  it("renders a distinct type icon alongside the delete icon for each notification", async () => {
+    mockNotificationsFetch([
+      { id: "n1", message: "A", type: "campaign-delete", read: false, createdAt: new Date().toISOString() },
+    ]);
+
+    render(<NotificationBell />);
+    await waitFor(() => expect(screen.getByText("1")).toBeTruthy());
+    await userEvent.click(screen.getByLabelText("Thông báo"));
+
+    const deleteButton = screen.getByLabelText("Xoá thông báo");
+    const row = deleteButton.parentElement!;
+    expect(row.querySelectorAll("svg").length).toBe(2);
+  });
 });
