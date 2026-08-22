@@ -57,7 +57,7 @@ describe("AdminCampaignsPage create errors", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "+ Campaign mới" }));
     await userEvent.type(screen.getByLabelText("Slug"), "fpt38");
-    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "T");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));

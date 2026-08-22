@@ -12,16 +12,27 @@ interface CampaignDraft {
   startDate: string;
   endDate: string;
   language: "vi" | "en";
-  displayConfig: { title: string; description: string; ctaLabel: string; badge?: string };
+  displayConfig: {
+    title: string;
+    titleEn?: string;
+    description: string;
+    descriptionEn?: string;
+    ctaLabel: string;
+    ctaEn?: string;
+    badge?: string;
+  };
 }
 
 export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: CampaignDraft) => void; initial?: CampaignDraft }) {
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [status, setStatus] = useState<"draft" | "active" | "archived">(initial?.status ?? "draft");
   const [title, setTitle] = useState(initial?.displayConfig.title ?? "");
+  const [titleEn, setTitleEn] = useState(initial?.displayConfig.titleEn ?? "");
   const [badge, setBadge] = useState(initial?.displayConfig.badge ?? "");
   const [description, setDescription] = useState(initial?.displayConfig.description ?? "");
+  const [descriptionEn, setDescriptionEn] = useState(initial?.displayConfig.descriptionEn ?? "");
   const [ctaLabel, setCtaLabel] = useState(initial?.displayConfig.ctaLabel ?? "Tạo avatar ngay");
+  const [ctaEn, setCtaEn] = useState(initial?.displayConfig.ctaEn ?? "");
   const [startDate, setStartDate] = useState(initial?.startDate ?? "");
   const [endDate, setEndDate] = useState(initial?.endDate ?? "");
   const [language, setLanguage] = useState<"vi" | "en">(initial?.language ?? "vi");
@@ -48,7 +59,15 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
       startDate,
       endDate,
       language,
-      displayConfig: { title, description, ctaLabel, badge: badge || undefined },
+      displayConfig: {
+        title,
+        titleEn: titleEn || undefined,
+        description,
+        descriptionEn: descriptionEn || undefined,
+        ctaLabel,
+        ctaEn: ctaEn || undefined,
+        badge: badge || undefined,
+      },
     });
   }
 
@@ -59,10 +78,6 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
         <div className="space-y-2">
           <Label htmlFor="campaign-slug">Slug</Label>
           <Input id="campaign-slug" value={slug} onChange={e => setSlug(e.target.value)} readOnly={!!initial} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="campaign-title">Tiêu đề</Label>
-          <Input id="campaign-title" value={title} onChange={e => setTitle(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="campaign-start">Ngày bắt đầu</Label>
@@ -101,12 +116,26 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
           <Label htmlFor="campaign-badge">Badge</Label>
           <Input id="campaign-badge" placeholder="VD: 38" value={badge} onChange={e => setBadge(e.target.value)} />
         </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="campaign-cta">Nhãn nút CTA</Label>
+          <Label htmlFor="campaign-title">Tiêu đề (VI)</Label>
+          <Input id="campaign-title" value={title} onChange={e => setTitle(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-title-en">Tiêu đề (EN)</Label>
+          <Input id="campaign-title-en" value={titleEn} onChange={e => setTitleEn(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-cta">Nhãn nút CTA (VI)</Label>
           <Input id="campaign-cta" value={ctaLabel} onChange={e => setCtaLabel(e.target.value)} />
         </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="campaign-description">Mô tả</Label>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-cta-en">Nhãn nút CTA (EN)</Label>
+          <Input id="campaign-cta-en" value={ctaEn} onChange={e => setCtaEn(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-description">Mô tả (VI)</Label>
           <textarea
             id="campaign-description"
             value={description}
@@ -115,6 +144,19 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
             className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="campaign-description-en">Mô tả (EN)</Label>
+          <textarea
+            id="campaign-description-en"
+            value={descriptionEn}
+            onChange={e => setDescriptionEn(e.target.value)}
+            rows={3}
+            className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          />
+        </div>
+      </div>
+      <div className="rounded-lg border border-[#CFE2F4] bg-[#EAF2FB] p-3 text-xs leading-relaxed text-[#00396B]">
+        Mỗi Campaign hỗ trợ song ngữ đầy đủ — điền cả 2 cột VI/EN, người dùng chuyển ngôn ngữ ở góc trên sẽ thấy đúng nội dung tương ứng.
       </div>
       <Button type="submit" className="w-fit">{initial ? "Cập nhật" : "Lưu"}</Button>
     </form>

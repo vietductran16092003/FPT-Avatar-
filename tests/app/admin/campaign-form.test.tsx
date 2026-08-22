@@ -16,7 +16,7 @@ describe("CampaignForm", () => {
     render(<CampaignForm onSubmit={onSubmit} />);
 
     await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
-    await userEvent.type(screen.getByLabelText("Tiêu đề"), "Ngày hội Công nghệ FPT 2026");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "Ngày hội Công nghệ FPT 2026");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
@@ -45,7 +45,7 @@ describe("CampaignForm", () => {
     render(<CampaignForm onSubmit={onSubmit} />);
 
     await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
-    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "T");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
@@ -80,13 +80,13 @@ describe("CampaignForm", () => {
     render(<CampaignForm onSubmit={onSubmit} />);
 
     await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
-    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "T");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.type(screen.getByLabelText("Badge"), "38");
-    await userEvent.type(screen.getByLabelText("Mô tả"), "Tạo avatar kỷ niệm");
-    await userEvent.clear(screen.getByLabelText("Nhãn nút CTA"));
-    await userEvent.type(screen.getByLabelText("Nhãn nút CTA"), "Bắt đầu ngay");
+    await userEvent.type(screen.getByLabelText("Mô tả (VI)"), "Tạo avatar kỷ niệm");
+    await userEvent.clear(screen.getByLabelText("Nhãn nút CTA (VI)"));
+    await userEvent.type(screen.getByLabelText("Nhãn nút CTA (VI)"), "Bắt đầu ngay");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
@@ -99,7 +99,7 @@ describe("CampaignForm", () => {
     render(<CampaignForm onSubmit={onSubmit} />);
 
     await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
-    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "T");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.click(screen.getByLabelText("Trạng thái"));
@@ -114,7 +114,7 @@ describe("CampaignForm", () => {
     render(<CampaignForm onSubmit={onSubmit} />);
 
     await userEvent.type(screen.getByLabelText("Slug"), "Tech Week 2026");
-    await userEvent.type(screen.getByLabelText("Tiêu đề"), "T");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "T");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
     await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
@@ -140,8 +140,8 @@ describe("CampaignForm", () => {
     );
 
     expect((screen.getByLabelText("Badge") as HTMLInputElement).value).toBe("38");
-    expect((screen.getByLabelText("Mô tả") as HTMLTextAreaElement).value).toBe("Mô tả cũ");
-    expect((screen.getByLabelText("Nhãn nút CTA") as HTMLInputElement).value).toBe("CTA cũ");
+    expect((screen.getByLabelText("Mô tả (VI)") as HTMLTextAreaElement).value).toBe("Mô tả cũ");
+    expect((screen.getByLabelText("Nhãn nút CTA (VI)") as HTMLInputElement).value).toBe("CTA cũ");
   });
 
   it("displays the selected status and language labels, not their raw values", () => {
@@ -161,5 +161,55 @@ describe("CampaignForm", () => {
 
     expect(screen.getByText("Lưu trữ")).toBeTruthy();
     expect(screen.getByText("English")).toBeTruthy();
+  });
+
+  it("submits titleEn, descriptionEn and ctaEn entered by the admin", async () => {
+    const onSubmit = vi.fn();
+    render(<CampaignForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText("Slug"), "techweek-2026");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "Ngày hội Công nghệ");
+    await userEvent.type(screen.getByLabelText("Tiêu đề (EN)"), "Tech Day");
+    await userEvent.type(screen.getByLabelText("Mô tả (EN)"), "An event for FPT staff");
+    await userEvent.type(screen.getByLabelText("Nhãn nút CTA (EN)"), "Start now");
+    await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
+    await userEvent.type(screen.getByLabelText("Ngày kết thúc"), "2026-08-28");
+    await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      displayConfig: expect.objectContaining({
+        titleEn: "Tech Day",
+        descriptionEn: "An event for FPT staff",
+        ctaEn: "Start now",
+      }),
+    }));
+  });
+
+  it("pre-fills titleEn, descriptionEn and ctaEn from initial when editing", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <CampaignForm
+        onSubmit={onSubmit}
+        initial={{
+          slug: "fpt38",
+          status: "active",
+          startDate: "2026-08-13",
+          endDate: "2026-09-13",
+          language: "vi",
+          displayConfig: {
+            title: "FPT tròn 38 tuổi",
+            titleEn: "FPT turns 38",
+            description: "",
+            descriptionEn: "Sample",
+            ctaLabel: "Tạo avatar ngay",
+            ctaEn: "Create now",
+          },
+        }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Tiêu đề (EN)") as HTMLInputElement).value).toBe("FPT turns 38");
+    expect((screen.getByLabelText("Mô tả (EN)") as HTMLTextAreaElement).value).toBe("Sample");
+    expect((screen.getByLabelText("Nhãn nút CTA (EN)") as HTMLInputElement).value).toBe("Create now");
   });
 });
