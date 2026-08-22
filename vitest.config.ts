@@ -12,5 +12,6 @@ export default defineConfig({
   test: {
     environment: "node",
     exclude: [...configDefaults.exclude, "**/.worktrees/**"],
+    setupFiles: ["./tests/setup/local-storage-polyfill.ts"],
   },
 });
