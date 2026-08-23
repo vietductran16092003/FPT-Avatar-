@@ -5,15 +5,24 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TemplateForm } from "../../../src/app/admin/campaigns/template-form";
+import { AdminLangProvider } from "../../../src/lib/admin-i18n";
 
 afterEach(() => {
   cleanup();
 });
 
+function renderTemplateForm(props: Parameters<typeof TemplateForm>[0]) {
+  return render(
+    <AdminLangProvider>
+      <TemplateForm {...props} />
+    </AdminLangProvider>,
+  );
+}
+
 describe("TemplateForm", () => {
   it("submits name, frame image, photoArea and a manually added text overlay", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung cam chuẩn");
 
@@ -39,7 +48,7 @@ describe("TemplateForm", () => {
 
   it("shows a validation error when name or frame image is missing", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
 
@@ -49,18 +58,16 @@ describe("TemplateForm", () => {
 
   it("pre-fills from initial and submits without requiring a new frame image", async () => {
     const onSubmit = vi.fn();
-    render(
-      <TemplateForm
-        onSubmit={onSubmit}
-        initial={{
-          name: "Khung cam chuẩn",
-          overlayConfig: {
-            photoArea: { x: 18, y: 14, w: 64, h: 64 },
-            textOverlays: [{ key: "joinYear", label: "Năm gia nhập", labelEn: "Join year", type: "select", options: ["2020"], x: 50, y: 85, fontSize: 24, color: "#ffffff" }],
-          },
-        }}
-      />,
-    );
+    renderTemplateForm({
+      onSubmit,
+      initial: {
+        name: "Khung cam chuẩn",
+        overlayConfig: {
+          photoArea: { x: 18, y: 14, w: 64, h: 64 },
+          textOverlays: [{ key: "joinYear", label: "Năm gia nhập", labelEn: "Join year", type: "select", options: ["2020"], x: 50, y: 85, fontSize: 24, color: "#ffffff" }],
+        },
+      },
+    });
 
     expect((screen.getByLabelText("Tên khung") as HTMLInputElement).value).toBe("Khung cam chuẩn");
     await userEvent.click(screen.getByRole("button", { name: "Cập nhật khung" }));
@@ -76,7 +83,7 @@ describe("TemplateForm", () => {
 
   it("rejects a frame image over 5MB with a visible error and does not stage it", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung to");
 
@@ -91,7 +98,7 @@ describe("TemplateForm", () => {
 
   it("clears a previously staged valid file when a later oversized file is rejected", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung to");
 
@@ -107,7 +114,7 @@ describe("TemplateForm", () => {
 
   it("displays the selected overlay type label, not its raw value", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.click(screen.getByRole("button", { name: "Thêm trường overlay" }));
 
@@ -116,7 +123,7 @@ describe("TemplateForm", () => {
 
   it("adds a text overlay with default position when a text preset checkbox is ticked", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
     const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
@@ -136,7 +143,7 @@ describe("TemplateForm", () => {
 
   it("adds a select overlay with year options when the join-year preset is ticked", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
     const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
@@ -157,7 +164,7 @@ describe("TemplateForm", () => {
 
   it("removes an untouched preset overlay immediately when its checkbox is unticked", async () => {
     const onSubmit = vi.fn();
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
     const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
@@ -178,7 +185,7 @@ describe("TemplateForm", () => {
   it("asks for confirmation before removing a preset overlay the admin has edited, and keeps it if cancelled", async () => {
     const onSubmit = vi.fn();
     vi.spyOn(window, "confirm").mockReturnValue(false);
-    render(<TemplateForm onSubmit={onSubmit} />);
+    renderTemplateForm({ onSubmit });
 
     await userEvent.type(screen.getByLabelText("Tên khung"), "Khung preset");
     const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
@@ -204,18 +211,16 @@ describe("TemplateForm", () => {
   });
 
   it("pre-checks a preset checkbox when initial overlays already contain a matching key", () => {
-    render(
-      <TemplateForm
-        onSubmit={vi.fn()}
-        initial={{
-          name: "Khung có sẵn",
-          overlayConfig: {
-            photoArea: { x: 20, y: 20, w: 60, h: 60 },
-            textOverlays: [{ key: "unit", label: "Đơn vị công tác", labelEn: "Business unit", type: "select", options: ["FPT Software"], x: 50, y: 50, fontSize: 20, color: "#ffffff" }],
-          },
-        }}
-      />,
-    );
+    renderTemplateForm({
+      onSubmit: vi.fn(),
+      initial: {
+        name: "Khung có sẵn",
+        overlayConfig: {
+          photoArea: { x: 20, y: 20, w: 60, h: 60 },
+          textOverlays: [{ key: "unit", label: "Đơn vị công tác", labelEn: "Business unit", type: "select", options: ["FPT Software"], x: 50, y: 50, fontSize: 20, color: "#ffffff" }],
+        },
+      },
+    });
 
     expect((screen.getByLabelText("Đơn vị công tác") as HTMLInputElement).checked).toBe(true);
   });

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
 import { COMPONENT_PRESETS, type ComponentPreset } from "@/lib/component-presets";
+import { useAdminLang } from "@/lib/admin-i18n";
 
 const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -61,6 +62,7 @@ function overlaysMatch(a: TextOverlay, b: TextOverlay): boolean {
 }
 
 export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: TemplateDraft) => void; initial?: TemplateInitial }) {
+  const { t } = useAdminLang();
   const [name, setName] = useState(initial?.name ?? "");
   const [frameImage, setFrameImage] = useState<File | null>(null);
   const [photoArea, setPhotoArea] = useState(initial?.overlayConfig.photoArea ?? { x: 20, y: 20, w: 60, h: 60 });
@@ -104,12 +106,12 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
       <div className="space-y-2">
-        <Label htmlFor="template-name">Tên khung</Label>
+        <Label htmlFor="template-name">{t("fTplName")}</Label>
         <Input id="template-name" value={name} onChange={e => setName(e.target.value)} />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="template-frame">Ảnh khung (PNG){initial && " (để trống nếu giữ ảnh cũ)"}</Label>
+        <Label htmlFor="template-frame">{t("fFrameUpload")}{initial && " (để trống nếu giữ ảnh cũ)"}</Label>
         <div className="rounded-xl border-2 border-dashed border-border bg-muted/40 p-4 text-center">
           <Input
             id="template-frame"
@@ -131,7 +133,7 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Vùng ảnh cá nhân (%)</legend>
+        <legend className="text-sm font-medium">{t("fPhotoArea")}</legend>
         <div className="grid grid-cols-4 gap-2">
           <div className="space-y-1">
             <Label htmlFor="photo-area-x">X</Label>
@@ -153,7 +155,7 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
       </fieldset>
 
       <fieldset className="space-y-2 rounded-xl border border-border p-3">
-        <legend className="px-1 text-sm font-medium">Thêm nhanh trường phổ biến</legend>
+        <legend className="px-1 text-sm font-medium">{t("fQuickAdd")}</legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {COMPONENT_PRESETS.map(preset => (
             <label key={preset.key} htmlFor={`preset-${preset.key}`} className="flex items-center gap-2 text-sm">
@@ -238,7 +240,7 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
         ))}
       </div>
 
-      <Button type="submit">{initial ? "Cập nhật khung" : "Lưu khung"}</Button>
+      <Button type="submit">{initial ? t("templateUpdate") : t("templateSave")}</Button>
     </form>
   );
 }

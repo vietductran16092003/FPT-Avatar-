@@ -280,7 +280,7 @@ export default function AdminCampaignsPage() {
                             {t("adminEdit")}
                           </Button>
                           <Button type="button" variant="destructive" size="sm" className="flex-1" onClick={() => handleTemplateDelete(tpl.id)}>
-                            Xóa khung
+                            {t("templateDelete")}
                           </Button>
                         </div>
                       </div>
