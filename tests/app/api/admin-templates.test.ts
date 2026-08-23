@@ -58,8 +58,11 @@ describe("admin templates API", () => {
     (prisma.template.updateMany as any).mockResolvedValue({ count: 1 });
     (prisma.template.findUnique as any).mockResolvedValue({ id: "t1" });
 
+    const form = new FormData();
+    form.set("overlayConfig", JSON.stringify({ photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] }));
+
     const res = await PATCH(
-      new Request("http://x", { method: "PATCH", body: JSON.stringify({ overlayConfig: { photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] } }) }),
+      new Request("http://x", { method: "PATCH", body: form }),
       { params: { slug: "fpt38", id: "t1" } },
     );
 
@@ -72,12 +75,66 @@ describe("admin templates API", () => {
   it("PATCH returns 404 when the template does not belong to the campaign", async () => {
     (prisma.template.updateMany as any).mockResolvedValue({ count: 0 });
 
+    const form = new FormData();
+    form.set("overlayConfig", JSON.stringify({ photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] }));
+
     const res = await PATCH(
-      new Request("http://x", { method: "PATCH", body: JSON.stringify({ overlayConfig: { photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] } }) }),
+      new Request("http://x", { method: "PATCH", body: form }),
       { params: { slug: "fpt38", id: "nope" } },
     );
 
     expect(res.status).toBe(404);
+  });
+
+  it("PATCH uploads a replacement frame image and updates frameImageKey", async () => {
+    (prisma.template.updateMany as any).mockResolvedValue({ count: 1 });
+    (prisma.template.findUnique as any).mockResolvedValue({ id: "t1" });
+
+    const form = new FormData();
+    form.set("name", "Khung cam chuẩn");
+    form.set("frameImage", new Blob([Buffer.from("png")], { type: "image/png" }), "new-frame.png");
+
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: form }),
+      { params: { slug: "fpt38", id: "t1" } },
+    );
+
+    expect(res.status).toBe(200);
+    expect(prisma.template.updateMany).toHaveBeenCalledWith({
+      where: { id: "t1", campaign: { slug: "fpt38" } },
+      data: expect.objectContaining({ name: "Khung cam chuẩn", frameImageKey: expect.stringMatching(/^frames\/fpt38-\d+\.png$/) }),
+    });
+  });
+
+  it("PATCH leaves frameImageKey untouched when no replacement image is sent", async () => {
+    (prisma.template.updateMany as any).mockResolvedValue({ count: 1 });
+    (prisma.template.findUnique as any).mockResolvedValue({ id: "t1" });
+
+    const form = new FormData();
+    form.set("name", "Tên mới");
+
+    await PATCH(
+      new Request("http://x", { method: "PATCH", body: form }),
+      { params: { slug: "fpt38", id: "t1" } },
+    );
+
+    expect(prisma.template.updateMany).toHaveBeenCalledWith({
+      where: { id: "t1", campaign: { slug: "fpt38" } },
+      data: { name: "Tên mới" },
+    });
+  });
+
+  it("PATCH returns 400 when the replacement frame image exceeds 5MB", async () => {
+    const form = new FormData();
+    form.set("frameImage", new Blob([new Uint8Array(5 * 1024 * 1024 + 1)], { type: "image/png" }), "big.png");
+
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: form }),
+      { params: { slug: "fpt38", id: "t1" } },
+    );
+
+    expect(res.status).toBe(400);
+    expect(prisma.template.updateMany).not.toHaveBeenCalled();
   });
 
   it("DELETE removes a template by id", async () => {
@@ -163,8 +220,12 @@ describe("admin templates API", () => {
     (prisma.template.updateMany as any).mockResolvedValue({ count: 1 });
     (prisma.template.findUnique as any).mockResolvedValue({ id: "t1" });
 
+    const form = new FormData();
+    form.set("name", "Tên mới");
+    form.set("campaignId", "other-campaign-id");
+
     await PATCH(
-      new Request("http://x", { method: "PATCH", body: JSON.stringify({ name: "Tên mới", campaignId: "other-campaign-id" }) }),
+      new Request("http://x", { method: "PATCH", body: form }),
       { params: { slug: "fpt38", id: "t1" } },
     );
 

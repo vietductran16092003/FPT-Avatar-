@@ -147,10 +147,13 @@ export default function AdminCampaignsPage() {
     setTemplateSubmitting(true);
     setTemplateError(null);
     try {
+      const form = new FormData();
+      form.set("name", draft.name);
+      form.set("overlayConfig", JSON.stringify(draft.overlayConfig));
+      if (draft.frameImage) form.set("frameImage", draft.frameImage);
       const res = await fetch(`/api/admin/campaigns/${editingSlug}/templates/${templateEditing.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: draft.name, overlayConfig: draft.overlayConfig }),
+        body: form,
       });
       if (!res.ok) {
         setTemplateError("Không cập nhật được khung. Vui lòng thử lại.");
