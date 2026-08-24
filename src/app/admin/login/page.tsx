@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 function MicrosoftLogo() {
   return (
@@ -15,13 +16,13 @@ function MicrosoftLogo() {
   );
 }
 
-function DevLoginForm() {
+function DevLoginForm({ callbackUrl }: { callbackUrl: string }) {
   const [email, setEmail] = useState("");
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!email) return;
-    signIn("dev-login", { email, callbackUrl: "/admin/campaigns" });
+    signIn("dev-login", { email, callbackUrl });
   }
 
   return (
@@ -47,6 +48,8 @@ function DevLoginForm() {
 
 export default function AdminLoginPage() {
   const devLoginEnabled = process.env.NEXT_PUBLIC_DEV_LOGIN_ENABLED === "true";
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/admin/campaigns";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
@@ -64,11 +67,11 @@ export default function AdminLoginPage() {
           Avatar Frame Platform
         </h1>
         <p className="mb-7 text-[14.5px] text-muted-foreground">
-          Đăng nhập bằng tài khoản FPT để quản trị.
+          Đăng nhập bằng tài khoản FPT để tiếp tục.
         </p>
         <button
           type="button"
-          onClick={() => signIn("azure-ad", { callbackUrl: "/admin/campaigns" })}
+          onClick={() => signIn("azure-ad", { callbackUrl })}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-foreground px-5 py-3.5 text-[15px] font-bold text-background transition-opacity hover:opacity-90"
         >
           <MicrosoftLogo />
@@ -77,7 +80,7 @@ export default function AdminLoginPage() {
         <p className="mt-4 text-[12.5px] text-muted-foreground">
           Chỉ dành cho nhân viên FPT · Xác thực qua Azure AD
         </p>
-        {devLoginEnabled && <DevLoginForm />}
+        {devLoginEnabled && <DevLoginForm callbackUrl={callbackUrl} />}
       </div>
     </div>
   );
