@@ -143,6 +143,23 @@ describe("AvatarCreator", () => {
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("Template not found"));
   });
 
+  it("shows a translated session-expired message instead of the raw API error when /generate returns 401", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ error: "Unauthorized" }) });
+
+    renderCreator();
+    const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), file);
+    await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
+    await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
+
+    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    await waitFor(() => expect(downloadBtn).not.toBeDisabled());
+    await userEvent.click(downloadBtn);
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("Phiên đăng nhập đã hết hạn"));
+    expect(screen.getByRole("alert").textContent).not.toContain("Unauthorized");
+  });
+
   it("does not show share buttons before a successful download", () => {
     renderCreator();
     expect(screen.queryByText("Chia sẻ lên")).toBeNull();

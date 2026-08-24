@@ -137,6 +137,10 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
 
       const res = await fetch(`/api/campaigns/${slug}/generate`, { method: "POST", body: form });
       if (!res.ok) {
+        if (res.status === 401) {
+          setDownloadError(t("sessionExpired"));
+          return;
+        }
         const data = await res.json().catch(() => null);
         setDownloadError(data?.error ?? t("errorGeneric"));
         return;
