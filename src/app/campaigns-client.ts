@@ -5,7 +5,15 @@ export interface Campaign {
   status: string;
   startDate: string;
   endDate: string;
-  displayConfig: { title: string; description: string; ctaLabel: string; badge?: string };
+  displayConfig: {
+    title: string;
+    titleEn?: string;
+    description: string;
+    descriptionEn?: string;
+    ctaLabel: string;
+    ctaEn?: string;
+    badge?: string;
+  };
   language: "vi" | "en";
   _count: { templates: number };
 }
