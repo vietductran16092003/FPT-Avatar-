@@ -38,6 +38,7 @@ const PUBLIC_DICT = {
     notifMinAgo: "phút trước",
     notifHourAgo: "giờ trước",
     logout: "Đăng xuất",
+    goAdmin: "Trang quản trị",
   },
   en: {
     heroTitle: "Choose a running campaign",
@@ -72,6 +73,7 @@ const PUBLIC_DICT = {
     notifMinAgo: "min ago",
     notifHourAgo: "hr ago",
     logout: "Log out",
+    goAdmin: "Admin panel",
   },
 } as const;
 

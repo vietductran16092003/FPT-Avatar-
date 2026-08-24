@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { usePublicLang, type PublicLang } from "@/lib/public-i18n";
 import { cn } from "@/lib/utils";
@@ -29,19 +30,24 @@ function LangToggle() {
   );
 }
 
-function AvatarBadge() {
+function AvatarWithName() {
   const { data: session } = useSession();
   const name = session?.user?.name || session?.user?.email || "?";
   const initial = name.trim().charAt(0).toUpperCase();
   return (
-    <div className="flex size-[30px] items-center justify-center rounded-full bg-[#FDE6D2] text-[12px] font-bold text-[#C25A00]">
-      {initial}
+    <div className="flex items-center gap-2">
+      <div className="flex size-[30px] items-center justify-center rounded-full bg-[#FDE6D2] text-[12px] font-bold text-[#C25A00]">
+        {initial}
+      </div>
+      <span className="text-[13.5px] font-semibold text-muted-foreground">{name}</span>
     </div>
   );
 }
 
 export function PublicHeader() {
   const { t } = usePublicLang();
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
 
   return (
     <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-7 py-3.5">
@@ -59,6 +65,11 @@ export function PublicHeader() {
       </div>
       <div className="flex items-center gap-3">
         <LangToggle />
+        {isAdmin && (
+          <Link href="/admin/campaigns" className="text-sm font-semibold text-primary hover:underline">
+            {t("goAdmin")}
+          </Link>
+        )}
         <PublicNotificationBell />
         <button
           type="button"
@@ -67,7 +78,7 @@ export function PublicHeader() {
         >
           {t("logout")}
         </button>
-        <AvatarBadge />
+        <AvatarWithName />
       </div>
     </header>
   );
