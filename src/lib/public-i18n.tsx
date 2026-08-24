@@ -36,6 +36,7 @@ const PUBLIC_DICT = {
     notifJustNow: "Vừa xong",
     notifMinAgo: "phút trước",
     notifHourAgo: "giờ trước",
+    logout: "Đăng xuất",
   },
   en: {
     heroTitle: "Choose a running campaign",
@@ -68,6 +69,7 @@ const PUBLIC_DICT = {
     notifJustNow: "Just now",
     notifMinAgo: "min ago",
     notifHourAgo: "hr ago",
+    logout: "Log out",
   },
 } as const;
 

@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import { signOut, useSession } from "next-auth/react";
 import { usePublicLang, type PublicLang } from "@/lib/public-i18n";
 import { cn } from "@/lib/utils";
 import { PublicNotificationBell } from "@/components/public-notification-bell";
@@ -28,7 +29,20 @@ function LangToggle() {
   );
 }
 
+function AvatarBadge() {
+  const { data: session } = useSession();
+  const name = session?.user?.name || session?.user?.email || "?";
+  const initial = name.trim().charAt(0).toUpperCase();
+  return (
+    <div className="flex size-[30px] items-center justify-center rounded-full bg-[#FDE6D2] text-[12px] font-bold text-[#C25A00]">
+      {initial}
+    </div>
+  );
+}
+
 export function PublicHeader() {
+  const { t } = usePublicLang();
+
   return (
     <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-7 py-3.5">
       <div className="flex items-center gap-2.5">
@@ -46,6 +60,14 @@ export function PublicHeader() {
       <div className="flex items-center gap-3">
         <LangToggle />
         <PublicNotificationBell />
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/admin/login" })}
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
+          {t("logout")}
+        </button>
+        <AvatarBadge />
       </div>
     </header>
   );
