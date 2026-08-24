@@ -5,10 +5,16 @@ import { compositeAvatar } from "@/lib/compositing/server-compositor";
 import { validateOverlayValues } from "@/lib/compositing/validate-overlay-values";
 import { createNotification } from "@/lib/notifications";
 import { isCampaignPubliclyVisible } from "@/lib/campaign-visibility";
+import { getCurrentUser } from "@/lib/session";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 export async function POST(req: Request, { params }: { params: { slug: string } }) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const form = await req.formData();
   const templateId = form.get("templateId") as string;
   const photoFile = form.get("photo");
@@ -78,6 +84,7 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     data: {
       campaignId: campaign.id,
       templateId: template.id,
+      userId: user.id,
       overlayValues,
       resultImageKey: resultKey,
     },

@@ -20,11 +20,15 @@ vi.mock("../../../src/lib/compositing/server-compositor", () => ({
 vi.mock("../../../src/lib/notifications", () => ({
   createNotification: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("../../../src/lib/session", () => ({
+  getCurrentUser: vi.fn(),
+}));
 
 import { POST } from "../../../src/app/api/campaigns/[slug]/generate/route";
 import { prisma } from "../../../src/lib/prisma";
 import { createNotification } from "../../../src/lib/notifications";
 import { compositeAvatar } from "../../../src/lib/compositing/server-compositor";
+import { getCurrentUser } from "../../../src/lib/session";
 
 const overlays = [
   { key: "joinYear", label: "L", labelEn: "L", type: "select", options: ["2021"], x: 10, y: 10, fontSize: 10, color: "#fff" },
@@ -42,6 +46,7 @@ describe("POST /api/campaigns/:slug/generate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (compositeAvatar as any).mockResolvedValue(Buffer.from("png-bytes"));
+    (getCurrentUser as any).mockResolvedValue({ id: "u1", role: "user" });
     (prisma.campaign.findUnique as any).mockResolvedValue({ id: "c1", slug: "fpt38", status: "active", startDate: new Date("2020-01-01"), endDate: new Date("2099-01-01"), displayConfig: { title: "FPT tròn 38 tuổi" } });
   });
 
@@ -189,5 +194,31 @@ describe("POST /api/campaigns/:slug/generate", () => {
     const res = await POST(req, { params: { slug: "fpt38" } });
 
     expect(res.status).toBe(400);
+  });
+
+  it("returns 401 when there is no signed-in session", async () => {
+    (getCurrentUser as any).mockResolvedValue(null);
+
+    const res = await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
+
+    expect(res.status).toBe(401);
+    expect(prisma.campaign.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("stamps the signed-in user's id onto the created GeneratedAvatar", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
+
+    expect(prisma.generatedAvatar.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ userId: "u1" }),
+    });
   });
 });
