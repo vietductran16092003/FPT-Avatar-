@@ -1,3 +1,54 @@
+FPT-Avatar-Frame-Platform/
+├── .env.example                  # Mẫu biến môi trường (storage, database)
+├── .gitignore
+├── CLAUDE.md                     # Hướng dẫn hành vi Claude Code cho dự án
+├── README.md                     # (tự sinh từ create-next-app, chưa tùy chỉnh)
+├── package.json / package-lock.json
+├── tsconfig.json
+├── next.config.mjs
+├── tailwind.config.ts
+├── postcss.config.mjs
+│
+├── docs/                                     ← TÀI LIỆU DỰ ÁN
+│   ├── origins/
+│   │   └── Bao_cao_kien_truc_he_thong_...docx   # Báo cáo kiến trúc gốc (yêu cầu ban đầu)
+│   └── superpowers/
+│       ├── demo/                                 # Prototype UX cũ (vanilla JS, tham khảo)
+│       │   ├── admin.html, index.html, styles.css
+│       │   └── js/ (config/, core/)
+│       ├── specs/
+│       │   ├── 2026-08-20-campaign-platform-nextjs-design.md   ✅ spec CHUẨN đang dùng
+│       │   ├── 2026-08-20-admin-backend-api-design.md          ⚠️ cũ, đã thay thế
+│       │   └── 2026-08-20-generic-text-overlays-design.md      ⚠️ cũ, đã thay thế
+│       └── plans/
+│           ├── 2026-08-20-campaign-platform-nextjs.md          ✅ plan CHUẨN 15 task
+│           ├── 2026-08-20-scaffold-and-storage.md               ✅ plan Task 1+2 (đã xong)
+│           ├── 2026-08-20-admin-backend-api.md                 ⚠️ cũ, đã thay thế
+│           └── 2026-08-20-generic-text-overlays.md              ⚠️ cũ, đã thay thế
+│
+├── prisma/
+│   └── schema.prisma              # Model: User, Campaign, Template, GeneratedAvatar
+│
+├── src/
+│   ├── app/                       # Next.js App Router
+│   │   ├── layout.tsx, page.tsx, globals.css
+│   │   └── fonts/, favicon.ico
+│   └── lib/
+│       ├── prisma.ts              # Prisma client singleton
+│       └── storage/                # ImageStorage abstraction (Task 2)
+│           ├── types.ts            # interface ImageStorage
+│           ├── minio-storage.ts    # Adapter MinIO
+│           └── index.ts            # Factory chọn adapter theo env var
+│
+└── tests/
+    ├── prisma-schema.test.ts
+    └── lib/storage/minio-storage.test.ts
+
+
+
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
