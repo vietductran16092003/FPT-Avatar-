@@ -2,10 +2,14 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { PublicHeader } from "../../src/components/public-header";
 import { PublicLangProvider } from "../../src/lib/public-i18n";
+
+beforeEach(() => {
+  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
+});
 
 afterEach(() => cleanup());
 
@@ -29,5 +33,10 @@ describe("PublicHeader", () => {
     renderHeader();
     expect(screen.queryByRole("button", { name: "Đăng xuất" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Log out" })).toBeNull();
+  });
+
+  it("renders the public notification bell", () => {
+    renderHeader();
+    expect(screen.getByRole("button", { name: "Thông báo" })).toBeTruthy();
   });
 });

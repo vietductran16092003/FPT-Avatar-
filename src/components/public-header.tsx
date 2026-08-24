@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { usePublicLang, type PublicLang } from "@/lib/public-i18n";
 import { cn } from "@/lib/utils";
+import { PublicNotificationBell } from "@/components/public-notification-bell";
 
 function LangToggle() {
   const { lang, setLang } = usePublicLang();
@@ -44,6 +45,7 @@ export function PublicHeader() {
       </div>
       <div className="flex items-center gap-3">
         <LangToggle />
+        <PublicNotificationBell />
       </div>
     </header>
   );
