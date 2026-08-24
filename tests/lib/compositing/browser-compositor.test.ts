@@ -95,4 +95,20 @@ describe("renderPreview", () => {
     expect(ctx.clip).toHaveBeenCalled();
     expect(ctx.restore).toHaveBeenCalled();
   });
+
+  it("skips drawing the photo (no NaN/Infinity to drawImage) when the image has not yet decoded (naturalWidth/naturalHeight 0), but still draws the frame", async () => {
+    const { canvas, ctx } = fakeCanvas();
+    const frameImg = {} as HTMLImageElement;
+    const photoImg = { naturalWidth: 0, naturalHeight: 0 } as HTMLImageElement;
+
+    await renderPreview(
+      canvas as any, frameImg, photoImg,
+      { x: 0, y: 0, w: 50, h: 50 },
+      [], {},
+    );
+
+    expect(ctx.drawImage).not.toHaveBeenCalledWith(photoImg, expect.anything(), expect.anything(), expect.anything(), expect.anything());
+    expect(ctx.drawImage).toHaveBeenCalledWith(frameImg, 0, 0, 200, 200);
+    expect(ctx.drawImage).toHaveBeenCalledTimes(1);
+  });
 });

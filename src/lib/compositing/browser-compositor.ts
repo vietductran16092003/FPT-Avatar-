@@ -25,18 +25,20 @@ export async function renderPreview(
   const pw = (photoArea.w / 100) * canvas.width;
   const ph = (photoArea.h / 100) * canvas.height;
 
-  const coverScale = Math.max(pw / photoImg.naturalWidth, ph / photoImg.naturalHeight) * transform.scale;
-  const drawW = photoImg.naturalWidth * coverScale;
-  const drawH = photoImg.naturalHeight * coverScale;
-  const dx = px + (pw - drawW) / 2 + transform.ox * pw;
-  const dy = py + (ph - drawH) / 2 + transform.oy * ph;
+  if (photoImg.naturalWidth > 0 && photoImg.naturalHeight > 0) {
+    const coverScale = Math.max(pw / photoImg.naturalWidth, ph / photoImg.naturalHeight) * transform.scale;
+    const drawW = photoImg.naturalWidth * coverScale;
+    const drawH = photoImg.naturalHeight * coverScale;
+    const dx = px + (pw - drawW) / 2 + transform.ox * pw;
+    const dy = py + (ph - drawH) / 2 + transform.oy * ph;
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(px, py, pw, ph);
-  ctx.clip();
-  ctx.drawImage(photoImg, dx, dy, drawW, drawH);
-  ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(px, py, pw, ph);
+    ctx.clip();
+    ctx.drawImage(photoImg, dx, dy, drawW, drawH);
+    ctx.restore();
+  }
 
   ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
 
