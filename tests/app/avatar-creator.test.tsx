@@ -88,4 +88,58 @@ describe("AvatarCreator", () => {
     expect(screen.getByLabelText("Tên")).toBeTruthy();
     expect(screen.queryByLabelText("Câu châm ngôn")).toBeNull();
   });
+
+  it("POSTs FormData to /generate and auto-downloads the result when the download button is clicked", async () => {
+    const resultBlob = new Blob(["png-bytes"], { type: "image/png" });
+    global.fetch = vi.fn((url: string) => {
+      if (url === "/api/campaigns/fpt38/generate") {
+        return Promise.resolve({ ok: true, json: async () => ({ resultUrl: "http://storage/results/t1-123.png" }) });
+      }
+      if (url === "http://storage/results/t1-123.png") {
+        return Promise.resolve({ ok: true, blob: async () => resultBlob });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    }) as unknown as typeof fetch;
+
+    const createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:fake-url");
+    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    renderCreator();
+    const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), file);
+    await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
+    await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
+
+    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    await waitFor(() => expect(downloadBtn).not.toBeDisabled());
+    await userEvent.click(downloadBtn);
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/campaigns/fpt38/generate", expect.objectContaining({ method: "POST" })));
+    const generateCall = (global.fetch as any).mock.calls.find((c: any[]) => c[0] === "/api/campaigns/fpt38/generate");
+    const sentForm = generateCall[1].body as FormData;
+    expect(sentForm.get("templateId")).toBe("t1");
+    expect(sentForm.get("photo")).toBe(file);
+    expect(JSON.parse(sentForm.get("overlayValues") as string)).toEqual({ slogan: "Dream Big", unit: "FPT Software" });
+
+    await waitFor(() => expect(clickSpy).toHaveBeenCalled());
+    expect(createObjectURLSpy).toHaveBeenCalledWith(resultBlob);
+    expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:fake-url");
+  });
+
+  it("shows the server's error message and does not crash when /generate fails", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Template not found" }) });
+
+    renderCreator();
+    const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), file);
+    await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
+    await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
+
+    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    await waitFor(() => expect(downloadBtn).not.toBeDisabled());
+    await userEvent.click(downloadBtn);
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("Template not found"));
+  });
 });

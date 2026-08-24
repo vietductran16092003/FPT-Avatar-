@@ -40,6 +40,9 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
   const [transform, setTransform] = useState({ scale: 1, ox: 0, oy: 0 });
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -111,6 +114,40 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
       (e.target as HTMLCanvasElement).releasePointerCapture(e.pointerId);
     } catch {
       // pointer already released — nothing to do
+    }
+  }
+
+  async function handleDownload() {
+    if (!photoFile) return;
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      const form = new FormData();
+      form.set("templateId", selected.id);
+      form.set("photo", photoFile);
+      form.set("overlayValues", JSON.stringify(overlayValues));
+
+      const res = await fetch(`/api/campaigns/${slug}/generate`, { method: "POST", body: form });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setDownloadError(data?.error ?? t("errorGeneric"));
+        return;
+      }
+      const { resultUrl: url } = await res.json();
+      setResultUrl(url);
+
+      const blobRes = await fetch(url);
+      const blob = await blobRes.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${slug}-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -230,9 +267,11 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
           </div>
         )}
         <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{t("previewNote")}</p>
+        {downloadError && <p role="alert" className="mb-2 text-sm text-destructive">{downloadError}</p>}
         <button
           type="button"
-          disabled={!stepsComplete}
+          disabled={!stepsComplete || downloading}
+          onClick={handleDownload}
           className="mb-2 w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
           {t("downloadButton")}
