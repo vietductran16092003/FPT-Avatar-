@@ -47,7 +47,7 @@ describe("AvatarCreator", () => {
     renderCreator();
     expect(screen.getByLabelText("Câu châm ngôn")).toBeTruthy();
     const unitSelect = screen.getByLabelText("Đơn vị") as HTMLSelectElement;
-    expect(Array.from(unitSelect.options).map(o => o.value)).toEqual(["FPT Software", "FPT Telecom"]);
+    expect(Array.from(unitSelect.options).map(o => o.value).filter(Boolean)).toEqual(["FPT Software", "FPT Telecom"]);
   });
 
   it("disables the download button until a photo is uploaded and all overlay fields are filled", async () => {

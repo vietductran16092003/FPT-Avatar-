@@ -39,6 +39,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
   const [frameImg, setFrameImg] = useState<HTMLImageElement | null>(null);
   const [transform, setTransform] = useState({ scale: 1, ox: 0, oy: 0 });
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -56,7 +57,6 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
     if (!file) return;
     if (file.size > MAX_PHOTO_BYTES) {
       setPhotoError(`Ảnh vượt quá 10MB, vui lòng chọn ảnh nhỏ hơn.`);
-      setPhotoFile(null);
       e.target.value = "";
       return;
     }
@@ -68,9 +68,11 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
   useEffect(() => {
     if (!photoFile) {
       setPhotoImg(null);
+      setPhotoPreviewUrl(null);
       return;
     }
     const url = URL.createObjectURL(photoFile);
+    setPhotoPreviewUrl(url);
     const img = new Image();
     img.onload = () => setPhotoImg(img);
     img.src = url;
@@ -126,7 +128,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
           <label htmlFor="photo-input" className="cursor-pointer">
             {photoFile ? (
               <div className="flex items-center gap-3">
-                <img src={URL.createObjectURL(photoFile)} alt="" className="size-20 rounded-full border border-border object-cover" />
+                <img src={photoPreviewUrl ?? undefined} alt="" className="size-20 rounded-full border border-border object-cover" />
                 <span className="text-sm font-semibold text-primary">{t("changePhoto")}</span>
               </div>
             ) : (
@@ -176,6 +178,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
                     onChange={e => setOverlayValues(v => ({ ...v, [overlay.key]: e.target.value }))}
                     className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
                   >
+                    <option value="" disabled>—</option>
                     {(overlay.options ?? []).map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
