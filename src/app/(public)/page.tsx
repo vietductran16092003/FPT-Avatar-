@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { fetchActiveCampaigns } from "./campaigns-client";
+import { fetchActiveCampaigns } from "@/app/campaigns-client";
 
 export const metadata: Metadata = {
   title: "Avatar sự kiện FPT",
