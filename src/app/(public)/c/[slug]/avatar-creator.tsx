@@ -276,6 +276,47 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
         >
           {t("downloadButton")}
         </button>
+        {resultUrl && (
+          <div className="mt-4 border-t border-border pt-4">
+            <div className="mb-2 text-xs font-bold text-muted-foreground">{t("shareTitle")}</div>
+            {typeof navigator !== "undefined" && "share" in navigator ? (
+              <button
+                type="button"
+                onClick={() => navigator.share({ title: "Avatar Frame Platform", url: resultUrl })}
+                className="w-full rounded-lg border border-input px-4 py-2 text-sm font-semibold"
+              >
+                {t("shareTitle")}
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resultUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-secondary"
+                >
+                  Facebook
+                </a>
+                <a
+                  href={`https://zalo.me/share?u=${encodeURIComponent(resultUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-emerald-600"
+                >
+                  Zalo
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(resultUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground"
+                >
+                  LinkedIn
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -142,4 +142,66 @@ describe("AvatarCreator", () => {
 
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("Template not found"));
   });
+
+  it("does not show share buttons before a successful download", () => {
+    renderCreator();
+    expect(screen.queryByText("Chia sẻ lên")).toBeNull();
+  });
+
+  it("uses navigator.share when available, as a single share action", async () => {
+    const shareSpy = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "share", { value: shareSpy, configurable: true });
+
+    global.fetch = vi.fn((url: string) => {
+      if (url === "/api/campaigns/fpt38/generate") {
+        return Promise.resolve({ ok: true, json: async () => ({ resultUrl: "http://storage/results/t1-123.png" }) });
+      }
+      return Promise.resolve({ ok: true, blob: async () => new Blob(["x"], { type: "image/png" }) });
+    }) as unknown as typeof fetch;
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:fake-url");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    renderCreator();
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), new File(["x"], "me.jpg", { type: "image/jpeg" }));
+    await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
+    await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
+    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    await waitFor(() => expect(downloadBtn).not.toBeDisabled());
+    await userEvent.click(downloadBtn);
+
+    const shareBtn = await screen.findByRole("button", { name: "Chia sẻ lên" });
+    await userEvent.click(shareBtn);
+    expect(shareSpy).toHaveBeenCalledWith(expect.objectContaining({ url: "http://storage/results/t1-123.png" }));
+
+    // @ts-expect-error - cleanup the test-only property
+    delete navigator.share;
+  });
+
+  it("falls back to platform share links when navigator.share is unavailable", async () => {
+    // @ts-expect-error - ensure it's absent for this test
+    delete navigator.share;
+
+    global.fetch = vi.fn((url: string) => {
+      if (url === "/api/campaigns/fpt38/generate") {
+        return Promise.resolve({ ok: true, json: async () => ({ resultUrl: "http://storage/results/t1-123.png" }) });
+      }
+      return Promise.resolve({ ok: true, blob: async () => new Blob(["x"], { type: "image/png" }) });
+    }) as unknown as typeof fetch;
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:fake-url");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    renderCreator();
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), new File(["x"], "me.jpg", { type: "image/jpeg" }));
+    await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
+    await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
+    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    await waitFor(() => expect(downloadBtn).not.toBeDisabled());
+    await userEvent.click(downloadBtn);
+
+    const fbLink = await screen.findByRole("link", { name: "Facebook" });
+    expect(fbLink.getAttribute("href")).toContain("facebook.com/sharer");
+    expect(fbLink.getAttribute("target")).toBe("_blank");
+  });
 });
