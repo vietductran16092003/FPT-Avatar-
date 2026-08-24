@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   description: "Tạo avatar cá nhân theo khung ảnh của các chiến dịch sự kiện FPT đang diễn ra.",
 };
 
+// SessionProvider in the (public) layout requires a per-request render;
+// prerendering this page statically crashes the build ("React Context is
+// unavailable in Server Components").
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const campaigns = await fetchActiveCampaigns();
   return <CampaignCards campaigns={campaigns} />;
