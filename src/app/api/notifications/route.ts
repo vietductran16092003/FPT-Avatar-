@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 const PUBLIC_NOTIFICATION_TYPES = ["campaign-create", "campaign-update", "campaign-delete"] as const;
 
 export async function GET() {
