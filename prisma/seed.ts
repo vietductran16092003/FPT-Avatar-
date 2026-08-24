@@ -1,6 +1,24 @@
 import { PrismaClient } from "@prisma/client";
+import { readFile } from "fs/promises";
+import { join } from "path";
+import { getStorage } from "../src/lib/storage";
+import type { ImageStorage } from "../src/lib/storage/types";
 
-export async function seedDatabase(client: PrismaClient) {
+const SEED_ASSETS_DIR = join(__dirname, "seed-assets");
+
+// The seeded Campaign/Template rows reference these frame image keys, but a
+// fresh MinIO volume has no files at all — without this upload, the public
+// preview and /generate compositing silently never render (they wait on the
+// frame image, which just 404s forever) even though the DB looks complete.
+async function uploadPlaceholderFrame(storage: ImageStorage, assetFile: string, key: string) {
+  const buffer = await readFile(join(SEED_ASSETS_DIR, assetFile));
+  await storage.upload(key, buffer, "image/png");
+}
+
+export async function seedDatabase(client: PrismaClient, storage: ImageStorage = getStorage()) {
+  await uploadPlaceholderFrame(storage, "frame-fpt38-orange.png", "frames/fpt38-orange.png");
+  await uploadPlaceholderFrame(storage, "frame-tw-blue.png", "frames/tw-blue.png");
+
   await client.campaign.create({
     data: {
       slug: "fpt38",
