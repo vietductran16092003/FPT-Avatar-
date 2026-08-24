@@ -53,6 +53,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
   function selectTemplate(id: string) {
     setSelectedId(id);
     setOverlayValues({});
+    setResultUrl(null);
   }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -66,6 +67,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
     setPhotoError(null);
     setPhotoFile(file);
     setTransform({ scale: 1, ox: 0, oy: 0 });
+    setResultUrl(null);
   }
 
   useEffect(() => {
@@ -83,10 +85,16 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
   }, [photoFile]);
 
   useEffect(() => {
+    let cancelled = false;
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => setFrameImg(img);
+    img.onload = () => {
+      if (!cancelled) setFrameImg(img);
+    };
     img.src = selected.frameImageUrl;
+    return () => {
+      cancelled = true;
+    };
   }, [selected.frameImageUrl]);
 
   useEffect(() => {
@@ -146,6 +154,8 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
       a.click();
       a.remove();
       URL.revokeObjectURL(objectUrl);
+    } catch {
+      setDownloadError(t("errorGeneric"));
     } finally {
       setDownloading(false);
     }

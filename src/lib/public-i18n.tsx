@@ -92,6 +92,7 @@ function loadSavedLang(): PublicLang {
 }
 
 export function PublicLangProvider({ children }: { children: React.ReactNode }) {
+  const existing = useContext(PublicLangContext);
   const [lang, setLangState] = useState<PublicLang>("vi");
 
   useEffect(() => {
@@ -111,6 +112,14 @@ export function PublicLangProvider({ children }: { children: React.ReactNode }) 
     (key: PublicDictKey) => (PUBLIC_DICT[lang] as Record<string, string>)[key] ?? key,
     [lang],
   );
+
+  // If a PublicLangProvider already exists above this one in the tree, defer to it
+  // instead of creating a second, disconnected context (e.g. components that
+  // self-wrap for standalone unit testing but are also mounted under the layout's
+  // provider in the real app).
+  if (existing) {
+    return <>{children}</>;
+  }
 
   return <PublicLangContext.Provider value={{ lang, setLang, t }}>{children}</PublicLangContext.Provider>;
 }

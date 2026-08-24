@@ -51,6 +51,28 @@ describe("PublicLangProvider / usePublicLang", () => {
     expect(screen.getByTestId("lang").textContent).toBe("en");
   });
 
+  it("nested PublicLangProvider defers to the outer one instead of creating a disconnected context", async () => {
+    function InnerProbe() {
+      const { lang } = usePublicLang();
+      return <span data-testid="inner-lang">{lang}</span>;
+    }
+    render(
+      <PublicLangProvider>
+        <Probe />
+        <PublicLangProvider>
+          <InnerProbe />
+        </PublicLangProvider>
+      </PublicLangProvider>,
+    );
+    expect(screen.getByTestId("lang").textContent).toBe("vi");
+    expect(screen.getByTestId("inner-lang").textContent).toBe("vi");
+
+    await userEvent.click(screen.getByText("toggle"));
+
+    expect(screen.getByTestId("lang").textContent).toBe("en");
+    expect(screen.getByTestId("inner-lang").textContent).toBe("en");
+  });
+
   it("falls back to the key itself when a translation is missing", () => {
     function MissingKeyProbe() {
       const { t } = usePublicLang();
