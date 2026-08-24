@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getStorage } from "@/lib/storage";
 import { isCampaignPubliclyVisible } from "@/lib/campaign-visibility";
 
 export async function GET(_req: Request, { params }: { params: { slug: string } }) {
@@ -12,5 +13,11 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 
-  return NextResponse.json(campaign);
+  const storage = getStorage();
+  const templates = campaign.templates.map(t => ({
+    ...t,
+    frameImageUrl: storage.getPublicUrl(t.frameImageKey),
+  }));
+
+  return NextResponse.json({ ...campaign, templates });
 }
