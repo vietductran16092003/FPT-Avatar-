@@ -13,5 +13,6 @@ export default defineConfig({
     environment: "node",
     exclude: [...configDefaults.exclude, "**/.worktrees/**"],
     execArgv: ["--no-experimental-webstorage"],
+    setupFiles: ["./vitest.setup.ts"],
   },
 });

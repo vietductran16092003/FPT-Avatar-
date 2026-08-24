@@ -1,5 +1,5 @@
 import { getBaseUrl } from "@/lib/base-url";
-import { CampaignCompositor, type Template } from "./campaign-compositor";
+import { AvatarCreator, type Template } from "./avatar-creator";
 
 async function fetchCampaign(slug: string): Promise<{ templates: Template[] } | null> {
   const res = await fetch(`${getBaseUrl()}/api/campaigns/${slug}`, { cache: "no-store" });
@@ -18,5 +18,5 @@ export default async function CampaignPage({ params }: { params: { slug: string 
     return <p>Chiến dịch này chưa có khung ảnh nào. Vui lòng quay lại sau.</p>;
   }
 
-  return <CampaignCompositor templates={campaign.templates} />;
+  return <AvatarCreator slug={params.slug} templates={campaign.templates} />;
 }
