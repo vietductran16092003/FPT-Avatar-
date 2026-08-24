@@ -1,3 +1,5 @@
+"use client";
+
 import { SessionProvider } from "next-auth/react";
 import { PublicLangProvider } from "@/lib/public-i18n";
 import { PublicHeader } from "@/components/public-header";
