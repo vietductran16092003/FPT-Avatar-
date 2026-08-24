@@ -3,6 +3,19 @@ import AzureADProvider from "next-auth/providers/azure-ad";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 
+// Dev-login is an open "any email, no password" bypass (see the provider
+// below), so granting it admin unconditionally would let literally anyone
+// typing an email into that form reach /admin locally. Restrict admin grants
+// to an explicit allowlist even in dev — everyone else still gets in (as
+// role "user"), just without admin.
+export function isDevLoginAdminEmail(email: string): boolean {
+  const allowlist = (process.env.DEV_LOGIN_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  return allowlist.includes(email.toLowerCase());
+}
+
 // Exported separately (not just inline in the [...nextauth] route) so
 // getServerSession() in session.ts can be called with the exact same
 // options object — calling getServerSession() with no argument silently
@@ -38,14 +51,15 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (!user.email) return false;
       // First login creates the User with role "user" (or "admin" for the
-      // dev-login bypass, so a local tester can reach /admin without a
-      // manual DB edit). Admin role is otherwise granted by hand directly
-      // in the DB and must never be overwritten here on subsequent logins
-      // (spec §5, §9) — upsert only touches name/email, never role.
+      // dev-login bypass, but only for allowlisted emails — see
+      // isDevLoginAdminEmail). Admin role is otherwise granted by hand
+      // directly in the DB and must never be overwritten here on subsequent
+      // logins (spec §5, §9) — upsert only touches name/email, never role.
+      const isDevLoginAdmin = account?.provider === "dev-login" && isDevLoginAdminEmail(user.email);
       await prisma.user.upsert({
         where: { email: user.email },
         update: { name: user.name ?? undefined },
-        create: { email: user.email, name: user.name ?? undefined, role: account?.provider === "dev-login" ? "admin" : "user" },
+        create: { email: user.email, name: user.name ?? undefined, role: isDevLoginAdmin ? "admin" : "user" },
       });
       return true;
     },
