@@ -46,6 +46,24 @@ async function findDownloadButton() {
 }
 
 describe("AvatarCreator", () => {
+  it("shows the campaign title (localized) as a page heading when displayConfig is provided", () => {
+    render(
+      <PublicLangProvider>
+        <AvatarCreator
+          slug="fpt38"
+          templates={templates}
+          displayConfig={{ title: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38", titleEn: "FPT 38th Anniversary Avatar Frame" }}
+        />
+      </PublicLangProvider>,
+    );
+    expect(screen.getByRole("heading", { name: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38" })).toBeTruthy();
+  });
+
+  it("renders without a title heading when displayConfig is not provided", () => {
+    renderCreator();
+    expect(screen.queryByRole("heading")).toBeNull();
+  });
+
   it("shows the frame name and step labels", () => {
     renderCreator();
     expect(screen.getByText("Khung cam")).toBeTruthy();

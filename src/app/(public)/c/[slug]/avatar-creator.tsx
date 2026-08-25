@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAvatarCanvas, CANVAS_SIZE } from "./use-avatar-canvas";
 import { resolveOverlayDraws, type TextOverlay } from "@/lib/compositing/overlay-layout";
 import { PublicLangProvider, usePublicLang } from "@/lib/public-i18n";
+import { pickLocalized, type DisplayConfigLike } from "@/lib/localized-content";
 import { cn } from "@/lib/utils";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -15,15 +16,31 @@ export interface Template {
   overlayConfig: { photoArea: { x: number; y: number; w: number; h: number }; textOverlays: TextOverlay[] };
 }
 
-export function AvatarCreator({ slug, templates }: { slug: string; templates: Template[] }) {
+export function AvatarCreator({
+  slug,
+  templates,
+  displayConfig,
+}: {
+  slug: string;
+  templates: Template[];
+  displayConfig?: DisplayConfigLike;
+}) {
   return (
     <PublicLangProvider>
-      <AvatarCreatorInner slug={slug} templates={templates} />
+      <AvatarCreatorInner slug={slug} templates={templates} displayConfig={displayConfig} />
     </PublicLangProvider>
   );
 }
 
-function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Template[] }) {
+function AvatarCreatorInner({
+  slug,
+  templates,
+  displayConfig,
+}: {
+  slug: string;
+  templates: Template[];
+  displayConfig?: DisplayConfigLike;
+}) {
   const { t, lang } = usePublicLang();
   const [selectedId, setSelectedId] = useState(templates[0].id);
   const [overlayValues, setOverlayValues] = useState<Record<string, string>>({});
@@ -164,8 +181,14 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
     !!photoFile &&
     selected.overlayConfig.textOverlays.every(o => !!(overlayValues[o.key] && overlayValues[o.key].trim()));
 
+  const campaignTitle = displayConfig ? pickLocalized(displayConfig, "title", lang) : "";
+
   return (
-    <div className="mx-auto max-w-5xl p-6 pb-24 lg:grid lg:grid-cols-[1fr_360px] lg:gap-8 lg:pb-6">
+    <div className="mx-auto max-w-5xl p-6 pb-24 lg:pb-6">
+      {campaignTitle && (
+        <h1 className="mb-6 text-2xl font-extrabold tracking-tight">{campaignTitle}</h1>
+      )}
+      <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-8">
       <div className={cn("flex flex-col gap-8", mobileView === "preview" && "hidden lg:flex")}>
         <div>
           <div className="mb-1 text-lg font-extrabold tracking-tight">{t("stepUpload")}</div>
@@ -331,6 +354,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
             )}
           </div>
         )}
+      </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-10 flex gap-2 border-t border-border bg-background p-3 lg:hidden">

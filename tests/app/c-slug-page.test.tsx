@@ -55,6 +55,21 @@ describe("CampaignPage", () => {
     expect(screen.getByText("Khung cam")).toBeTruthy();
   });
 
+  it("shows the campaign's display title as a heading above the tool", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        slug: "fpt38",
+        displayConfig: { title: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38" },
+        templates: [{ id: "t1", name: "Khung cam", frameImageUrl: "http://storage/frames/x.png", overlayConfig: { photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] } }],
+      }),
+    });
+
+    render(await CampaignPage({ params: { slug: "fpt38" } }));
+
+    expect(screen.getByRole("heading", { name: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38" })).toBeTruthy();
+  });
+
   it("redirects to the public home (not /admin/login) with a callback URL when signed out", async () => {
     (getCurrentUser as any).mockResolvedValue(null);
     global.fetch = vi.fn();
