@@ -3,7 +3,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 const signInMock = vi.fn();
 vi.mock("next-auth/react", () => ({ signIn: (...args: unknown[]) => signInMock(...args) }));
 
-import { signInAsMockUser, signInAsMockAdmin, isMockFptLoginEnabled, MOCK_USER_EMAIL, MOCK_ADMIN_EMAIL } from "../../src/lib/mock-fpt-auth";
+import { signInAsMockAdmin, isMockFptLoginEnabled, MOCK_ADMIN_EMAIL } from "../../src/lib/mock-fpt-auth";
 
 const ORIGINAL_FLAG = process.env.NEXT_PUBLIC_DEV_LOGIN_ENABLED;
 
@@ -31,19 +31,6 @@ describe("isMockFptLoginEnabled", () => {
   });
 });
 
-describe("signInAsMockUser", () => {
-  it("signs in with Azure AD when mock login is disabled", () => {
-    signInAsMockUser("/c/fpt38");
-    expect(signInMock).toHaveBeenCalledWith("azure-ad", { callbackUrl: "/c/fpt38" });
-  });
-
-  it("signs in as the fixed mock USER account when mock login is enabled", () => {
-    process.env.NEXT_PUBLIC_DEV_LOGIN_ENABLED = "true";
-    signInAsMockUser("/c/fpt38");
-    expect(signInMock).toHaveBeenCalledWith("dev-login", { email: MOCK_USER_EMAIL, callbackUrl: "/c/fpt38" });
-  });
-});
-
 describe("signInAsMockAdmin", () => {
   it("signs in with Azure AD when mock login is disabled", () => {
     signInAsMockAdmin("/admin/campaigns");
@@ -54,11 +41,5 @@ describe("signInAsMockAdmin", () => {
     process.env.NEXT_PUBLIC_DEV_LOGIN_ENABLED = "true";
     signInAsMockAdmin("/admin/campaigns");
     expect(signInMock).toHaveBeenCalledWith("dev-login", { email: MOCK_ADMIN_EMAIL, callbackUrl: "/admin/campaigns" });
-  });
-});
-
-describe("mock account identities", () => {
-  it("uses two distinct fixed emails for the user and admin mock accounts", () => {
-    expect(MOCK_USER_EMAIL).not.toBe(MOCK_ADMIN_EMAIL);
   });
 });

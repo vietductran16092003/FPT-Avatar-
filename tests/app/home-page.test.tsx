@@ -29,7 +29,7 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage({}));
+    render(await HomePage());
 
     expect(screen.getByText("Chưa có khung ảnh, vui lòng quay lại sau.")).toBeTruthy();
     expect(screen.queryByRole("link")).toBeNull();
@@ -44,7 +44,7 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage({}));
+    render(await HomePage());
 
     expect(screen.getByRole("link").getAttribute("href")).toBe("/c/fpt38");
   });
@@ -64,7 +64,7 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage({}));
+    render(await HomePage());
 
     await waitFor(() => expect(screen.getByText("FPT turns 38")).toBeTruthy());
     expect(screen.getByText("Description")).toBeTruthy();
@@ -81,7 +81,7 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage({}));
+    render(await HomePage());
 
     expect(screen.getByRole("link").getAttribute("href")).toBe("/c/fpt38");
     expect(screen.queryByRole("button", { name: "Đăng nhập với tài khoản FPT" })).toBeNull();
