@@ -3,10 +3,15 @@
  */
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
+
+vi.mock("../../src/lib/session", () => ({ getCurrentUser: vi.fn() }));
+
 import HomePage from "../../src/app/(public)/page";
+import { getCurrentUser } from "../../src/lib/session";
 
 beforeEach(() => {
   localStorage.clear();
+  (getCurrentUser as any).mockResolvedValue({ id: "u1", role: "user" });
 });
 
 afterEach(() => {
@@ -24,7 +29,7 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage());
+    render(await HomePage({}));
 
     expect(screen.getByText("Chưa có khung ảnh, vui lòng quay lại sau.")).toBeTruthy();
     expect(screen.queryByRole("link")).toBeNull();
@@ -39,7 +44,7 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage());
+    render(await HomePage({}));
 
     expect(screen.getByRole("link").getAttribute("href")).toBe("/c/fpt38");
   });
@@ -59,10 +64,20 @@ describe("HomePage", () => {
       }],
     });
 
-    render(await HomePage());
+    render(await HomePage({}));
 
     await waitFor(() => expect(screen.getByText("FPT turns 38")).toBeTruthy());
     expect(screen.getByText("Description")).toBeTruthy();
     expect(screen.getByText("Create now")).toBeTruthy();
+  });
+
+  it("shows a login prompt instead of the campaign dashboard when signed out, without fetching campaigns", async () => {
+    (getCurrentUser as any).mockResolvedValue(null);
+    global.fetch = vi.fn();
+
+    render(await HomePage({}));
+
+    expect(screen.getByRole("button", { name: "Đăng nhập với tài khoản FPT" })).toBeTruthy();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

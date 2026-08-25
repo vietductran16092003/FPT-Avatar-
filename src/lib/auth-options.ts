@@ -28,9 +28,11 @@ export const authOptions: NextAuthOptions = {
       tenantId: process.env.AZURE_AD_TENANT_ID!,
     }),
     // Dev-only bypass for local testing while the Azure AD infra gate
-    // (spec §10) is unconfirmed — no password check, just an email. Never
-    // registered in production so it can't become a real auth bypass.
-    ...(process.env.NODE_ENV !== "production"
+    // (spec §10) is unconfirmed — no password check, just an email. Only
+    // registers in local dev, and only while Azure AD isn't actually
+    // configured, so it can't become a real auth bypass and self-disables
+    // the moment real Azure AD credentials are added to the environment.
+    ...(process.env.NODE_ENV === "development" && !process.env.AZURE_AD_CLIENT_ID
       ? [
           CredentialsProvider({
             id: "dev-login",

@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
 import { getBaseUrl } from "@/lib/base-url";
 import { AvatarCreator, type Template } from "./avatar-creator";
 
@@ -8,6 +10,11 @@ async function fetchCampaign(slug: string): Promise<{ templates: Template[] } | 
 }
 
 export default async function CampaignPage({ params }: { params: { slug: string } }) {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/?callbackUrl=${encodeURIComponent(`/c/${params.slug}`)}`);
+  }
+
   const campaign = await fetchCampaign(params.slug);
 
   if (!campaign) {

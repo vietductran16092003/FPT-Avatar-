@@ -65,20 +65,24 @@ export function PublicHeader() {
       </div>
       <div className="flex items-center gap-3">
         <LangToggle />
-        {isAdmin && (
-          <Link href="/admin/campaigns" className="text-sm font-semibold text-primary hover:underline">
-            {t("goAdmin")}
-          </Link>
+        {session?.user && (
+          <>
+            {isAdmin && (
+              <Link href="/admin/campaigns" className="text-sm font-semibold text-primary hover:underline">
+                {t("goAdmin")}
+              </Link>
+            )}
+            <PublicNotificationBell />
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              {t("logout")}
+            </button>
+            <AvatarWithName />
+          </>
         )}
-        <PublicNotificationBell />
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: "/admin/login" })}
-          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
-          {t("logout")}
-        </button>
-        <AvatarWithName />
       </div>
     </header>
   );

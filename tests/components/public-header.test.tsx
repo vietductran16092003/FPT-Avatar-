@@ -50,17 +50,25 @@ describe("PublicHeader", () => {
     expect(screen.getByText("Nguyen Van A")).toBeTruthy();
   });
 
-  it("renders a logout button that calls signOut with the login callback URL", async () => {
+  it("renders a logout button that calls signOut with the public home as callback URL", async () => {
     renderHeader();
 
     await userEvent.click(screen.getByRole("button", { name: "Đăng xuất" }));
 
-    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/admin/login" });
+    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/" });
   });
 
   it("renders the public notification bell", () => {
     renderHeader();
     expect(screen.getByRole("button", { name: "Thông báo" })).toBeTruthy();
+  });
+
+  it("hides session-only controls (avatar, logout, notification bell) when no one is signed in", () => {
+    sessionValue = { data: null };
+    renderHeader();
+    expect(screen.queryByRole("button", { name: "Đăng xuất" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Thông báo" })).toBeNull();
+    expect(screen.queryByText("Nguyen Van A")).toBeNull();
   });
 
   it("does not show the admin panel link for a regular (non-admin) user", () => {
