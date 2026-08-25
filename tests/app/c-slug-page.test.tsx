@@ -7,9 +7,6 @@ import { render, screen, cleanup } from "@testing-library/react";
 vi.mock("../../src/lib/session", () => ({ getCurrentUser: vi.fn() }));
 const redirectMock = vi.fn();
 vi.mock("next/navigation", () => ({
-  // Mirrors real next/navigation: redirect() throws to halt the render, so
-  // code after the call never runs — a plain no-op mock would let
-  // fetchCampaign() run anyway and mask the redirect-then-stop behavior.
   redirect: (...args: unknown[]) => {
     redirectMock(...args);
     throw new Error("NEXT_REDIRECT");
@@ -52,7 +49,7 @@ describe("CampaignPage", () => {
 
     render(await CampaignPage({ params: { slug: "fpt38" } }));
 
-    expect(screen.getByText("Khung cam")).toBeTruthy();
+    expect(screen.queryAllByRole("button", { name: "TẢI ẢNH" })).toBeTruthy();
   });
 
   it("shows the campaign's display title as a heading above the tool", async () => {
@@ -70,13 +67,19 @@ describe("CampaignPage", () => {
     expect(screen.getByRole("heading", { name: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38" })).toBeTruthy();
   });
 
-  it("redirects to the public home (not /admin/login) with a callback URL when signed out", async () => {
+  it("renders the avatar creator (no redirect) even when signed out", async () => {
     (getCurrentUser as any).mockResolvedValue(null);
-    global.fetch = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        slug: "fpt38",
+        templates: [{ id: "t1", name: "Khung cam", frameImageUrl: "http://storage/frames/x.png", overlayConfig: { photoArea: { x: 0, y: 0, w: 10, h: 10 }, textOverlays: [] } }],
+      }),
+    });
 
-    await expect(CampaignPage({ params: { slug: "fpt38" } })).rejects.toThrow("NEXT_REDIRECT");
+    render(await CampaignPage({ params: { slug: "fpt38" } }));
 
-    expect(redirectMock).toHaveBeenCalledWith("/?callbackUrl=%2Fc%2Ffpt38");
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.queryAllByRole("button", { name: "TẢI ẢNH" })).toBeTruthy();
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 });
