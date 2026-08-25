@@ -1,25 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { renderPreview } from "@/lib/compositing/browser-compositor";
-import type { TextOverlay } from "@/lib/compositing/overlay-layout";
+import { useAvatarCanvas, CANVAS_SIZE } from "./use-avatar-canvas";
+import { resolveOverlayDraws, type TextOverlay } from "@/lib/compositing/overlay-layout";
 import { PublicLangProvider, usePublicLang } from "@/lib/public-i18n";
 import { cn } from "@/lib/utils";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 3;
-const ZOOM_STEP = 0.1;
 
 export interface Template {
   id: string;
   name: string;
   frameImageUrl: string;
   overlayConfig: { photoArea: { x: number; y: number; w: number; h: number }; textOverlays: TextOverlay[] };
-}
-
-function clampPan(v: number): number {
-  return Math.max(-0.45, Math.min(0.45, v));
 }
 
 export function AvatarCreator({ slug, templates }: { slug: string; templates: Template[] }) {
@@ -31,22 +24,23 @@ export function AvatarCreator({ slug, templates }: { slug: string; templates: Te
 }
 
 function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Template[] }) {
-  const { t } = usePublicLang();
+  const { t, lang } = usePublicLang();
   const [selectedId, setSelectedId] = useState(templates[0].id);
   const [overlayValues, setOverlayValues] = useState<Record<string, string>>({});
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoImg, setPhotoImg] = useState<HTMLImageElement | null>(null);
   const [frameImg, setFrameImg] = useState<HTMLImageElement | null>(null);
-  const [transform, setTransform] = useState({ scale: 1, ox: 0, oy: 0 });
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef({ dragging: false, startX: 0, startY: 0, startOx: 0, startOy: 0 });
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const { setPhoto, setFrame, setOverlays, getTransform, zoomBy, ZOOM_STEP } = useAvatarCanvas(canvasRef);
 
   const selected = templates.find(t => t.id === selectedId)!;
 
@@ -56,18 +50,28 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
     setResultUrl(null);
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function stagePhotoFile(file: File) {
     if (file.size > MAX_PHOTO_BYTES) {
       setPhotoError(`Ảnh vượt quá 10MB, vui lòng chọn ảnh nhỏ hơn.`);
-      e.target.value = "";
       return;
     }
     setPhotoError(null);
     setPhotoFile(file);
-    setTransform({ scale: 1, ox: 0, oy: 0 });
     setResultUrl(null);
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    stagePhotoFile(file);
+    if (file.size > MAX_PHOTO_BYTES) e.target.value = "";
+  }
+
+  function handlePhotoDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) stagePhotoFile(file);
   }
 
   useEffect(() => {
@@ -87,7 +91,6 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
   useEffect(() => {
     let cancelled = false;
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.onload = () => {
       if (!cancelled) setFrameImg(img);
     };
@@ -97,33 +100,23 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
     };
   }, [selected.frameImageUrl]);
 
+  // Photo/frame/overlay layers are pushed into the fabric canvas imperatively
+  // via the hook rather than declaratively re-rendered — fabric owns the
+  // interactive pan/zoom state for the photo layer between these updates.
   useEffect(() => {
-    if (!canvasRef.current || !frameImg || !photoImg) return;
-    renderPreview(canvasRef.current, frameImg, photoImg, selected.overlayConfig.photoArea, selected.overlayConfig.textOverlays, overlayValues, transform);
-  }, [frameImg, photoImg, selected, overlayValues, transform]);
-
-  function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!photoImg) return;
-    dragRef.current = { dragging: true, startX: e.clientX, startY: e.clientY, startOx: transform.ox, startOy: transform.oy };
-    (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
-  }
+    setPhoto(photoImg, selected.overlayConfig.photoArea);
+  }, [photoImg, selected, setPhoto]);
 
-  function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!dragRef.current.dragging || !stageRef.current) return;
-    const rect = stageRef.current.getBoundingClientRect();
-    const nx = clampPan(dragRef.current.startOx + (e.clientX - dragRef.current.startX) / rect.width);
-    const ny = clampPan(dragRef.current.startOy + (e.clientY - dragRef.current.startY) / rect.height);
-    setTransform(tr => ({ ...tr, ox: nx, oy: ny }));
-  }
+  useEffect(() => {
+    if (!frameImg) return;
+    setFrame(frameImg);
+  }, [frameImg, setFrame]);
 
-  function handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
-    dragRef.current.dragging = false;
-    try {
-      (e.target as HTMLCanvasElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // pointer already released — nothing to do
-    }
-  }
+  useEffect(() => {
+    const draws = resolveOverlayDraws(selected.overlayConfig.textOverlays, overlayValues, CANVAS_SIZE, CANVAS_SIZE, lang);
+    setOverlays(draws);
+  }, [selected, overlayValues, lang, setOverlays]);
 
   async function handleDownload() {
     if (!photoFile) return;
@@ -134,6 +127,8 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
       form.set("templateId", selected.id);
       form.set("photo", photoFile);
       form.set("overlayValues", JSON.stringify(overlayValues));
+      form.set("language", lang);
+      form.set("transform", JSON.stringify(getTransform()));
 
       const res = await fetch(`/api/campaigns/${slug}/generate`, { method: "POST", body: form });
       if (!res.ok) {
@@ -170,30 +165,45 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
     selected.overlayConfig.textOverlays.every(o => !!(overlayValues[o.key] && overlayValues[o.key].trim()));
 
   return (
-    <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 p-6 lg:grid-cols-[1fr_360px]">
-      <div className="flex flex-col gap-8">
+    <div className="mx-auto max-w-5xl p-6 pb-24 lg:grid lg:grid-cols-[1fr_360px] lg:gap-8 lg:pb-6">
+      <div className={cn("flex flex-col gap-8", mobileView === "preview" && "hidden lg:flex")}>
         <div>
-          <div className="mb-1 text-[15px] font-bold">{t("stepUpload")}</div>
+          <div className="mb-1 text-lg font-extrabold tracking-tight">{t("stepUpload")}</div>
           <div className="mb-3 text-[13px] text-muted-foreground">{t("stepUploadHint")}</div>
           {photoError && <p role="alert" className="mb-2 text-sm text-destructive">{photoError}</p>}
-          <label htmlFor="photo-input" className="cursor-pointer">
+          <label
+            htmlFor="photo-input"
+            data-testid="photo-dropzone"
+            className="cursor-pointer"
+            onDragOver={e => {
+              e.preventDefault();
+              setIsDraggingPhoto(true);
+            }}
+            onDragLeave={() => setIsDraggingPhoto(false)}
+            onDrop={handlePhotoDrop}
+          >
             {photoFile ? (
               <div className="flex items-center gap-3">
                 <img src={photoPreviewUrl ?? undefined} alt="" className="size-20 rounded-full border border-border object-cover" />
                 <span className="text-sm font-semibold text-primary">{t("changePhoto")}</span>
               </div>
             ) : (
-              <div className="rounded-2xl border-2 border-dashed border-border bg-muted/40 p-8 text-center">
-                <div className="mb-1 text-sm font-bold">{t("dropTitle")}</div>
+              <div
+                className={cn(
+                  "rounded-2xl border-2 border-dashed p-8 text-center transition-colors",
+                  isDraggingPhoto ? "border-primary bg-primary/10" : "border-border bg-muted/40",
+                )}
+              >
+                <div className="mb-1 text-base font-bold">{t("dropTitle")}</div>
                 <div className="text-xs text-muted-foreground">{t("dropSub")}</div>
               </div>
             )}
           </label>
-          <input id="photo-input" aria-label={t("stepUpload")} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handlePhotoChange} />
+          <input ref={photoInputRef} id="photo-input" aria-label={t("stepUpload")} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handlePhotoChange} />
         </div>
 
         <div>
-          <div className="mb-3 text-[15px] font-bold">{t("stepTemplate")}</div>
+          <div className="mb-3 text-lg font-extrabold tracking-tight">{t("stepTemplate")}</div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {templates.map(tpl => (
               <button
@@ -215,14 +225,14 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
         </div>
 
         <div>
-          <div className="mb-3 text-[15px] font-bold">{t("stepOverlay")}</div>
+          <div className="mb-3 text-lg font-extrabold tracking-tight">{t("stepOverlay")}</div>
           <div className="flex flex-col gap-3">
             {selected.overlayConfig.textOverlays.map(overlay => (
               <div key={overlay.key} className="space-y-1">
-                <label htmlFor={`overlay-${overlay.key}`} className="text-xs font-semibold text-muted-foreground">
+                <label htmlFor={`overlay-${overlay.key}`} className="text-xs font-bold tracking-wide text-muted-foreground">
                   {overlay.label}
                 </label>
-                {overlay.type === "select" ? (
+                {overlay.type === "select" || overlay.type === "yearsSince" ? (
                   <select
                     id={`overlay-${overlay.key}`}
                     value={overlayValues[overlay.key] ?? ""}
@@ -249,35 +259,25 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="mb-3 text-[15px] font-bold">{t("previewTitle")}</div>
-        <div ref={stageRef} className="relative mb-2 aspect-square overflow-hidden rounded-xl" style={{ boxShadow: "inset 0 0 0 1px rgba(16,30,46,.16)" }}>
+      <div className={cn("rounded-2xl border border-border bg-card p-5 shadow-sm", mobileView === "edit" && "hidden lg:block")}>
+        <button type="button" onClick={() => setMobileView("edit")} className="mb-3 text-xs font-semibold text-muted-foreground lg:hidden">
+          {t("backToEdit")}
+        </button>
+        <div className="mb-3 text-lg font-extrabold tracking-tight">{t("previewTitle")}</div>
+        <div className="relative mx-auto mb-2 w-full max-w-[480px] overflow-hidden rounded-xl" style={{ aspectRatio: "1 / 1", boxShadow: "inset 0 0 0 1px rgba(16,30,46,.16)" }}>
           <canvas
             ref={canvasRef}
-            width={800}
-            height={800}
+            width={CANVAS_SIZE}
+            height={CANVAS_SIZE}
             className="h-full w-full touch-none"
             style={{ cursor: photoImg ? "grab" : "default" }}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
           />
         </div>
         {photoImg && (
-          <div className="mb-3 flex items-center gap-2">
-            <button type="button" onClick={() => setTransform(tr => ({ ...tr, scale: Math.max(MIN_ZOOM, +(tr.scale - ZOOM_STEP).toFixed(2)) }))} className="flex size-7 items-center justify-center rounded-lg border border-input text-sm font-bold">−</button>
-            <input
-              type="range"
-              aria-label="Zoom"
-              min={MIN_ZOOM}
-              max={MAX_ZOOM}
-              step={0.01}
-              value={transform.scale}
-              onChange={e => setTransform(tr => ({ ...tr, scale: Number(e.target.value) }))}
-              className="flex-1"
-            />
-            <button type="button" onClick={() => setTransform(tr => ({ ...tr, scale: Math.min(MAX_ZOOM, +(tr.scale + ZOOM_STEP).toFixed(2)) }))} className="flex size-7 items-center justify-center rounded-lg border border-input text-sm font-bold">+</button>
+          <div className="mb-3 flex items-center justify-center gap-2">
+            <button type="button" onClick={() => zoomBy(-ZOOM_STEP)} className="flex size-7 items-center justify-center rounded-lg border border-input text-sm font-bold">−</button>
+            <span className="text-xs text-muted-foreground">{t("zoomHint")}</span>
+            <button type="button" onClick={() => zoomBy(ZOOM_STEP)} className="flex size-7 items-center justify-center rounded-lg border border-input text-sm font-bold">+</button>
           </div>
         )}
         <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{t("previewNote")}</p>
@@ -286,7 +286,7 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
           type="button"
           disabled={!stepsComplete || downloading}
           onClick={handleDownload}
-          className="mb-2 w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
+          className="mb-2 hidden w-full rounded-full bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-40 lg:block"
         >
           {t("downloadButton")}
         </button>
@@ -331,6 +331,31 @@ function AvatarCreatorInner({ slug, templates }: { slug: string; templates: Temp
             )}
           </div>
         )}
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-2 border-t border-border bg-background p-3 lg:hidden">
+        <button
+          type="button"
+          onClick={() => photoInputRef.current?.click()}
+          className="flex-1 rounded-full border border-[#FF5A01] bg-[#FFE7CF] px-3 py-3 text-xs font-bold text-[#FF5A01]"
+        >
+          {photoFile ? t("changePhotoButton") : t("uploadPhotoButton")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileView("preview")}
+          className="flex-1 rounded-full border border-[#FF5A01] bg-[#FFE7CF] px-3 py-3 text-xs font-bold text-[#FF5A01]"
+        >
+          {t("previewLabel")}
+        </button>
+        <button
+          type="button"
+          disabled={!stepsComplete || downloading}
+          onClick={handleDownload}
+          className="flex-1 rounded-full bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] px-3 py-3 text-xs font-bold text-primary-foreground disabled:opacity-40"
+        >
+          {t("downloadButton")}
+        </button>
       </div>
     </div>
   );

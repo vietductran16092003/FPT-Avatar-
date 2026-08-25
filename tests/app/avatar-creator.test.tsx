@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PublicLangProvider } from "../../src/lib/public-i18n";
 import { AvatarCreator, type Template } from "../../src/app/(public)/c/[slug]/avatar-creator";
@@ -34,6 +34,17 @@ function renderCreator(tpls: Template[] = templates) {
   );
 }
 
+// The download action is rendered twice — once in the desktop preview panel,
+// once in the mobile sticky bottom bar — both wired to the same handler and
+// disabled state. jsdom renders both regardless of the Tailwind `hidden`
+// class (no real CSS layout), so tests target the first (desktop) instance.
+function getDownloadButton() {
+  return screen.getAllByRole("button", { name: "TẢI ẢNH" })[0];
+}
+async function findDownloadButton() {
+  return (await screen.findAllByRole("button", { name: "TẢI ẢNH" }))[0];
+}
+
 describe("AvatarCreator", () => {
   it("shows the frame name and step labels", () => {
     renderCreator();
@@ -52,7 +63,7 @@ describe("AvatarCreator", () => {
 
   it("disables the download button until a photo is uploaded and all overlay fields are filled", async () => {
     renderCreator();
-    const downloadBtn = screen.getByRole("button", { name: "Tải ảnh về máy" });
+    const downloadBtn = getDownloadButton();
     expect(downloadBtn).toBeDisabled();
 
     const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
@@ -65,13 +76,32 @@ describe("AvatarCreator", () => {
     await waitFor(() => expect(downloadBtn).not.toBeDisabled());
   });
 
+  it("accepts a photo dropped onto the upload dropzone", async () => {
+    renderCreator();
+    const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
+
+    fireEvent.drop(screen.getByTestId("photo-dropzone"), { dataTransfer: { files: [file] } });
+
+    await waitFor(() => expect(screen.getByText("Đổi ảnh khác")).toBeTruthy());
+  });
+
+  it("rejects a dropped photo over 10MB with a visible warning and does not stage it", async () => {
+    renderCreator();
+    const oversized = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" });
+
+    fireEvent.drop(screen.getByTestId("photo-dropzone"), { dataTransfer: { files: [oversized] } });
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/10MB/));
+    expect(getDownloadButton()).toBeDisabled();
+  });
+
   it("rejects a photo over 10MB with a visible warning and does not stage it", async () => {
     renderCreator();
     const oversized = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" });
     await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), oversized);
 
     expect(screen.getByRole("alert").textContent).toMatch(/10MB/);
-    expect(screen.getByRole("button", { name: "Tải ảnh về máy" })).toBeDisabled();
+    expect(getDownloadButton()).toBeDisabled();
   });
 
   it("switches the selected frame and resets its overlay field values when a second template is chosen", async () => {
@@ -111,7 +141,7 @@ describe("AvatarCreator", () => {
     await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
     await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
 
-    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    const downloadBtn = await findDownloadButton();
     await waitFor(() => expect(downloadBtn).not.toBeDisabled());
     await userEvent.click(downloadBtn);
 
@@ -136,7 +166,7 @@ describe("AvatarCreator", () => {
     await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
     await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
 
-    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    const downloadBtn = await findDownloadButton();
     await waitFor(() => expect(downloadBtn).not.toBeDisabled());
     await userEvent.click(downloadBtn);
 
@@ -152,7 +182,7 @@ describe("AvatarCreator", () => {
     await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
     await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
 
-    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    const downloadBtn = await findDownloadButton();
     await waitFor(() => expect(downloadBtn).not.toBeDisabled());
     await userEvent.click(downloadBtn);
 
@@ -183,7 +213,7 @@ describe("AvatarCreator", () => {
     await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), new File(["x"], "me.jpg", { type: "image/jpeg" }));
     await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
     await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
-    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    const downloadBtn = await findDownloadButton();
     await waitFor(() => expect(downloadBtn).not.toBeDisabled());
     await userEvent.click(downloadBtn);
 
@@ -213,7 +243,7 @@ describe("AvatarCreator", () => {
     await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), new File(["x"], "me.jpg", { type: "image/jpeg" }));
     await userEvent.type(screen.getByLabelText("Câu châm ngôn"), "Dream Big");
     await userEvent.selectOptions(screen.getByLabelText("Đơn vị"), "FPT Software");
-    const downloadBtn = await screen.findByRole("button", { name: "Tải ảnh về máy" });
+    const downloadBtn = await findDownloadButton();
     await waitFor(() => expect(downloadBtn).not.toBeDisabled());
     await userEvent.click(downloadBtn);
 
