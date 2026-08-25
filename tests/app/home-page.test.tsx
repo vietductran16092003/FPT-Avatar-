@@ -71,13 +71,19 @@ describe("HomePage", () => {
     expect(screen.getByText("Create now")).toBeTruthy();
   });
 
-  it("shows a login prompt instead of the campaign dashboard when signed out, without fetching campaigns", async () => {
+  it("shows the campaign dashboard (not a login prompt) even when signed out", async () => {
     (getCurrentUser as any).mockResolvedValue(null);
-    global.fetch = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      json: async () => [{
+        slug: "fpt38", status: "active", startDate: "2026-01-01", endDate: "2026-12-31",
+        language: "vi", displayConfig: { title: "FPT 38", description: "", ctaLabel: "Tạo avatar ngay" },
+        _count: { templates: 1 },
+      }],
+    });
 
     render(await HomePage({}));
 
-    expect(screen.getByRole("button", { name: "Đăng nhập với tài khoản FPT" })).toBeTruthy();
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.getByRole("link").getAttribute("href")).toBe("/c/fpt38");
+    expect(screen.queryByRole("button", { name: "Đăng nhập với tài khoản FPT" })).toBeNull();
   });
 });
