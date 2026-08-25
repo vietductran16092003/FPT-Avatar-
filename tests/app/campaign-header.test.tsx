@@ -1,9 +1,17 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null }),
+  signOut: vi.fn(),
+}));
+vi.mock("next/navigation", () => ({
+  useParams: () => ({ slug: "test-campaign" }),
+}));
+
 import { CampaignHeader } from "../../src/app/(public)/c/[slug]/campaign-header";
 import { PublicLangProvider } from "../../src/lib/public-i18n";
 

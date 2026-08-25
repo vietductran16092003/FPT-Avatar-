@@ -33,7 +33,7 @@ describe("AccountPage", () => {
   it("redirects to login with a callbackUrl when signed out", async () => {
     (getCurrentUser as any).mockResolvedValue(null);
 
-    await expect(AccountPage({})).rejects.toThrow("NEXT_REDIRECT");
+    await expect(AccountPage()).rejects.toThrow("NEXT_REDIRECT");
 
     expect(redirectMock).toHaveBeenCalledWith("/admin/login?callbackUrl=%2Ftai-khoan");
     expect(prisma.generatedAvatar.findMany).not.toHaveBeenCalled();
@@ -43,7 +43,7 @@ describe("AccountPage", () => {
     (getCurrentUser as any).mockResolvedValue({ id: "u1", role: "user" });
     (prisma.generatedAvatar.findMany as any).mockResolvedValue([]);
 
-    render(await AccountPage({}));
+    render(await AccountPage());
 
     expect(screen.getByText("Bạn chưa tải ảnh nào.")).toBeTruthy();
   });
@@ -59,7 +59,7 @@ describe("AccountPage", () => {
       },
     ]);
 
-    render(await AccountPage({}));
+    render(await AccountPage());
 
     expect(prisma.generatedAvatar.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
