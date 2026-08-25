@@ -47,6 +47,12 @@ const PUBLIC_DICT = {
     notifHourAgo: "giờ trước",
     logout: "Đăng xuất",
     goAdmin: "Trang quản trị",
+    headerLogin: "Đăng nhập",
+    accountPageTitle: "Lịch sử tải ảnh",
+    accountEmpty: "Bạn chưa tải ảnh nào.",
+    accountColFrame: "Khung",
+    accountColCampaign: "Chiến dịch",
+    accountColDate: "Ngày tải",
   },
   en: {
     heroTitle: "Choose a running campaign",
@@ -90,6 +96,12 @@ const PUBLIC_DICT = {
     notifHourAgo: "hr ago",
     logout: "Log out",
     goAdmin: "Admin panel",
+    headerLogin: "Login",
+    accountPageTitle: "Download history",
+    accountEmpty: "You haven't downloaded any avatars yet.",
+    accountColFrame: "Frame",
+    accountColCampaign: "Campaign",
+    accountColDate: "Downloaded on",
   },
 } as const;
 
