@@ -34,11 +34,19 @@ const overlays = [
   { key: "joinYear", label: "L", labelEn: "L", type: "select", options: ["2021"], x: 10, y: 10, fontSize: 10, color: "#fff" },
 ];
 
-function multipartRequest(overlayValues: object | string, templateId = "tpl1", photoBytes: BlobPart = Buffer.from("photo-bytes")) {
+function multipartRequest(
+  overlayValues: object | string,
+  templateId = "tpl1",
+  photoBytes: BlobPart = Buffer.from("photo-bytes"),
+  language?: string,
+  transform?: object | string,
+) {
   const form = new FormData();
   form.set("templateId", templateId);
   form.set("overlayValues", typeof overlayValues === "string" ? overlayValues : JSON.stringify(overlayValues));
   form.set("photo", new Blob([photoBytes], { type: "image/png" }), "photo.png");
+  if (language) form.set("language", language);
+  if (transform !== undefined) form.set("transform", typeof transform === "string" ? transform : JSON.stringify(transform));
   return new Request("http://x/api/campaigns/fpt38/generate", { method: "POST", body: form });
 }
 
@@ -220,5 +228,119 @@ describe("POST /api/campaigns/:slug/generate", () => {
     expect(prisma.generatedAvatar.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ userId: "u1" }),
     });
+  });
+
+  it("defaults language to vi when the client sends none", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
+
+    expect(prisma.generatedAvatar.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ language: "vi" }),
+    });
+    expect(compositeAvatar).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), expect.anything(), expect.anything(), expect.anything(), "vi",
+      { scale: 1, ox: 0, oy: 0 },
+    );
+  });
+
+  it("stores and composites with language=en when the client requests English", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }, "tpl1", Buffer.from("photo-bytes"), "en"), { params: { slug: "fpt38" } });
+
+    expect(prisma.generatedAvatar.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ language: "en" }),
+    });
+    expect(compositeAvatar).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), expect.anything(), expect.anything(), expect.anything(), "en",
+      { scale: 1, ox: 0, oy: 0 },
+    );
+  });
+
+  it("forwards a well-formed transform to compositeAvatar", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }, "tpl1", Buffer.from("photo-bytes"), undefined, { scale: 2, ox: 0.2, oy: -0.1 }), { params: { slug: "fpt38" } });
+
+    expect(compositeAvatar).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), expect.anything(), expect.anything(), expect.anything(), "vi",
+      { scale: 2, ox: 0.2, oy: -0.1 },
+    );
+  });
+
+  it("clamps an out-of-range transform instead of passing it through raw", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }, "tpl1", Buffer.from("photo-bytes"), undefined, { scale: 999, ox: -9, oy: 9 }), { params: { slug: "fpt38" } });
+
+    expect(compositeAvatar).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), expect.anything(), expect.anything(), expect.anything(), "vi",
+      { scale: 3, ox: -0.45, oy: 0.45 },
+    );
+  });
+
+  it("falls back to the identity transform when none is sent", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
+
+    expect(compositeAvatar).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), expect.anything(), expect.anything(), expect.anything(), "vi",
+      { scale: 1, ox: 0, oy: 0 },
+    );
+  });
+
+  it("falls back to the identity transform when transform is malformed JSON", async () => {
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
+
+    await POST(multipartRequest({ joinYear: "2021" }, "tpl1", Buffer.from("photo-bytes"), undefined, "{not-json"), { params: { slug: "fpt38" } });
+
+    expect(compositeAvatar).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), expect.anything(), expect.anything(), expect.anything(), "vi",
+      { scale: 1, ox: 0, oy: 0 },
+    );
   });
 });

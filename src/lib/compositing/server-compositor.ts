@@ -1,5 +1,6 @@
 import { createCanvas, loadImage } from "canvas";
 import { resolveOverlayDraws, type TextOverlay } from "./overlay-layout";
+import { resolvePhotoPlacement, IDENTITY_TRANSFORM, type PhotoTransform } from "./photo-placement";
 
 export async function compositeAvatar(
   framePngBuffer: Buffer,
@@ -7,6 +8,8 @@ export async function compositeAvatar(
   photoArea: { x: number; y: number; w: number; h: number },
   overlays: TextOverlay[],
   overlayValues: Record<string, string>,
+  lang: "vi" | "en" = "vi",
+  transform: PhotoTransform = IDENTITY_TRANSFORM,
 ): Promise<Buffer> {
   const frame = await loadImage(framePngBuffer);
   const photo = await loadImage(photoBuffer);
@@ -14,15 +17,21 @@ export async function compositeAvatar(
   const canvas = createCanvas(frame.width, frame.height);
   const ctx = canvas.getContext("2d");
 
-  const px = (photoArea.x / 100) * frame.width;
-  const py = (photoArea.y / 100) * frame.height;
-  const pw = (photoArea.w / 100) * frame.width;
-  const ph = (photoArea.h / 100) * frame.height;
-  ctx.drawImage(photo, px, py, pw, ph);
+  // Same cover-fit + pan/zoom math the client preview uses (photo-placement.ts)
+  // so the server-rendered download matches what the user saw pixel-for-pixel.
+  const { px, py, pw, ph, dx, dy, drawW, drawH } = resolvePhotoPlacement(
+    photoArea, photo.width, photo.height, frame.width, frame.height, transform,
+  );
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(px, py, pw, ph);
+  ctx.clip();
+  ctx.drawImage(photo, dx, dy, drawW, drawH);
+  ctx.restore();
 
   ctx.drawImage(frame, 0, 0);
 
-  const draws = resolveOverlayDraws(overlays, overlayValues, frame.width, frame.height);
+  const draws = resolveOverlayDraws(overlays, overlayValues, frame.width, frame.height, lang);
   for (const draw of draws) {
     ctx.fillStyle = draw.color;
     ctx.font = `${draw.fontSize}px sans-serif`;

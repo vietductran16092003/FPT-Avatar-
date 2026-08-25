@@ -26,7 +26,14 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
       startDate: new Date("2026-08-13"),
       endDate: new Date("2026-09-13"),
       language: "vi",
-      displayConfig: { title: "FPT tròn 38 tuổi", description: "Tạo avatar kỷ niệm 38 năm", ctaLabel: "Tạo avatar ngay" },
+      displayConfig: {
+        title: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38",
+        titleEn: "FPT 38th Anniversary Avatar Frame",
+        description: "Tạo avatar kỷ niệm 38 năm",
+        descriptionEn: "Create your avatar for FPT's 38th anniversary",
+        ctaLabel: "Tạo avatar ngay",
+        ctaEn: "Create avatar now",
+      },
       templates: {
         create: [{
           name: "Khung cam chuẩn",
@@ -34,7 +41,17 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
           overlayConfig: {
             photoArea: { x: 18, y: 14, w: 64, h: 64 },
             textOverlays: [
-              { key: "joinYear", label: "Năm gia nhập FPT", labelEn: "Year joined FPT", type: "select", options: ["2020", "2021", "2022"], x: 50, y: 85, fontSize: 24, color: "#ffffff" },
+              {
+                key: "joinYear",
+                label: "NĂM GIA NHẬP FPT",
+                labelEn: "YEAR YOU JOINED FPT",
+                type: "yearsSince",
+                options: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(1988 + i)),
+                x: 50,
+                y: 85,
+                fontSize: 24,
+                color: "#ffffff",
+              },
             ],
           },
         }],

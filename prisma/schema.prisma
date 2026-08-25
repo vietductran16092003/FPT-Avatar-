@@ -61,6 +61,7 @@ model GeneratedAvatar {
   user            User?    @relation(fields: [userId], references: [id])
   overlayValues   Json
   resultImageKey  String
+  language        String   @default("vi")
   createdAt       DateTime @default(now())
 }
 

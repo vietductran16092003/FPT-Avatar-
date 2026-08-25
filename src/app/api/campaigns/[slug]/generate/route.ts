@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/storage";
 import { compositeAvatar } from "@/lib/compositing/server-compositor";
 import { validateOverlayValues } from "@/lib/compositing/validate-overlay-values";
+import { clampTransform, IDENTITY_TRANSFORM, type PhotoTransform } from "@/lib/compositing/photo-placement";
 import { createNotification } from "@/lib/notifications";
 import { isCampaignPubliclyVisible } from "@/lib/campaign-visibility";
 import { getCurrentUser } from "@/lib/session";
@@ -19,6 +20,23 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
   const templateId = form.get("templateId") as string;
   const photoFile = form.get("photo");
   const overlayValuesRaw = form.get("overlayValues");
+  const language = form.get("language") === "en" ? "en" : "vi";
+
+  // The client-side pan/zoom is a UX affordance, not a trust boundary — a
+  // malformed or out-of-range transform falls back to identity/clamped
+  // values instead of failing the whole request.
+  const transformRaw = form.get("transform");
+  let transform: PhotoTransform = IDENTITY_TRANSFORM;
+  if (typeof transformRaw === "string") {
+    try {
+      const parsed = JSON.parse(transformRaw);
+      if (parsed && typeof parsed === "object") {
+        transform = clampTransform({ scale: Number(parsed.scale), ox: Number(parsed.ox), oy: Number(parsed.oy) });
+      }
+    } catch {
+      // malformed transform JSON — keep the identity fallback above
+    }
+  }
 
   if (typeof overlayValuesRaw !== "string") {
     return NextResponse.json({ error: "Missing overlayValues" }, { status: 400 });
@@ -75,6 +93,8 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
     overlayConfig.photoArea,
     overlayConfig.textOverlays,
     overlayValues,
+    language,
+    transform,
   );
 
   const resultKey = `results/${template.id}-${Date.now()}.png`;
@@ -87,6 +107,7 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
       userId: user.id,
       overlayValues,
       resultImageKey: resultKey,
+      language,
     },
   });
 

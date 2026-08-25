@@ -13,7 +13,7 @@ export function validateOverlayValues(
   }
 
   for (const overlay of overlays) {
-    if (overlay.type === "select" && values[overlay.key] !== undefined) {
+    if ((overlay.type === "select" || overlay.type === "yearsSince") && values[overlay.key] !== undefined) {
       if (!overlay.options?.includes(values[overlay.key])) {
         return { valid: false, error: `Invalid value for select overlay "${overlay.key}"` };
       }
