@@ -49,7 +49,7 @@ describe("CampaignPage", () => {
 
     render(await CampaignPage({ params: { slug: "fpt38" } }));
 
-    expect(screen.queryAllByRole("button", { name: "TẢI ẢNH" })).toBeTruthy();
+    expect(screen.queryAllByRole("button", { name: "TẢI ẢNH" }).length).toBeGreaterThan(0);
   });
 
   it("shows the campaign's display title as a heading above the tool", async () => {
@@ -79,7 +79,7 @@ describe("CampaignPage", () => {
 
     render(await CampaignPage({ params: { slug: "fpt38" } }));
 
-    expect(screen.queryAllByRole("button", { name: "TẢI ẢNH" })).toBeTruthy();
+    expect(screen.queryAllByRole("button", { name: "TẢI ẢNH" }).length).toBeGreaterThan(0);
     expect(redirectMock).not.toHaveBeenCalled();
   });
 });
