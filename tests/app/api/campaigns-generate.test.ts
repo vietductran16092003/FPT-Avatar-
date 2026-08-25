@@ -204,16 +204,26 @@ describe("POST /api/campaigns/:slug/generate", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 401 when there is no signed-in session", async () => {
+  it("succeeds with a null userId when there is no signed-in session", async () => {
     (getCurrentUser as any).mockResolvedValue(null);
+    (prisma.template.findFirst as any).mockResolvedValue({
+      id: "tpl1",
+      name: "Khung cam chuẩn",
+      frameImageKey: "frames/tpl1.png",
+      overlayConfig: { photoArea: { x: 0, y: 0, w: 50, h: 50 }, textOverlays: overlays },
+    });
+    (prisma.generatedAvatar.create as any).mockResolvedValue({ id: "ga1" });
+    global.fetch = vi.fn().mockResolvedValue({ arrayBuffer: async () => Buffer.from("frame-bytes") });
 
     const res = await POST(multipartRequest({ joinYear: "2021" }), { params: { slug: "fpt38" } });
 
-    expect(res.status).toBe(401);
-    expect(prisma.campaign.findUnique).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(prisma.generatedAvatar.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ userId: null }),
+    });
   });
 
-  it("stamps the signed-in user's id onto the created GeneratedAvatar", async () => {
+  it("still stamps the signed-in user's id when a session is present", async () => {
     (prisma.template.findFirst as any).mockResolvedValue({
       id: "tpl1",
       name: "Khung cam chuẩn",
