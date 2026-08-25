@@ -1,34 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: {
     template: { findFirst: vi.fn() },
     campaign: { findUnique: vi.fn() },
     generatedAvatar: { create: vi.fn() },
   },
 }));
-vi.mock("../../../src/lib/storage", () => ({
+vi.mock("../../../src/lib/server/storage", () => ({
   getStorage: () => ({
     upload: vi.fn().mockResolvedValue(undefined),
     getPublicUrl: (key: string) => `http://storage/${key}`,
     delete: vi.fn(),
   }),
 }));
-vi.mock("../../../src/lib/compositing/server-compositor", () => ({
+vi.mock("../../../src/lib/server/compositing/server-compositor", () => ({
   compositeAvatar: vi.fn().mockResolvedValue(Buffer.from("png-bytes")),
 }));
-vi.mock("../../../src/lib/notifications", () => ({
+vi.mock("../../../src/lib/server/notifications", () => ({
   createNotification: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("../../../src/lib/session", () => ({
+vi.mock("../../../src/lib/server/session", () => ({
   getCurrentUser: vi.fn(),
 }));
 
 import { POST } from "../../../src/app/api/campaigns/[slug]/generate/route";
-import { prisma } from "../../../src/lib/prisma";
-import { createNotification } from "../../../src/lib/notifications";
-import { compositeAvatar } from "../../../src/lib/compositing/server-compositor";
-import { getCurrentUser } from "../../../src/lib/session";
+import { prisma } from "../../../src/lib/server/prisma";
+import { createNotification } from "../../../src/lib/server/notifications";
+import { compositeAvatar } from "../../../src/lib/server/compositing/server-compositor";
+import { getCurrentUser } from "../../../src/lib/server/session";
 
 const overlays = [
   { key: "joinYear", label: "L", labelEn: "L", type: "select", options: ["2021"], x: 10, y: 10, fontSize: 10, color: "#fff" },

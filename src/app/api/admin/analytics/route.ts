@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/require-admin";
+import { prisma } from "@/lib/server/prisma";
+import { requireAdmin } from "@/lib/server/require-admin";
+import { fetchDownloadsByField } from "@/lib/server/analytics/ga4-report";
+
+// The overlay field GA4 breaks "downloads by X" down by. Requires a
+// matching event-scoped custom dimension named "unit" to exist in the GA4
+// property's admin UI first (GA4 does not expose an API to create these,
+// and they are not retroactive to events sent before the dimension existed).
+const BY_FIELD_KEY = "unit";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -47,5 +54,7 @@ export async function GET() {
     byDay.push({ day: key, count: counts.get(key) ?? 0 });
   }
 
-  return NextResponse.json({ campaigns: campaignRows, byDay });
+  const byField = await fetchDownloadsByField(BY_FIELD_KEY);
+
+  return NextResponse.json({ campaigns: campaignRows, byDay, byField });
 }

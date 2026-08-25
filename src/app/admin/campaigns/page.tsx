@@ -307,7 +307,7 @@ export default function AdminCampaignsPage() {
                     <fieldset disabled={templateSubmitting} aria-busy={templateSubmitting}>
                       <TemplateForm
                         key={templateEditing?.id ?? "new"}
-                        initial={templateEditing ? { name: templateEditing.name, overlayConfig: templateEditing.overlayConfig } : undefined}
+                        initial={templateEditing ? { name: templateEditing.name, overlayConfig: templateEditing.overlayConfig, frameImageUrl: templateEditing.frameImageUrl } : undefined}
                         onSubmit={templateEditing ? handleTemplateUpdate : handleTemplateCreate}
                       />
                     </fieldset>

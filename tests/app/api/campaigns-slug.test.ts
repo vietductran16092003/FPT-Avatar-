@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: { campaign: { findUnique: vi.fn() } },
 }));
 
 import { GET } from "../../../src/app/api/campaigns/[slug]/route";
-import { prisma } from "../../../src/lib/prisma";
+import { prisma } from "../../../src/lib/server/prisma";
 
 describe("GET /api/campaigns/:slug", () => {
   it("returns the campaign with its templates when found and active", async () => {

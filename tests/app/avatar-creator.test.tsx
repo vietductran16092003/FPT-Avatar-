@@ -64,12 +64,23 @@ describe("AvatarCreator", () => {
     expect(screen.queryByRole("heading")).toBeNull();
   });
 
-  it("shows the frame name and step labels", () => {
+  it("hides the frame-choice grid when the campaign has only one template", () => {
     renderCreator();
+    expect(screen.queryByText("Khung cam")).toBeNull();
+    expect(screen.queryByText("2. Chọn khung")).toBeNull();
+  });
+
+  it("shows the frame-choice grid when the campaign has more than one template", () => {
+    const second: Template = {
+      id: "t2",
+      name: "Khung xanh",
+      frameImageUrl: "http://storage/frames/blue.png",
+      overlayConfig: { photoArea: { x: 5, y: 5, w: 70, h: 70 }, textOverlays: [] },
+    };
+    renderCreator([...templates, second]);
     expect(screen.getByText("Khung cam")).toBeTruthy();
-    expect(screen.getByText("1. Tải ảnh của bạn")).toBeTruthy();
+    expect(screen.getByText("Khung xanh")).toBeTruthy();
     expect(screen.getByText("2. Chọn khung")).toBeTruthy();
-    expect(screen.getByText("3. Điền thông tin")).toBeTruthy();
   });
 
   it("renders a text input for a text overlay and a select for a select overlay, using the template's first frame by default", () => {
@@ -100,7 +111,7 @@ describe("AvatarCreator", () => {
 
     fireEvent.drop(screen.getByTestId("photo-dropzone"), { dataTransfer: { files: [file] } });
 
-    await waitFor(() => expect(screen.getByText("Đổi ảnh khác")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("THAY ẢNH")).toBeTruthy());
   });
 
   it("rejects a dropped photo over 10MB with a visible warning and does not stage it", async () => {
@@ -206,6 +217,42 @@ describe("AvatarCreator", () => {
 
     await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("Phiên đăng nhập đã hết hạn"));
     expect(screen.getByRole("alert").textContent).not.toContain("Unauthorized");
+  });
+
+  it("shows a draggable zoom slider only after a photo is uploaded", async () => {
+    renderCreator();
+    expect(screen.queryByRole("slider")).toBeNull();
+
+    const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), file);
+
+    const slider = await screen.findByRole("slider");
+    expect(slider.getAttribute("min")).toBe("1");
+    expect(slider.getAttribute("max")).toBe("3");
+  });
+
+  it("styles a select overlay as a filled pill once a value is chosen", async () => {
+    renderCreator();
+    const unitSelect = screen.getByLabelText("Đơn vị") as HTMLSelectElement;
+    expect(unitSelect.className).toContain("bg-white");
+
+    await userEvent.selectOptions(unitSelect, "FPT Software");
+
+    expect(unitSelect.className).toContain("bg-gradient-to-b");
+  });
+
+  it("toggles between the edit and preview views via the preview/back-to-edit button", async () => {
+    renderCreator();
+    const file = new File(["photo-bytes"], "me.jpg", { type: "image/jpeg" });
+    await userEvent.upload(screen.getByLabelText("1. Tải ảnh của bạn"), file);
+
+    expect(screen.getByLabelText("Đơn vị")).toBeTruthy();
+
+    await userEvent.click(screen.getByText("XEM TRƯỚC"));
+    expect(screen.queryByLabelText("Đơn vị")).toBeNull();
+
+    await userEvent.click(screen.getByText("← Chỉnh sửa"));
+    expect(screen.getByLabelText("Đơn vị")).toBeTruthy();
   });
 
   it("does not show share buttons before a successful download", () => {

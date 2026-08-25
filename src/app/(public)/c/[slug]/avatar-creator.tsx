@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Camera, Eye, Download } from "lucide-react";
 import { useAvatarCanvas, CANVAS_SIZE } from "./use-avatar-canvas";
 import { resolveOverlayDraws, type TextOverlay } from "@/lib/compositing/overlay-layout";
+import { MIN_ZOOM, MAX_ZOOM } from "@/lib/compositing/photo-placement";
 import { PublicLangProvider, usePublicLang } from "@/lib/public-i18n";
 import { pickLocalized, type DisplayConfigLike } from "@/lib/localized-content";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics/ga4-client";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const ZOOM_STEP = 0.1;
 
 export interface Template {
   id: string;
@@ -32,6 +36,47 @@ export function AvatarCreator({
   );
 }
 
+// Pill button used for select-type overlay fields (e.g. "join year") — an
+// outlined orange pill while empty, a solid orange-gradient pill once a
+// value is picked, matching the client's reference design.
+function PillSelect({
+  id,
+  value,
+  options,
+  placeholder,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  const filled = !!value;
+  return (
+    <div className="relative">
+      <select
+        id={id}
+        aria-label={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className={cn(
+          "w-full appearance-none rounded-full border-2 px-5 py-3 text-center text-sm font-extrabold uppercase tracking-wide outline-none transition-colors",
+          filled
+            ? "border-transparent bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] text-white"
+            : "border-[#FF5A01] bg-white text-[#FF5A01]",
+        )}
+      >
+        <option value="" disabled>{placeholder}</option>
+        {options.map(opt => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+      <ChevronDown className={cn("pointer-events-none absolute right-5 top-1/2 size-4 -translate-y-1/2", filled ? "text-white" : "text-[#FF5A01]")} />
+    </div>
+  );
+}
+
 function AvatarCreatorInner({
   slug,
   templates,
@@ -52,19 +97,28 @@ function AvatarCreatorInner({
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
-  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
+  const [view, setView] = useState<"edit" | "preview">("edit");
   const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
+  const [zoom, setZoom] = useState(MIN_ZOOM);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const { setPhoto, setFrame, setOverlays, getTransform, zoomBy, ZOOM_STEP } = useAvatarCanvas(canvasRef);
+  const { setPhoto, setFrame, setOverlays, getTransform, zoomTo } = useAvatarCanvas(canvasRef);
 
   const selected = templates.find(t => t.id === selectedId)!;
+
+  // Fires once per mount, not per template switch — this event marks a
+  // visitor landing on the campaign's tool, before any template is chosen.
+  useEffect(() => {
+    trackEvent("campaign_view", { campaign_slug: slug });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function selectTemplate(id: string) {
     setSelectedId(id);
     setOverlayValues({});
     setResultUrl(null);
+    trackEvent("template_select", { campaign_slug: slug, template_id: id });
   }
 
   function stagePhotoFile(file: File) {
@@ -75,6 +129,7 @@ function AvatarCreatorInner({
     setPhotoError(null);
     setPhotoFile(file);
     setResultUrl(null);
+    setZoom(MIN_ZOOM);
   }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -89,6 +144,12 @@ function AvatarCreatorInner({
     setIsDraggingPhoto(false);
     const file = e.dataTransfer.files?.[0];
     if (file) stagePhotoFile(file);
+  }
+
+  function handleZoomChange(next: number) {
+    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
+    setZoom(clamped);
+    zoomTo(clamped);
   }
 
   useEffect(() => {
@@ -159,6 +220,11 @@ function AvatarCreatorInner({
       }
       const { resultUrl: url } = await res.json();
       setResultUrl(url);
+      // overlayValues is spread directly (not nested) so each field — e.g.
+      // "unit", "joinYear", or any admin-defined key — becomes its own GA4
+      // event parameter, ready to register as a custom dimension per field
+      // rather than only a fixed, hardcoded set.
+      trackEvent("avatar_download", { campaign_slug: slug, template_id: selected.id, ...overlayValues });
 
       const blobRes = await fetch(url);
       const blob = await blobRes.blob();
@@ -184,50 +250,15 @@ function AvatarCreatorInner({
   const campaignTitle = displayConfig ? pickLocalized(displayConfig, "title", lang) : "";
 
   return (
-    <div className="mx-auto max-w-5xl p-6 pb-24 lg:pb-6">
+    <div className="mx-auto max-w-lg p-6">
       {campaignTitle && (
-        <h1 className="mb-6 text-2xl font-extrabold tracking-tight">{campaignTitle}</h1>
+        <h1 className="mb-6 text-center text-2xl font-extrabold tracking-tight">{campaignTitle}</h1>
       )}
-      <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-8">
-      <div className={cn("flex flex-col gap-8", mobileView === "preview" && "hidden lg:flex")}>
-        <div>
-          <div className="mb-1 text-lg font-extrabold tracking-tight">{t("stepUpload")}</div>
-          <div className="mb-3 text-[13px] text-muted-foreground">{t("stepUploadHint")}</div>
-          {photoError && <p role="alert" className="mb-2 text-sm text-destructive">{photoError}</p>}
-          <label
-            htmlFor="photo-input"
-            data-testid="photo-dropzone"
-            className="cursor-pointer"
-            onDragOver={e => {
-              e.preventDefault();
-              setIsDraggingPhoto(true);
-            }}
-            onDragLeave={() => setIsDraggingPhoto(false)}
-            onDrop={handlePhotoDrop}
-          >
-            {photoFile ? (
-              <div className="flex items-center gap-3">
-                <img src={photoPreviewUrl ?? undefined} alt="" className="size-20 rounded-full border border-border object-cover" />
-                <span className="text-sm font-semibold text-primary">{t("changePhoto")}</span>
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  "rounded-2xl border-2 border-dashed p-8 text-center transition-colors",
-                  isDraggingPhoto ? "border-primary bg-primary/10" : "border-border bg-muted/40",
-                )}
-              >
-                <div className="mb-1 text-base font-bold">{t("dropTitle")}</div>
-                <div className="text-xs text-muted-foreground">{t("dropSub")}</div>
-              </div>
-            )}
-          </label>
-          <input ref={photoInputRef} id="photo-input" aria-label={t("stepUpload")} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handlePhotoChange} />
-        </div>
 
-        <div>
-          <div className="mb-3 text-lg font-extrabold tracking-tight">{t("stepTemplate")}</div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {templates.length > 1 && (
+        <div className="mb-8">
+          <div className="mb-3 text-center text-sm font-bold uppercase tracking-wide text-muted-foreground">{t("stepTemplate")}</div>
+          <div className="grid grid-cols-3 gap-3">
             {templates.map(tpl => (
               <button
                 key={tpl.id}
@@ -246,141 +277,189 @@ function AvatarCreatorInner({
             ))}
           </div>
         </div>
+      )}
 
-        <div>
-          <div className="mb-3 text-lg font-extrabold tracking-tight">{t("stepOverlay")}</div>
-          <div className="flex flex-col gap-3">
+      <div className="rounded-2xl border-2 border-dashed border-[#FDAE15]/60 bg-card p-6 shadow-sm">
+        {photoError && <p role="alert" className="mb-3 text-sm text-destructive">{photoError}</p>}
+
+        {view === "edit" && (
+          <div className="mb-4 flex flex-col gap-4">
             {selected.overlayConfig.textOverlays.map(overlay => (
               <div key={overlay.key} className="space-y-1">
-                <label htmlFor={`overlay-${overlay.key}`} className="text-xs font-bold tracking-wide text-muted-foreground">
-                  {overlay.label}
-                </label>
                 {overlay.type === "select" || overlay.type === "yearsSince" ? (
-                  <select
+                  <PillSelect
                     id={`overlay-${overlay.key}`}
                     value={overlayValues[overlay.key] ?? ""}
-                    onChange={e => setOverlayValues(v => ({ ...v, [overlay.key]: e.target.value }))}
-                    className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
-                  >
-                    <option value="" disabled>—</option>
-                    {(overlay.options ?? []).map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    id={`overlay-${overlay.key}`}
-                    value={overlayValues[overlay.key] ?? ""}
-                    placeholder={overlay.placeholder}
-                    onChange={e => setOverlayValues(v => ({ ...v, [overlay.key]: e.target.value }))}
-                    className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+                    options={overlay.options ?? []}
+                    placeholder={overlay.label}
+                    onChange={v => setOverlayValues(vals => ({ ...vals, [overlay.key]: v }))}
                   />
+                ) : (
+                  <>
+                    <label htmlFor={`overlay-${overlay.key}`} className="text-xs font-bold tracking-wide text-muted-foreground">
+                      {overlay.label}
+                    </label>
+                    <input
+                      id={`overlay-${overlay.key}`}
+                      value={overlayValues[overlay.key] ?? ""}
+                      placeholder={overlay.placeholder}
+                      onChange={e => setOverlayValues(v => ({ ...v, [overlay.key]: e.target.value }))}
+                      className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
+                    />
+                  </>
                 )}
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        )}
 
-      <div className={cn("rounded-2xl border border-border bg-card p-5 shadow-sm", mobileView === "edit" && "hidden lg:block")}>
-        <button type="button" onClick={() => setMobileView("edit")} className="mb-3 text-xs font-semibold text-muted-foreground lg:hidden">
-          {t("backToEdit")}
-        </button>
-        <div className="mb-3 text-lg font-extrabold tracking-tight">{t("previewTitle")}</div>
-        <div className="relative mx-auto mb-2 w-full max-w-[480px] overflow-hidden rounded-xl" style={{ aspectRatio: "1 / 1", boxShadow: "inset 0 0 0 1px rgba(16,30,46,.16)" }}>
+        {/* The canvas element stays mounted at this same position for the
+            component's whole lifetime — the fabric.js Canvas in
+            useAvatarCanvas binds to it once on mount and never re-attaches,
+            so it must never be conditionally unmounted/remounted (e.g. by
+            branching between two different wrapper element types). The
+            dropzone label is an absolutely-positioned sibling instead,
+            shown only until a photo is staged. */}
+        <div
+          className={cn(
+            "relative mx-auto aspect-square w-full overflow-hidden rounded-full transition-colors",
+            !photoFile && isDraggingPhoto && "ring-4 ring-primary/40",
+          )}
+          style={{ boxShadow: "inset 0 0 0 1px rgba(16,30,46,.16)" }}
+        >
+          {/* Shown only until a real photo is staged — lets the frame + text
+              ribbon be visible from the very first render instead of hiding
+              behind an opaque dropzone, matching the reference mockup. */}
+          {!photoFile && (
+            <img src="/avatar-placeholder.svg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+          )}
           <canvas
             ref={canvasRef}
             width={CANVAS_SIZE}
             height={CANVAS_SIZE}
-            className="h-full w-full touch-none"
+            className="relative h-full w-full touch-none"
             style={{ cursor: photoImg ? "grab" : "default" }}
           />
+          {!photoFile && (
+            <label
+              htmlFor="photo-input"
+              data-testid="photo-dropzone"
+              className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/10 text-center text-xs font-semibold text-white"
+              onDragOver={e => {
+                e.preventDefault();
+                setIsDraggingPhoto(true);
+              }}
+              onDragLeave={() => setIsDraggingPhoto(false)}
+              onDrop={handlePhotoDrop}
+            >
+              {t("dropTitle")}
+            </label>
+          )}
         </div>
-        {photoImg && (
-          <div className="mb-3 flex items-center justify-center gap-2">
-            <button type="button" onClick={() => zoomBy(-ZOOM_STEP)} className="flex size-7 items-center justify-center rounded-lg border border-input text-sm font-bold">−</button>
-            <span className="text-xs text-muted-foreground">{t("zoomHint")}</span>
-            <button type="button" onClick={() => zoomBy(ZOOM_STEP)} className="flex size-7 items-center justify-center rounded-lg border border-input text-sm font-bold">+</button>
+        <input ref={photoInputRef} id="photo-input" aria-label={t("stepUpload")} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handlePhotoChange} />
+
+        {photoFile && view === "edit" && (
+          <div className="mt-4 flex items-center gap-3 rounded-full bg-[#FFE7CF] p-1.5">
+            <button type="button" aria-label="-" onClick={() => handleZoomChange(zoom - ZOOM_STEP)} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FDD8B4] text-sm font-bold text-[#C25A00]">−</button>
+            <input
+              type="range"
+              aria-label={t("zoomHint")}
+              min={MIN_ZOOM}
+              max={MAX_ZOOM}
+              step={0.01}
+              value={zoom}
+              onChange={e => handleZoomChange(Number(e.target.value))}
+              className="h-1.5 flex-1 accent-[#FF5A01]"
+            />
+            <button type="button" aria-label="+" onClick={() => handleZoomChange(zoom + ZOOM_STEP)} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FDD8B4] text-sm font-bold text-[#C25A00]">+</button>
           </div>
         )}
-        <p className="mb-4 text-xs leading-relaxed text-muted-foreground">{t("previewNote")}</p>
-        {downloadError && <p role="alert" className="mb-2 text-sm text-destructive">{downloadError}</p>}
-        <button
-          type="button"
-          disabled={!stepsComplete || downloading}
-          onClick={handleDownload}
-          className="mb-2 hidden w-full rounded-full bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-40 lg:block"
-        >
-          {t("downloadButton")}
-        </button>
-        {resultUrl && (
-          <div className="mt-4 border-t border-border pt-4">
-            <div className="mb-2 text-xs font-bold text-muted-foreground">{t("shareTitle")}</div>
-            {typeof navigator !== "undefined" && "share" in navigator ? (
-              <button
-                type="button"
-                onClick={() => navigator.share({ title: "Avatar Frame Platform", url: resultUrl })}
-                className="w-full rounded-lg border border-input px-4 py-2 text-sm font-semibold"
-              >
-                {t("shareTitle")}
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resultUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-secondary"
-                >
-                  Facebook
-                </a>
-                <a
-                  href={`https://zalo.me/share?u=${encodeURIComponent(resultUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-emerald-600"
-                >
-                  Zalo
-                </a>
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(resultUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground"
-                >
-                  LinkedIn
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 flex gap-2 border-t border-border bg-background p-3 lg:hidden">
+      <div className="mt-4 flex items-center gap-3">
         <button
           type="button"
           onClick={() => photoInputRef.current?.click()}
-          className="flex-1 rounded-full border border-[#FF5A01] bg-[#FFE7CF] px-3 py-3 text-xs font-bold text-[#FF5A01]"
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-full border-2 px-4 py-3 text-xs font-extrabold uppercase tracking-wide transition-colors",
+            view === "edit"
+              ? "border-transparent bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] text-white"
+              : "border-[#FF5A01] bg-[#FFE7CF] text-[#FF5A01]",
+          )}
         >
+          <Camera className="size-4" />
           {photoFile ? t("changePhotoButton") : t("uploadPhotoButton")}
         </button>
-        <button
-          type="button"
-          onClick={() => setMobileView("preview")}
-          className="flex-1 rounded-full border border-[#FF5A01] bg-[#FFE7CF] px-3 py-3 text-xs font-bold text-[#FF5A01]"
-        >
-          {t("previewLabel")}
-        </button>
-        <button
-          type="button"
-          disabled={!stepsComplete || downloading}
-          onClick={handleDownload}
-          className="flex-1 rounded-full bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] px-3 py-3 text-xs font-bold text-primary-foreground disabled:opacity-40"
-        >
-          {t("downloadButton")}
-        </button>
+        {photoFile && (
+          <button
+            type="button"
+            onClick={() => setView(v => (v === "edit" ? "preview" : "edit"))}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full border-2 px-4 py-3 text-xs font-extrabold uppercase tracking-wide transition-colors",
+              view === "preview"
+                ? "border-transparent bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] text-white"
+                : "border-[#FF5A01] bg-[#FFE7CF] text-[#FF5A01]",
+            )}
+          >
+            <Eye className="size-4" />
+            {view === "edit" ? t("previewLabel") : t("backToEdit")}
+          </button>
+        )}
       </div>
+
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">{t("previewNote")}</p>
+      {downloadError && <p role="alert" className="mb-2 text-sm text-destructive">{downloadError}</p>}
+      <button
+        type="button"
+        disabled={!stepsComplete || downloading}
+        onClick={handleDownload}
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#FF5A01] to-[#FDAE15] px-4 py-3.5 text-sm font-extrabold uppercase tracking-wide text-primary-foreground transition-opacity disabled:opacity-40"
+      >
+        <Download className="size-4" />
+        {t("downloadButton")}
+      </button>
+
+      {resultUrl && (
+        <div className="mt-4 border-t border-border pt-4">
+          <div className="mb-2 text-xs font-bold text-muted-foreground">{t("shareTitle")}</div>
+          {typeof navigator !== "undefined" && "share" in navigator ? (
+            <button
+              type="button"
+              onClick={() => navigator.share({ title: "Avatar Frame Platform", url: resultUrl })}
+              className="w-full rounded-lg border border-input px-4 py-2 text-sm font-semibold"
+            >
+              {t("shareTitle")}
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resultUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-secondary"
+              >
+                Facebook
+              </a>
+              <a
+                href={`https://zalo.me/share?u=${encodeURIComponent(resultUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-emerald-600"
+              >
+                Zalo
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(resultUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex size-9 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground"
+              >
+                LinkedIn
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

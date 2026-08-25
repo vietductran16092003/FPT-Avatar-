@@ -1,17 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-vi.mock("next-auth/react", () => ({
-  useSession: () => ({ data: null }),
-  signOut: vi.fn(),
-}));
-vi.mock("next/navigation", () => ({
-  useParams: () => ({ slug: "test-campaign" }),
-}));
-
 import { CampaignHeader } from "../../src/app/(public)/c/[slug]/campaign-header";
 import { PublicLangProvider } from "../../src/lib/public-i18n";
 
@@ -32,10 +24,10 @@ function renderHeader() {
 }
 
 describe("CampaignHeader", () => {
-  it("renders the FPT logo and the 38th-anniversary badge", () => {
+  it("renders a back link to the home page", () => {
     renderHeader();
-    expect(screen.getByAltText("FPT")).toBeTruthy();
-    expect(screen.getByAltText("38 năm FPT")).toBeTruthy();
+    const backLink = screen.getByLabelText("Về trang chủ");
+    expect(backLink.getAttribute("href")).toBe("/");
   });
 
   it("shows the current language on the toggle button, defaulting to Vietnamese", () => {

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/server/session";
+import { prisma } from "@/lib/server/prisma";
 import { AccountHistory, type AccountHistoryEntry } from "./account-history";
 
 export default async function AccountPage() {

@@ -1,4 +1,4 @@
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl } from "@/lib/server/base-url";
 import type { DisplayConfigLike } from "@/lib/localized-content";
 import { AvatarCreator, type Template } from "./avatar-creator";
 

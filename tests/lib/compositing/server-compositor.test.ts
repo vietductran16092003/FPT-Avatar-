@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createCanvas, loadImage } from "canvas";
-import { compositeAvatar } from "../../../src/lib/compositing/server-compositor";
+import { compositeAvatar } from "../../../src/lib/server/compositing/server-compositor";
 
 function solidPng(width: number, height: number, color: string): Buffer {
   const canvas = createCanvas(width, height);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { MinioStorage } from "../../../src/lib/storage/minio-storage";
+import { MinioStorage } from "../../../src/lib/server/storage/minio-storage";
 
 describe("MinioStorage", () => {
   it("uploads via the injected S3 client and builds a public URL from the bucket", async () => {

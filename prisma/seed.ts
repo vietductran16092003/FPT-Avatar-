@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { getStorage } from "../src/lib/storage";
-import type { ImageStorage } from "../src/lib/storage/types";
+import { getStorage } from "../src/lib/server/storage";
+import type { ImageStorage } from "../src/lib/server/storage/types";
 
 const SEED_ASSETS_DIR = join(__dirname, "seed-assets");
 
@@ -39,7 +39,9 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
           name: "Khung cam chuẩn",
           frameImageKey: "frames/fpt38-orange.png",
           overlayConfig: {
-            photoArea: { x: 18, y: 14, w: 64, h: 64 },
+            // Matches the transparent photo-hole in the Frame 29 artwork
+            // (roughly x:22-442, y:22-398 of its 464x464 source).
+            photoArea: { x: 5, y: 5, w: 90, h: 81 },
             textOverlays: [
               {
                 key: "joinYear",
@@ -47,10 +49,13 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
                 labelEn: "YEAR YOU JOINED FPT",
                 type: "yearsSince",
                 options: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(1988 + i)),
-                x: 50,
-                y: 85,
-                fontSize: 24,
+                // Sits on the diagonal ribbon baked into the frame's top-left
+                // corner; rotation matches the ribbon's own angle.
+                x: 21,
+                y: 19,
+                fontSize: 45,
                 color: "#ffffff",
+                rotation: -44,
               },
             ],
           },

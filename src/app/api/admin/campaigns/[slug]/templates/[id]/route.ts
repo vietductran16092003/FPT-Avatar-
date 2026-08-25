@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/require-admin";
-import { getStorage } from "@/lib/storage";
+import { prisma } from "@/lib/server/prisma";
+import { requireAdmin } from "@/lib/server/require-admin";
+import { getStorage } from "@/lib/server/storage";
 
 const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
 

@@ -4,10 +4,10 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 
-vi.mock("../../src/lib/session", () => ({ getCurrentUser: vi.fn() }));
+vi.mock("../../src/lib/server/session", () => ({ getCurrentUser: vi.fn() }));
 
 import HomePage from "../../src/app/(public)/page";
-import { getCurrentUser } from "../../src/lib/session";
+import { getCurrentUser } from "../../src/lib/server/session";
 
 beforeEach(() => {
   localStorage.clear();

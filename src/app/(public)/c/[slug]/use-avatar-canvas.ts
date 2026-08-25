@@ -262,6 +262,7 @@ export function useAvatarCanvas(canvasElRef: RefObject<HTMLCanvasElement | null>
         top: d.y,
         originX: "center",
         originY: "center",
+        angle: d.rotation,
         fontSize: d.fontSize,
         fill: d.color,
         fontFamily: "sans-serif",
@@ -293,5 +294,23 @@ export function useAvatarCanvas(canvasElRef: RefObject<HTMLCanvasElement | null>
     fabricRef.current?.requestRenderAll();
   }, [deriveRawTransform]);
 
-  return { setPhoto, setFrame, setOverlays, getTransform, zoomBy, ZOOM_STEP };
+  // Absolute-value counterpart to zoomBy, for a draggable range slider
+  // (which reports "the value is now X", not "move by X").
+  const zoomTo = useCallback((scale: number) => {
+    const photo = photoObjRef.current;
+    if (!photo) return;
+    const area = photoAreaRef.current;
+    const current = clampTransform(deriveRawTransform(photo, area));
+    const next = clampTransform({ ...current, scale });
+    const placement = resolvePhotoPlacement(area, photo.width, photo.height, CANVAS_SIZE, CANVAS_SIZE, next);
+    photo.set({
+      scaleX: placement.drawW / photo.width,
+      scaleY: placement.drawH / photo.height,
+      left: placement.dx,
+      top: placement.dy,
+    });
+    fabricRef.current?.requestRenderAll();
+  }, [deriveRawTransform]);
+
+  return { setPhoto, setFrame, setOverlays, getTransform, zoomBy, zoomTo, ZOOM_STEP };
 }

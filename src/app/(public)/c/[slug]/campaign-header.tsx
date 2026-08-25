@@ -1,30 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Globe, ChevronDown } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { Globe, ChevronDown, ArrowLeft } from "lucide-react";
 import { usePublicLang, type PublicLang } from "@/lib/public-i18n";
 import { cn } from "@/lib/utils";
 
 const LANG_LABELS: Record<PublicLang, string> = { vi: "Tiếng Việt", en: "English" };
 
-function AvatarLink() {
-  const { data: session } = useSession();
-  const name = session?.user?.name || session?.user?.email || "?";
-  const initial = name.trim().charAt(0).toUpperCase();
-  return (
-    <Link href="/tai-khoan" className="flex size-8 items-center justify-center rounded-full bg-white text-[12px] font-bold text-[#C25A00]">
-      {initial}
-    </Link>
-  );
-}
-
 export function CampaignHeader() {
-  const { lang, setLang, t } = usePublicLang();
-  const { data: session } = useSession();
-  const params = useParams<{ slug: string }>();
+  const { lang, setLang } = usePublicLang();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -37,67 +22,51 @@ export function CampaignHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-r from-[#FF6A00] via-[#FF5A01] to-[#E5450A] px-4 py-2.5 shadow-sm sm:px-8 sm:py-3.5">
-      <div className="flex items-center gap-3">
-        {/* Plain <img>, not next/image: Next's image optimizer refuses local
-            SVGs unless images.dangerouslyAllowSVG is set app-wide, which is
-            more blast radius than two small static logo files need. */}
-        <img src="/header-fpt-logo.svg" alt="FPT" className="h-7 w-auto sm:h-9" />
-        <img src="/header-fpt-38-badge.svg" alt="38 năm FPT" className="h-9 w-auto sm:h-11" />
-      </div>
+    <header
+      className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-cover bg-center px-4 py-2.5 shadow-sm sm:px-8 sm:py-3.5"
+      style={{ backgroundImage: "url('/Frame 2.png')" }}
+    >
+      <Link
+        href="/"
+        aria-label="Về trang chủ"
+        className="flex size-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15"
+      >
+        <ArrowLeft className="size-5" />
+      </Link>
 
-      <div className="flex items-center gap-3">
-        <div ref={wrapRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setOpen(o => !o)}
-            aria-haspopup="listbox"
-            aria-expanded={open}
-            className="flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-2 text-[13px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-          >
-            <Globe className="size-4" />
-            <span className="hidden sm:inline">{LANG_LABELS[lang]}</span>
-            <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
-          </button>
-          {open && (
-            <div role="listbox" className="absolute right-0 top-full z-30 mt-2 w-36 overflow-hidden rounded-xl border border-black/5 bg-white py-1 text-sm shadow-lg">
-              {(["vi", "en"] as PublicLang[]).map(code => (
-                <button
-                  key={code}
-                  type="button"
-                  role="option"
-                  aria-selected={lang === code}
-                  onClick={() => {
-                    setLang(code);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center px-3.5 py-2 text-left font-semibold text-foreground hover:bg-muted",
-                    lang === code && "text-primary",
-                  )}
-                >
-                  {LANG_LABELS[code]}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {session?.user ? (
-          <>
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="text-[13px] font-semibold text-white/90 hover:text-white"
-            >
-              {t("logout")}
-            </button>
-            <AvatarLink />
-          </>
-        ) : (
-          <Link href={`/admin/login?callbackUrl=${encodeURIComponent(`/c/${params.slug}`)}`} className="text-[13px] font-semibold text-white hover:underline">
-            {t("headerLogin")}
-          </Link>
+      <div ref={wrapRef} className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-2 text-[13px] font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
+        >
+          <Globe className="size-4" />
+          <span className="hidden sm:inline">{LANG_LABELS[lang]}</span>
+          <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
+        </button>
+        {open && (
+          <div role="listbox" className="absolute right-0 top-full z-30 mt-2 w-36 overflow-hidden rounded-xl border border-black/5 bg-white py-1 text-sm shadow-lg">
+            {(["vi", "en"] as PublicLang[]).map(code => (
+              <button
+                key={code}
+                type="button"
+                role="option"
+                aria-selected={lang === code}
+                onClick={() => {
+                  setLang(code);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex w-full items-center px-3.5 py-2 text-left font-semibold text-foreground hover:bg-muted",
+                  lang === code && "text-primary",
+                )}
+              >
+                {LANG_LABELS[code]}
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </header>

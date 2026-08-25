@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getStorage } from "@/lib/storage";
-import { compositeAvatar } from "@/lib/compositing/server-compositor";
-import { validateOverlayValues } from "@/lib/compositing/validate-overlay-values";
+import { prisma } from "@/lib/server/prisma";
+import { getStorage } from "@/lib/server/storage";
+import { compositeAvatar } from "@/lib/server/compositing/server-compositor";
+import { validateOverlayValues } from "@/lib/server/compositing/validate-overlay-values";
 import { clampTransform, IDENTITY_TRANSFORM, type PhotoTransform } from "@/lib/compositing/photo-placement";
-import { createNotification } from "@/lib/notifications";
-import { isCampaignPubliclyVisible } from "@/lib/campaign-visibility";
-import { getCurrentUser } from "@/lib/session";
+import { createNotification } from "@/lib/server/notifications";
+import { isCampaignPubliclyVisible } from "@/lib/server/campaign-visibility";
+import { getCurrentUser } from "@/lib/server/session";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 

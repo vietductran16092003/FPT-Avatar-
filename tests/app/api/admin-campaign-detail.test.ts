@@ -1,22 +1,22 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("../../../src/lib/require-admin", () => ({
+vi.mock("../../../src/lib/server/require-admin", () => ({
   requireAdmin: vi.fn().mockResolvedValue({ ok: true, userId: "admin1" }),
 }));
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: {
     campaign: { findUnique: vi.fn() },
   },
 }));
-vi.mock("../../../src/lib/storage", () => ({
+vi.mock("../../../src/lib/server/storage", () => ({
   getStorage: () => ({
     getPublicUrl: (key: string) => `http://storage/${key}`,
   }),
 }));
 
 import { GET } from "../../../src/app/api/admin/campaigns/[slug]/route";
-import { prisma } from "../../../src/lib/prisma";
-import { requireAdmin } from "../../../src/lib/require-admin";
+import { prisma } from "../../../src/lib/server/prisma";
+import { requireAdmin } from "../../../src/lib/server/require-admin";
 
 describe("GET /api/admin/campaigns/:slug", () => {
   it("returns the campaign with its templates", async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateOverlayValues } from "../../../src/lib/compositing/validate-overlay-values";
+import { validateOverlayValues } from "../../../src/lib/server/compositing/validate-overlay-values";
 import type { TextOverlay } from "../../../src/lib/compositing/overlay-layout";
 
 const overlays: TextOverlay[] = [

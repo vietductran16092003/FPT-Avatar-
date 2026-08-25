@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
 import { PublicLangProvider } from "@/lib/public-i18n";
 import { PublicHeader } from "@/components/public-header";
+import { GoogleAnalytics } from "@/components/google-analytics";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -15,6 +16,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <SessionProvider>
       <PublicLangProvider>
+        <GoogleAnalytics />
         <div className="flex min-h-screen flex-col" style={{ "--primary": "#FF5A01" } as React.CSSProperties}>
           {!isCampaignRoute && <PublicHeader />}
           <main className="flex-1">{children}</main>

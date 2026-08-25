@@ -3,15 +3,20 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/lib/require-admin", () => ({ requireAdmin: vi.fn().mockResolvedValue({ ok: true }) }));
+vi.mock("@/lib/server/require-admin", () => ({ requireAdmin: vi.fn().mockResolvedValue({ ok: true }) }));
 
 const findManyMock = vi.fn();
 const groupByMock = vi.fn();
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/lib/server/prisma", () => ({
   prisma: {
     campaign: { findMany: (...args: unknown[]) => findManyMock(...args) },
     generatedAvatar: { groupBy: (...args: unknown[]) => groupByMock(...args) },
   },
+}));
+
+const fetchDownloadsByFieldMock = vi.fn();
+vi.mock("@/lib/server/analytics/ga4-report", () => ({
+  fetchDownloadsByField: (...args: unknown[]) => fetchDownloadsByFieldMock(...args),
 }));
 
 import { GET } from "../../../src/app/api/admin/analytics/route";
@@ -19,6 +24,8 @@ import { GET } from "../../../src/app/api/admin/analytics/route";
 beforeEach(() => {
   findManyMock.mockReset();
   groupByMock.mockReset();
+  fetchDownloadsByFieldMock.mockReset();
+  fetchDownloadsByFieldMock.mockResolvedValue(null);
 });
 
 describe("GET /api/admin/analytics", () => {
@@ -37,5 +44,27 @@ describe("GET /api/admin/analytics", () => {
     expect(Array.isArray(body.byDay)).toBe(true);
     expect(body.byDay).toHaveLength(7);
     expect(body.byDay.every((d: any) => typeof d.day === "string" && typeof d.count === "number")).toBe(true);
+  });
+
+  it("returns byField as null when GA4 isn't configured (fetchDownloadsByField returns null)", async () => {
+    findManyMock.mockResolvedValue([]);
+    groupByMock.mockResolvedValue([]);
+
+    const res = await GET();
+    const body = await res.json();
+
+    expect(body.byField).toBeNull();
+  });
+
+  it("returns byField from GA4 when configured", async () => {
+    findManyMock.mockResolvedValue([]);
+    groupByMock.mockResolvedValue([]);
+    fetchDownloadsByFieldMock.mockResolvedValue([{ name: "FPT Software", value: 420 }]);
+
+    const res = await GET();
+    const body = await res.json();
+
+    expect(body.byField).toEqual([{ name: "FPT Software", value: 420 }]);
+    expect(fetchDownloadsByFieldMock).toHaveBeenCalledWith("unit");
   });
 });

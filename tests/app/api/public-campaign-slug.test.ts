@@ -4,10 +4,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const findUniqueMock = vi.fn();
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/lib/server/prisma", () => ({
   prisma: { campaign: { findUnique: (...args: unknown[]) => findUniqueMock(...args) } },
 }));
-vi.mock("@/lib/storage", () => ({
+vi.mock("@/lib/server/storage", () => ({
   getStorage: () => ({ getPublicUrl: (key: string) => `http://storage/${key}` }),
 }));
 

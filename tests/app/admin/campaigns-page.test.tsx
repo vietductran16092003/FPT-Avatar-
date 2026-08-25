@@ -36,7 +36,7 @@ describe("AdminCampaignsPage delete confirmation", () => {
     await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
 
     (global.fetch as any).mockClear();
-    await userEvent.click(screen.getByRole("button", { name: "Xóa" }));
+    await userEvent.click(screen.getByRole("button", { name: "Xoá" }));
 
     expect(window.confirm).toHaveBeenCalled();
     expect(global.fetch).not.toHaveBeenCalledWith("/api/admin/campaigns/fpt38", expect.objectContaining({ method: "DELETE" }));
@@ -49,7 +49,7 @@ describe("AdminCampaignsPage delete confirmation", () => {
     renderPage();
     await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
 
-    await userEvent.click(screen.getByRole("button", { name: "Xóa" }));
+    await userEvent.click(screen.getByRole("button", { name: "Xoá" }));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/admin/campaigns/fpt38", expect.objectContaining({ method: "DELETE" })));
   });
@@ -62,9 +62,9 @@ describe("AdminCampaignsPage create errors", () => {
       .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Campaign slug "fpt38" already exists' }) });
 
     renderPage();
-    await waitFor(() => expect(screen.getByRole("button", { name: "+ Campaign mới" })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole("button", { name: "+ Tạo Campaign mới" })).toBeTruthy());
 
-    await userEvent.click(screen.getByRole("button", { name: "+ Campaign mới" }));
+    await userEvent.click(screen.getByRole("button", { name: "+ Tạo Campaign mới" }));
     await userEvent.type(screen.getByLabelText("Slug"), "fpt38");
     await userEvent.type(screen.getByLabelText("Tiêu đề (VI)"), "T");
     await userEvent.type(screen.getByLabelText("Ngày bắt đầu"), "2026-08-20");
@@ -82,7 +82,7 @@ describe("AdminCampaignsPage status pill", () => {
     renderPage();
     await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
 
-    await userEvent.click(screen.getByText("Hoạt động"));
+    await userEvent.click(screen.getByText("Đang chạy"));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
       "/api/admin/campaigns/fpt38",
@@ -122,7 +122,7 @@ describe("AdminCampaignsPage status pill", () => {
     renderPage();
     await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
 
-    await userEvent.click(screen.getByText("Nháp"));
+    await userEvent.click(screen.getByText("Bản nháp"));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
       "/api/admin/campaigns/fpt38",
@@ -144,7 +144,7 @@ describe("AdminCampaignsPage status pill", () => {
     renderPage();
     await waitFor(() => expect(screen.getByText("FPT 38")).toBeTruthy());
 
-    await userEvent.click(screen.getByText("Hoạt động"));
+    await userEvent.click(screen.getByText("Đang chạy"));
 
     await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
   });
@@ -180,8 +180,8 @@ describe("AdminCampaignsPage merged frames section", () => {
     await userEvent.click(screen.getByRole("button", { name: "Sửa" }));
     await waitFor(() => expect(screen.getByText("Khung cam chuẩn")).toBeTruthy());
 
-    await userEvent.click(screen.getAllByRole("button", { name: "Đóng" })[0]);
-    await userEvent.click(screen.getByRole("button", { name: "+ Campaign mới" }));
+    await userEvent.click(screen.getAllByRole("button", { name: "Huỷ" })[0]);
+    await userEvent.click(screen.getByRole("button", { name: "+ Tạo Campaign mới" }));
     expect(screen.getByText("Lưu Campaign này trước để bắt đầu thêm khung ảnh.")).toBeTruthy();
     expect(screen.queryByText("Khung cam chuẩn")).toBeNull();
   });

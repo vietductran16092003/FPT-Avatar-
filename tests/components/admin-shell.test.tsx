@@ -18,8 +18,18 @@ describe("AdminShell", () => {
         <AdminShell>content</AdminShell>
       </AdminLangProvider>,
     );
-    const active = screen.getByText("Campaign");
+    const active = screen.getByText("Campaigns");
     expect(active.className).toContain("bg-[#FDE9D6]");
-    expect(screen.getByText("Thống kê")).toBeTruthy();
+    expect(screen.getByText("Số liệu tải ảnh")).toBeTruthy();
+  });
+
+  it("renders a link back to the public site", () => {
+    render(
+      <AdminLangProvider>
+        <AdminShell>content</AdminShell>
+      </AdminLangProvider>,
+    );
+    const backLink = screen.getByText("Về trang public").closest("a");
+    expect(backLink?.getAttribute("href")).toBe("/");
   });
 });

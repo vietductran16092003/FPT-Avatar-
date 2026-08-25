@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Prisma } from "@prisma/client";
 
-vi.mock("../../../src/lib/require-admin", () => ({
+vi.mock("../../../src/lib/server/require-admin", () => ({
   requireAdmin: vi.fn().mockResolvedValue({ ok: true, userId: "admin1" }),
 }));
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: {
     campaign: { findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   },
 }));
-vi.mock("../../../src/lib/notifications", () => ({
+vi.mock("../../../src/lib/server/notifications", () => ({
   createNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { GET, POST } from "../../../src/app/api/admin/campaigns/route";
 import { PATCH, DELETE } from "../../../src/app/api/admin/campaigns/[slug]/route";
-import { prisma } from "../../../src/lib/prisma";
-import { requireAdmin } from "../../../src/lib/require-admin";
-import { createNotification } from "../../../src/lib/notifications";
+import { prisma } from "../../../src/lib/server/prisma";
+import { requireAdmin } from "../../../src/lib/server/require-admin";
+import { createNotification } from "../../../src/lib/server/notifications";
 
 function prismaError(code: string) {
   return new Prisma.PrismaClientKnownRequestError("mock", { code, clientVersion: "5.22.0" });

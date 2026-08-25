@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getBaseUrl } from "../../src/lib/base-url";
+import { getBaseUrl } from "../../src/lib/server/base-url";
 
 describe("getBaseUrl", () => {
   it("returns an absolute origin for server-side calls (no window in this test environment)", () => {

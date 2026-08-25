@@ -9,6 +9,10 @@ export interface TextOverlay {
   y: number;
   fontSize: number;
   color: string;
+  // Clockwise degrees around (x,y), for ribbon-style diagonal banners baked
+  // into a frame's artwork (e.g. Frame 29's "N NĂM LÀM FPT" ribbon). Omitted
+  // or 0 draws upright, matching every overlay before this field existed.
+  rotation?: number;
 }
 
 export interface ResolvedDraw {
@@ -17,6 +21,7 @@ export interface ResolvedDraw {
   y: number;
   fontSize: number;
   color: string;
+  rotation: number;
 }
 
 // FPT's founding-anniversary phrasing: a join year of the current year (or
@@ -45,5 +50,6 @@ export function resolveOverlayDraws(
       y: (o.y / 100) * height,
       fontSize: o.fontSize,
       color: o.color,
+      rotation: o.rotation ?? 0,
     }));
 }

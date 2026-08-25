@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: { campaign: { findMany: vi.fn() } },
 }));
 
 import { GET } from "../../../src/app/api/campaigns/route";
-import { prisma } from "../../../src/lib/prisma";
+import { prisma } from "../../../src/lib/server/prisma";
 
 describe("GET /api/campaigns", () => {
   it("returns every active campaign currently within its date range as an array", async () => {

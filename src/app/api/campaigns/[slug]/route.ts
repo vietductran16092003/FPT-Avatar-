@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getStorage } from "@/lib/storage";
-import { isCampaignPubliclyVisible } from "@/lib/campaign-visibility";
+import { prisma } from "@/lib/server/prisma";
+import { getStorage } from "@/lib/server/storage";
+import { isCampaignPubliclyVisible } from "@/lib/server/campaign-visibility";
 
 export async function GET(_req: Request, { params }: { params: { slug: string } }) {
   const campaign = await prisma.campaign.findUnique({

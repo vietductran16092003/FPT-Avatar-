@@ -9,7 +9,7 @@ const overlays: TextOverlay[] = [
 describe("resolveOverlayDraws", () => {
   it("converts percentage coordinates to pixels for a 1000x800 canvas", () => {
     const draws = resolveOverlayDraws(overlays, { joinYear: "2021" }, 1000, 800);
-    expect(draws).toEqual([{ text: "2021", x: 500, y: 640, fontSize: 24, color: "#ffffff" }]);
+    expect(draws).toEqual([{ text: "2021", x: 500, y: 640, fontSize: 24, color: "#ffffff", rotation: 0 }]);
   });
 
   it("skips overlays with no submitted value", () => {

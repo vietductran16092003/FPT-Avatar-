@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 
-vi.mock("../../src/lib/session", () => ({ getCurrentUser: vi.fn() }));
+vi.mock("../../src/lib/server/session", () => ({ getCurrentUser: vi.fn() }));
 const redirectMock = vi.fn();
 vi.mock("next/navigation", () => ({
   redirect: (...args: unknown[]) => {
@@ -12,13 +12,13 @@ vi.mock("next/navigation", () => ({
     throw new Error("NEXT_REDIRECT");
   },
 }));
-vi.mock("../../src/lib/prisma", () => ({
+vi.mock("../../src/lib/server/prisma", () => ({
   prisma: { generatedAvatar: { findMany: vi.fn() } },
 }));
 
 import AccountPage from "../../src/app/(public)/tai-khoan/page";
-import { getCurrentUser } from "../../src/lib/session";
-import { prisma } from "../../src/lib/prisma";
+import { getCurrentUser } from "../../src/lib/server/session";
+import { prisma } from "../../src/lib/server/prisma";
 
 beforeEach(() => {
   redirectMock.mockClear();

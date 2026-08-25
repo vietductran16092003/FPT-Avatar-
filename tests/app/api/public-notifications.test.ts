@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const findManyMock = vi.fn();
-vi.mock("@/lib/prisma", () => ({
+vi.mock("@/lib/server/prisma", () => ({
   prisma: { notification: { findMany: (...args: unknown[]) => findManyMock(...args) } },
 }));
 
