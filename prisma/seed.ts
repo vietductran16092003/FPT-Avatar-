@@ -49,13 +49,22 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
                 labelEn: "YEAR YOU JOINED FPT",
                 type: "yearsSince",
                 options: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(1988 + i)),
-                // Sits on the diagonal ribbon baked into the frame's top-left
-                // corner; rotation matches the ribbon's own angle.
+                // Curves along the top-left rim of the white photo circle
+                // (see Frame 29 artwork). When `curve` is set, x/y/rotation
+                // are ignored for drawing (kept only as a straight-text
+                // fallback); the arc params below are what position the text.
                 x: 21,
                 y: 19,
                 fontSize: 45,
                 color: "#ffffff",
                 rotation: -44,
+                curve: {
+                  centerX: 50, // % width — center of the photo circle
+                  centerY: 48, // % height
+                  radius: 44,  // % width — just outside the circle's rim
+                  angle: -135, // deg (0=right, -90=up) — midpoint of the text, ~10:30
+                  direction: "cw",
+                },
               },
             ],
           },
