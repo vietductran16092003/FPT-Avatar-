@@ -224,4 +224,64 @@ describe("TemplateForm", () => {
 
     expect((screen.getByLabelText("Đơn vị công tác") as HTMLInputElement).checked).toBe(true);
   });
+
+  it("shows the curve picker instead of X/Y number inputs when 'Chữ theo đường cong' is checked, and submits the curve config", async () => {
+    const onSubmit = vi.fn();
+    renderTemplateForm({ onSubmit });
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung cong");
+    const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), file);
+
+    await userEvent.click(screen.getByRole("button", { name: "Thêm trường overlay" }));
+    await userEvent.type(screen.getByLabelText("Khóa (key)"), "ribbon");
+
+    await userEvent.click(screen.getByLabelText("Chữ theo đường cong"));
+
+    expect(screen.getByTestId("curve-text-picker")).toBeTruthy();
+    expect(screen.queryByLabelText("X")).toBeNull();
+    expect(screen.queryByLabelText("Y")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.arrayContaining([
+          expect.objectContaining({
+            key: "ribbon",
+            curve: { centerX: 50, centerY: 50, radius: 30, angle: -90, direction: "cw" },
+          }),
+        ]),
+      }),
+    }));
+  });
+
+  it("reverts to X/Y number inputs and drops the curve config when the checkbox is unticked", async () => {
+    const onSubmit = vi.fn();
+    renderTemplateForm({ onSubmit });
+
+    await userEvent.type(screen.getByLabelText("Tên khung"), "Khung cong");
+    const file = new File(["frame-bytes"], "frame.png", { type: "image/png" });
+    await userEvent.upload(screen.getByLabelText("Ảnh khung (PNG)"), file);
+
+    await userEvent.click(screen.getByRole("button", { name: "Thêm trường overlay" }));
+    await userEvent.type(screen.getByLabelText("Khóa (key)"), "ribbon");
+    const curveCheckbox = screen.getByLabelText("Chữ theo đường cong");
+
+    await userEvent.click(curveCheckbox);
+    expect(screen.getByTestId("curve-text-picker")).toBeTruthy();
+
+    await userEvent.click(curveCheckbox);
+    expect(screen.queryByTestId("curve-text-picker")).toBeNull();
+    expect(screen.getByLabelText("X")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "Lưu khung" }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      overlayConfig: expect.objectContaining({
+        textOverlays: expect.arrayContaining([
+          expect.objectContaining({ key: "ribbon", curve: undefined }),
+        ]),
+      }),
+    }));
+  });
 });

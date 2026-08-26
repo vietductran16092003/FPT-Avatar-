@@ -5,12 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { TextOverlay } from "@/lib/compositing/overlay-layout";
+import type { TextOverlay, OverlayCurve } from "@/lib/compositing/overlay-layout";
 import { COMPONENT_PRESETS, type ComponentPreset } from "@/lib/component-presets";
 import { useAdminLang } from "@/lib/admin-i18n";
 import { PhotoAreaPicker } from "./photo-area-picker";
+import { CurveTextPicker } from "./curve-text-picker";
 
 const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
+const DEFAULT_CURVE: OverlayCurve = { centerX: 50, centerY: 50, radius: 30, angle: -90, direction: "cw" };
 
 interface TemplateOverlayConfig {
   photoArea: { x: number; y: number; w: number; h: number };
@@ -59,7 +61,8 @@ function overlaysMatch(a: TextOverlay, b: TextOverlay): boolean {
     a.fontSize === b.fontSize &&
     a.color === b.color &&
     a.placeholder === b.placeholder &&
-    JSON.stringify(a.options ?? []) === JSON.stringify(b.options ?? [])
+    JSON.stringify(a.options ?? []) === JSON.stringify(b.options ?? []) &&
+    JSON.stringify(a.curve ?? null) === JSON.stringify(b.curve ?? null)
   );
 }
 
@@ -214,15 +217,36 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
                 />
               </div>
             )}
-            <div className="grid grid-cols-4 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor={`overlay-x-${index}`}>X</Label>
-                <Input id={`overlay-x-${index}`} type="number" value={overlay.x} onChange={e => updateOverlay(index, { x: Number(e.target.value) })} />
+            <label htmlFor={`overlay-curved-${index}`} className="flex items-center gap-2 text-sm">
+              <input
+                id={`overlay-curved-${index}`}
+                type="checkbox"
+                checked={!!overlay.curve}
+                onChange={e => updateOverlay(index, { curve: e.target.checked ? DEFAULT_CURVE : undefined })}
+              />
+              Chữ theo đường cong
+            </label>
+
+            {overlay.curve ? (
+              <CurveTextPicker
+                imageUrl={framePreviewUrl}
+                value={overlay.curve}
+                onChange={curve => updateOverlay(index, { curve })}
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor={`overlay-x-${index}`}>X</Label>
+                  <Input id={`overlay-x-${index}`} type="number" value={overlay.x} onChange={e => updateOverlay(index, { x: Number(e.target.value) })} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor={`overlay-y-${index}`}>Y</Label>
+                  <Input id={`overlay-y-${index}`} type="number" value={overlay.y} onChange={e => updateOverlay(index, { y: Number(e.target.value) })} />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label htmlFor={`overlay-y-${index}`}>Y</Label>
-                <Input id={`overlay-y-${index}`} type="number" value={overlay.y} onChange={e => updateOverlay(index, { y: Number(e.target.value) })} />
-              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label htmlFor={`overlay-fontsize-${index}`}>Cỡ chữ</Label>
                 <Input id={`overlay-fontsize-${index}`} type="number" value={overlay.fontSize} onChange={e => updateOverlay(index, { fontSize: Number(e.target.value) })} />
