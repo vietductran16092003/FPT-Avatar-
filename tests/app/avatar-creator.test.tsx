@@ -316,4 +316,33 @@ describe("AvatarCreator", () => {
     expect(fbLink.getAttribute("href")).toContain("facebook.com/sharer");
     expect(fbLink.getAttribute("target")).toBe("_blank");
   });
+
+  it("renders without crashing when a template overlay uses a curved layout", async () => {
+    const curvedTemplate: Template = {
+      id: "t3",
+      name: "Khung cong",
+      frameImageUrl: "http://storage/frames/curved.png",
+      overlayConfig: {
+        photoArea: { x: 10, y: 10, w: 60, h: 60 },
+        textOverlays: [
+          {
+            key: "ribbon",
+            label: "Ruy băng",
+            labelEn: "Ribbon",
+            type: "text",
+            x: 50,
+            y: 50,
+            fontSize: 20,
+            color: "#fff",
+            curve: { centerX: 50, centerY: 20, radius: 35, angle: -90, direction: "cw" },
+          },
+        ],
+      },
+    };
+    renderCreator([curvedTemplate]);
+
+    await userEvent.type(screen.getByLabelText("Ruy băng"), "FPT 38");
+
+    expect(screen.getByLabelText("Ruy băng")).toBeTruthy();
+  });
 });

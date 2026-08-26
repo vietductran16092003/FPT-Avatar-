@@ -3,12 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Camera, Eye, Download } from "lucide-react";
 import { useAvatarCanvas, CANVAS_SIZE } from "./use-avatar-canvas";
-import { resolveOverlayDraws, type TextOverlay } from "@/lib/compositing/overlay-layout";
+import { resolveOverlayDraws, type TextOverlay, type MeasureChar } from "@/lib/compositing/overlay-layout";
 import { MIN_ZOOM, MAX_ZOOM } from "@/lib/compositing/photo-placement";
 import { PublicLangProvider, usePublicLang } from "@/lib/public-i18n";
 import { pickLocalized, type DisplayConfigLike } from "@/lib/localized-content";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics/ga4-client";
+
+// Lazily-created, reused canvas 2d context for measuring curved-overlay
+// character widths in the browser — mirrors server-compositor.ts's use of
+// node-canvas's ctx.measureText, so client preview and server download lay
+// out curved text the same way (each side measures with its own engine
+// rather than sharing a guessed width).
+let measureCanvasCtx: CanvasRenderingContext2D | null | undefined;
+const measureCharWithCanvas: MeasureChar = (char, fontSize) => {
+  if (measureCanvasCtx === undefined) {
+    measureCanvasCtx = document.createElement("canvas").getContext("2d");
+  }
+  if (!measureCanvasCtx) return fontSize * 0.6;
+  measureCanvasCtx.font = `${fontSize}px sans-serif`;
+  return measureCanvasCtx.measureText(char).width;
+};
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const ZOOM_STEP = 0.1;
@@ -192,7 +207,7 @@ function AvatarCreatorInner({
   }, [frameImg, setFrame]);
 
   useEffect(() => {
-    const draws = resolveOverlayDraws(selected.overlayConfig.textOverlays, overlayValues, CANVAS_SIZE, CANVAS_SIZE, lang);
+    const draws = resolveOverlayDraws(selected.overlayConfig.textOverlays, overlayValues, CANVAS_SIZE, CANVAS_SIZE, lang, measureCharWithCanvas);
     setOverlays(draws);
   }, [selected, overlayValues, lang, setOverlays]);
 
