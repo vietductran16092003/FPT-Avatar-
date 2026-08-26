@@ -94,4 +94,32 @@ describe("compositeAvatar", () => {
 
     expect(Buffer.isBuffer(result)).toBe(true);
   });
+
+  it("renders a curved overlay one character at a time without throwing, honoring the curve config", async () => {
+    const frame = solidPng(200, 200, "rgba(0,0,0,0)");
+    const photo = solidPng(50, 50, "#0000ff");
+
+    const result = await compositeAvatar(
+      frame, photo, { x: 0, y: 0, w: 50, h: 50 },
+      [
+        {
+          key: "ribbon",
+          label: "R",
+          labelEn: "R",
+          type: "text",
+          x: 50,
+          y: 50,
+          fontSize: 20,
+          color: "#ffffff",
+          curve: { centerX: 50, centerY: 50, radius: 30, angle: -90, direction: "cw" },
+        },
+      ],
+      { ribbon: "FPT 38" },
+    );
+
+    expect(Buffer.isBuffer(result)).toBe(true);
+    const decoded = await loadImage(result);
+    expect(decoded.width).toBe(200);
+    expect(decoded.height).toBe(200);
+  });
 });

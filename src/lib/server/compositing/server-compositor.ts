@@ -1,5 +1,5 @@
 import { createCanvas, loadImage } from "canvas";
-import { resolveOverlayDraws, type TextOverlay } from "@/lib/compositing/overlay-layout";
+import { resolveOverlayDraws, type TextOverlay, type MeasureChar } from "@/lib/compositing/overlay-layout";
 import { resolvePhotoPlacement, IDENTITY_TRANSFORM, type PhotoTransform } from "@/lib/compositing/photo-placement";
 
 export async function compositeAvatar(
@@ -31,7 +31,14 @@ export async function compositeAvatar(
 
   ctx.drawImage(frame, 0, 0);
 
-  const draws = resolveOverlayDraws(overlays, overlayValues, frame.width, frame.height, lang);
+  // node-canvas's own text metrics — measured here rather than approximated,
+  // so curved overlays lay out characters using this environment's real
+  // glyph widths (see overlay-layout.ts's MeasureChar contract).
+  const measureChar: MeasureChar = (char, fontSize) => {
+    ctx.font = `${fontSize}px sans-serif`;
+    return ctx.measureText(char).width;
+  };
+  const draws = resolveOverlayDraws(overlays, overlayValues, frame.width, frame.height, lang, measureChar);
   for (const draw of draws) {
     ctx.save();
     ctx.fillStyle = draw.color;
