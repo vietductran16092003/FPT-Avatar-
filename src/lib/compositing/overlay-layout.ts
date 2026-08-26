@@ -19,6 +19,9 @@ export interface TextOverlay {
   y: number;
   fontSize: number;
   color: string;
+  // CSS font-weight token (e.g. "bold", "600"). Omitted renders at normal
+  // weight, matching every overlay before this field existed.
+  fontWeight?: string;
   // Clockwise degrees around (x,y), for ribbon-style diagonal banners baked
   // into a frame's artwork (e.g. Frame 29's "N NĂM LÀM FPT" ribbon). Omitted
   // or 0 draws upright, matching every overlay before this field existed.
@@ -37,6 +40,9 @@ export interface ResolvedDraw {
   fontSize: number;
   color: string;
   rotation: number;
+  // CSS font-weight token carried from the overlay so both renderers paint
+  // (and measure) at the same weight. Absent = normal weight, unchanged.
+  fontWeight?: string;
   // Set only on curved-arc character draws (see resolveCurvedDraws), whose
   // anchor point is meant to be the glyph's visual CENTER, not its default
   // start/baseline origin. Left absent for straight/rotated draws so their
@@ -50,7 +56,7 @@ export interface ResolvedDraw {
 // node-canvas (server download), so overlay-layout.ts never guesses this
 // itself — each caller measures with its own canvas 2d context so curved
 // text lines up the same way in both places.
-export type MeasureChar = (char: string, fontSize: number) => number;
+export type MeasureChar = (char: string, fontSize: number, fontWeight?: string) => number;
 
 // Safety-net default for callers that don't care about curved overlays (or
 // haven't wired a real measurer yet) — a rough monospace approximation.
@@ -80,6 +86,7 @@ function resolveCurvedDraws(
   width: number,
   height: number,
   measureChar: MeasureChar,
+  fontWeight?: string,
 ): ResolvedDraw[] {
   const centerX = (curve.centerX / 100) * width;
   const centerY = (curve.centerY / 100) * height;
@@ -87,7 +94,7 @@ function resolveCurvedDraws(
   const chars = Array.from(text);
 
   const charAngles = chars.map(ch => {
-    const widthPx = measureChar(ch, fontSize);
+    const widthPx = measureChar(ch, fontSize, fontWeight);
     return radiusPx > 0 ? (widthPx / radiusPx) * (180 / Math.PI) : 0;
   });
   const totalAngle = charAngles.reduce((sum, a) => sum + a, 0);
@@ -102,7 +109,7 @@ function resolveCurvedDraws(
     const x = centerX + radiusPx * Math.cos(angleRad);
     const y = centerY + radiusPx * Math.sin(angleRad);
     const rotation = angleDeg + 90 + (curve.direction === "ccw" ? 180 : 0);
-    draws.push({ text: chars[i], x, y, fontSize, color, rotation, centered: true });
+    draws.push({ text: chars[i], x, y, fontSize, color, rotation, fontWeight, centered: true });
     cursor += sign * charAngles[i];
   }
   return draws;
@@ -121,7 +128,7 @@ export function resolveOverlayDraws(
     .flatMap((o): ResolvedDraw[] => {
       const text = o.type === "yearsSince" ? formatYearsSince(values[o.key], lang) : values[o.key];
       if (o.curve) {
-        return resolveCurvedDraws(text, o.curve, o.fontSize, o.color, width, height, measureChar);
+        return resolveCurvedDraws(text, o.curve, o.fontSize, o.color, width, height, measureChar, o.fontWeight);
       }
       return [
         {
@@ -131,6 +138,7 @@ export function resolveOverlayDraws(
           fontSize: o.fontSize,
           color: o.color,
           rotation: o.rotation ?? 0,
+          fontWeight: o.fontWeight,
         },
       ];
     });

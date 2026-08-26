@@ -55,8 +55,9 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
                 // fallback); the arc params below are what position the text.
                 x: 21,
                 y: 19,
-                fontSize: 45,
+                fontSize: 46,
                 color: "#ffffff",
+                fontWeight: "bold",
                 rotation: -44,
                 curve: {
                   centerX: 50, // % width — center of the photo circle

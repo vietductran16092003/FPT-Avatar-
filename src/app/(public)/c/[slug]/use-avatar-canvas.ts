@@ -266,6 +266,7 @@ export function useAvatarCanvas(canvasElRef: RefObject<HTMLCanvasElement | null>
         fontSize: d.fontSize,
         fill: d.color,
         fontFamily: "sans-serif",
+        fontWeight: d.fontWeight ?? "normal",
         selectable: false,
         evented: false,
       });

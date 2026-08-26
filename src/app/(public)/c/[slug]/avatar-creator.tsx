@@ -16,12 +16,12 @@ import { trackEvent } from "@/lib/analytics/ga4-client";
 // out curved text the same way (each side measures with its own engine
 // rather than sharing a guessed width).
 let measureCanvasCtx: CanvasRenderingContext2D | null | undefined;
-const measureCharWithCanvas: MeasureChar = (char, fontSize) => {
+const measureCharWithCanvas: MeasureChar = (char, fontSize, fontWeight) => {
   if (measureCanvasCtx === undefined) {
     measureCanvasCtx = document.createElement("canvas").getContext("2d");
   }
   if (!measureCanvasCtx) return fontSize * 0.6;
-  measureCanvasCtx.font = `${fontSize}px sans-serif`;
+  measureCanvasCtx.font = `${fontWeight ?? ""} ${fontSize}px sans-serif`.trim();
   return measureCanvasCtx.measureText(char).width;
 };
 

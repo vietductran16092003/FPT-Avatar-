@@ -34,15 +34,15 @@ export async function compositeAvatar(
   // node-canvas's own text metrics — measured here rather than approximated,
   // so curved overlays lay out characters using this environment's real
   // glyph widths (see overlay-layout.ts's MeasureChar contract).
-  const measureChar: MeasureChar = (char, fontSize) => {
-    ctx.font = `${fontSize}px sans-serif`;
+  const measureChar: MeasureChar = (char, fontSize, fontWeight) => {
+    ctx.font = `${fontWeight ?? ""} ${fontSize}px sans-serif`.trim();
     return ctx.measureText(char).width;
   };
   const draws = resolveOverlayDraws(overlays, overlayValues, frame.width, frame.height, lang, measureChar);
   for (const draw of draws) {
     ctx.save();
     ctx.fillStyle = draw.color;
-    ctx.font = `${draw.fontSize}px sans-serif`;
+    ctx.font = `${draw.fontWeight ?? ""} ${draw.fontSize}px sans-serif`.trim();
     // Rotate around the draw's own anchor point rather than the canvas
     // origin, then draw at (0,0) in that rotated frame — mathematically
     // identical to the old unrotated fillText(text, x, y) when rotation is
