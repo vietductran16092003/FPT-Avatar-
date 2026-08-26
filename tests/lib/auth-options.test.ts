@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { isDevLoginAdminEmail } from "../../src/lib/auth-options";
+import { isDevLoginAdminEmail } from "../../src/lib/server/auth-options";
 
 const ORIGINAL_ENV = process.env.DEV_LOGIN_ADMIN_EMAILS;
 

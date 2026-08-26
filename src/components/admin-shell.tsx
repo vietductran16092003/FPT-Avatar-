@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminLang } from "@/lib/admin-i18n";
 
@@ -15,8 +16,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="grid flex-1 grid-cols-[220px_1fr]">
-      <nav className="border-r border-border bg-card p-4">
+    <div className="flex flex-1 flex-col">
+      <nav className="flex items-center gap-2 border-b border-border bg-card px-6 py-3">
+        <Link
+          href="/"
+          className="mr-2 flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          {t("adminBackToPublic")}
+        </Link>
         {NAV_ITEMS.map((item) => {
           const active = pathname.startsWith(item.href);
           return (
@@ -24,7 +32,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               key={item.id}
               href={item.href}
               className={cn(
-                "block rounded-md px-3 py-2 text-sm font-semibold transition-colors",
+                "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
                 active
                   ? "bg-[#FDE9D6] text-[#C25A00]"
                   : "text-foreground hover:bg-muted"

@@ -30,14 +30,14 @@ describe("PublicLangProvider / usePublicLang", () => {
   it("defaults to vi and renders the vi label", () => {
     render(<PublicLangProvider><Probe /></PublicLangProvider>);
     expect(screen.getByTestId("lang").textContent).toBe("vi");
-    expect(screen.getByTestId("label").textContent).toBe("Tải ảnh về máy");
+    expect(screen.getByTestId("label").textContent).toBe("TẢI ẢNH");
   });
 
   it("switches language, updates the translated label, and persists to its own localStorage key", async () => {
     render(<PublicLangProvider><Probe /></PublicLangProvider>);
     await userEvent.click(screen.getByText("toggle"));
     expect(screen.getByTestId("lang").textContent).toBe("en");
-    expect(screen.getByTestId("label").textContent).toBe("Download image");
+    expect(screen.getByTestId("label").textContent).toBe("DOWNLOAD");
     expect(localStorage.getItem(PUBLIC_LANG_STORAGE_KEY)).toBe("en");
   });
 

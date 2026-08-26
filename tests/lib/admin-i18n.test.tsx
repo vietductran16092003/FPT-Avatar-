@@ -29,7 +29,7 @@ describe("AdminLangProvider / useAdminLang", () => {
   it("defaults to vi and renders the vi label", () => {
     render(<AdminLangProvider><Probe /></AdminLangProvider>);
     expect(screen.getByTestId("lang").textContent).toBe("vi");
-    expect(screen.getByTestId("label").textContent).toBe("Campaign");
+    expect(screen.getByTestId("label").textContent).toBe("Campaigns");
   });
 
   it("switches language, updates the translated label, and persists to localStorage", async () => {

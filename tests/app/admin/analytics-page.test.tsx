@@ -19,10 +19,14 @@ function renderPage() {
   );
 }
 
-function mockAnalyticsFetch(campaigns: any[], byDay: { day: string; count: number }[] = []) {
+function mockAnalyticsFetch(
+  campaigns: any[],
+  byDay: { day: string; count: number }[] = [],
+  byField: { name: string; value: number }[] | null = null,
+) {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
-    json: async () => ({ campaigns, byDay }),
+    json: async () => ({ campaigns, byDay, byField }),
   });
 }
 
@@ -96,5 +100,20 @@ describe("AdminAnalyticsPage", () => {
 
     await waitFor(() => expect(screen.getByText("Lượt tải theo đơn vị")).toBeTruthy());
     expect(screen.getByText("(số liệu minh hoạ — chưa kết nối dữ liệu thật)")).toBeTruthy();
+  });
+
+  it("renders real GA4 byField data without the placeholder disclaimer when the API returns it", async () => {
+    mockAnalyticsFetch(
+      [{ slug: "fpt38", title: "FPT 38", count: 17, status: "active" }],
+      [],
+      [{ name: "FPT Software", value: 42 }, { name: "FPT Telecom", value: 7 }],
+    );
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText("FPT Software")).toBeTruthy());
+    expect(screen.getByText("42")).toBeTruthy();
+    expect(screen.getByText("FPT Telecom")).toBeTruthy();
+    expect(screen.queryByText("(số liệu minh hoạ — chưa kết nối dữ liệu thật)")).toBeNull();
   });
 });

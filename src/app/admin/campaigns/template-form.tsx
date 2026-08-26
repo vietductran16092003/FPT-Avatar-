@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { TextOverlay } from "@/lib/compositing/overlay-layout";
 import { COMPONENT_PRESETS, type ComponentPreset } from "@/lib/component-presets";
 import { useAdminLang } from "@/lib/admin-i18n";
+import { PhotoAreaPicker } from "./photo-area-picker";
 
 const MAX_FRAME_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -25,6 +26,7 @@ interface TemplateDraft {
 interface TemplateInitial {
   name: string;
   overlayConfig: TemplateOverlayConfig;
+  frameImageUrl?: string;
 }
 
 function emptyOverlay(): TextOverlay {
@@ -68,6 +70,19 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
   const [photoArea, setPhotoArea] = useState(initial?.overlayConfig.photoArea ?? { x: 20, y: 20, w: 60, h: 60 });
   const [overlays, setOverlays] = useState<TextOverlay[]>(initial?.overlayConfig.textOverlays ?? []);
   const [error, setError] = useState<string | null>(null);
+  const [framePreviewUrl, setFramePreviewUrl] = useState<string | null>(initial?.frameImageUrl ?? null);
+
+  // Swaps in a live preview of a newly selected frame file for the photo-area
+  // picker; falls back to the existing frame's URL (edit mode) or nothing.
+  useEffect(() => {
+    if (!frameImage) {
+      setFramePreviewUrl(initial?.frameImageUrl ?? null);
+      return;
+    }
+    const url = URL.createObjectURL(frameImage);
+    setFramePreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [frameImage, initial?.frameImageUrl]);
 
   function updateOverlay(index: number, patch: Partial<TextOverlay>) {
     setOverlays(list => list.map((o, i) => (i === index ? { ...o, ...patch } : o)));
@@ -134,24 +149,8 @@ export function TemplateForm({ onSubmit, initial }: { onSubmit: (draft: Template
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">{t("fPhotoArea")}</legend>
-        <div className="grid grid-cols-4 gap-2">
-          <div className="space-y-1">
-            <Label htmlFor="photo-area-x">X</Label>
-            <Input id="photo-area-x" type="number" value={photoArea.x} onChange={e => setPhotoArea(a => ({ ...a, x: Number(e.target.value) }))} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="photo-area-y">Y</Label>
-            <Input id="photo-area-y" type="number" value={photoArea.y} onChange={e => setPhotoArea(a => ({ ...a, y: Number(e.target.value) }))} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="photo-area-w">Rộng</Label>
-            <Input id="photo-area-w" type="number" value={photoArea.w} onChange={e => setPhotoArea(a => ({ ...a, w: Number(e.target.value) }))} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="photo-area-h">Cao</Label>
-            <Input id="photo-area-h" type="number" value={photoArea.h} onChange={e => setPhotoArea(a => ({ ...a, h: Number(e.target.value) }))} />
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground">Kéo để di chuyển, kéo chấm ở góc để đổi kích thước.</p>
+        <PhotoAreaPicker imageUrl={framePreviewUrl} value={photoArea} onChange={setPhotoArea} />
       </fieldset>
 
       <fieldset className="space-y-2 rounded-xl border border-border p-3">

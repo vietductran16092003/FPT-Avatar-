@@ -50,17 +50,33 @@ describe("PublicHeader", () => {
     expect(screen.getByText("Nguyen Van A")).toBeTruthy();
   });
 
-  it("renders a logout button that calls signOut with the login callback URL", async () => {
+  it("renders a logout button that calls signOut with the public home as callback URL", async () => {
     renderHeader();
 
     await userEvent.click(screen.getByRole("button", { name: "Đăng xuất" }));
 
-    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/admin/login" });
+    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/" });
   });
 
   it("renders the public notification bell", () => {
     renderHeader();
     expect(screen.getByRole("button", { name: "Thông báo" })).toBeTruthy();
+  });
+
+  it("shows a 'Đăng nhập' link (not the avatar/logout/notifications) when no one is signed in", () => {
+    sessionValue = { data: null };
+    renderHeader();
+    expect(screen.queryByRole("button", { name: "Đăng xuất" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Thông báo" })).toBeNull();
+    expect(screen.queryByText("Nguyen Van A")).toBeNull();
+    const loginLink = screen.getByText("Đăng nhập");
+    expect(loginLink.getAttribute("href")).toBe("/admin/login?callbackUrl=%2F");
+  });
+
+  it("links the avatar/name to the account history page when signed in", () => {
+    renderHeader();
+    const nameLink = screen.getByText("Nguyen Van A").closest("a");
+    expect(nameLink?.getAttribute("href")).toBe("/tai-khoan");
   });
 
   it("does not show the admin panel link for a regular (non-admin) user", () => {

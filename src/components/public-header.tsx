@@ -35,12 +35,12 @@ function AvatarWithName() {
   const name = session?.user?.name || session?.user?.email || "?";
   const initial = name.trim().charAt(0).toUpperCase();
   return (
-    <div className="flex items-center gap-2">
+    <Link href="/tai-khoan" className="flex items-center gap-2">
       <div className="flex size-[30px] items-center justify-center rounded-full bg-[#FDE6D2] text-[12px] font-bold text-[#C25A00]">
         {initial}
       </div>
       <span className="text-[13.5px] font-semibold text-muted-foreground">{name}</span>
-    </div>
+    </Link>
   );
 }
 
@@ -65,20 +65,28 @@ export function PublicHeader() {
       </div>
       <div className="flex items-center gap-3">
         <LangToggle />
-        {isAdmin && (
-          <Link href="/admin/campaigns" className="text-sm font-semibold text-primary hover:underline">
-            {t("goAdmin")}
+        {session?.user ? (
+          <>
+            {isAdmin && (
+              <Link href="/admin/campaigns" className="text-sm font-semibold text-primary hover:underline">
+                {t("goAdmin")}
+              </Link>
+            )}
+            <PublicNotificationBell />
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              {t("logout")}
+            </button>
+            <AvatarWithName />
+          </>
+        ) : (
+          <Link href="/admin/login?callbackUrl=%2F" className="text-sm font-semibold text-primary hover:underline">
+            {t("headerLogin")}
           </Link>
         )}
-        <PublicNotificationBell />
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: "/admin/login" })}
-          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
-          {t("logout")}
-        </button>
-        <AvatarWithName />
       </div>
     </header>
   );

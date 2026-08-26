@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Avatar Frame Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --orange:#F5760A;
+  --orange-deep:#C25A00;
+  --blue:#0068B4;
+  --blue-deep:#00396B;
+  --green:#00A651;
+  --ink:#101E2E;
+  --ink-soft:#546578;
+  --bg:#F7F9FB;
+  --surface:#FFFFFF;
+  --border:#E1E7EC;
+  --border-strong:#C9D3DC;
+  --success-bg:#E4F6EC;
+  --success-fg:#0E7A3F;
+  --warn-bg:#FEF3E6;
+  --warn-fg:#B45309;
+  --muted-bg:#EEF1F4;
+  --muted-fg:#5A6774;
+  --radius:14px;
+  --shadow-sm:0 1px 2px rgba(16,30,46,.06),0 1px 1px rgba(16,30,46,.04);
+  --shadow-md:0 10px 28px -10px rgba(16,30,46,.20);
+  --shadow-lg:0 26px 54px -18px rgba(16,30,46,.30);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'Be Vietnam Pro',-apple-system,'Segoe UI',sans-serif;
+  font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block;}
+button{font-family:inherit;}
+a{color:var(--blue);text-decoration:none;}
+a:hover{text-decoration:underline;}
+input,select,textarea{font-family:inherit;}
+.hidden{display:none !important;}
+:focus-visible{outline:2.5px solid var(--orange);outline-offset:2px;border-radius:4px;}
+::selection{background:color-mix(in srgb, var(--orange) 28%, transparent);}
+button{cursor:pointer;}
+.brand-mark{
+  background:linear-gradient(135deg,var(--orange),var(--blue) 62%,var(--green));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:800;letter-spacing:-.01em;flex-shrink:0;
+}
+.lang-toggle{display:inline-flex;gap:2px;background:var(--muted-bg);border:1px solid var(--border);border-radius:999px;padding:3px;}
+.lang-toggle button{border:none;background:transparent;padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--ink-soft);transition:background .15s ease,color .15s ease;}
+.lang-toggle button.active{background:var(--blue);color:#fff;}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:10px;border:1px solid transparent;padding:11px 20px;font-size:14px;font-weight:700;transition:box-shadow .15s ease,transform .1s ease,border-color .15s ease,background .15s ease;white-space:nowrap;}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--orange);color:#fff;box-shadow:var(--shadow-sm);}
+.btn-primary:hover{box-shadow:var(--shadow-md);}
+.btn-dark{background:var(--ink);color:#fff;}
+.btn-dark:hover{background:#000;}
+.btn-ghost{background:transparent;border-color:var(--border-strong);color:var(--ink);}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+.btn-danger-ghost{background:transparent;border-color:var(--border-strong);color:#B4231F;}
+.btn-sm{padding:8px 14px;font-size:12.5px;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px;}
+.pill-live{background:var(--success-bg);color:var(--success-fg);}
+.pill-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--success-fg);}
+.pill-draft{background:var(--warn-bg);color:var(--warn-fg);}
+.pill-archived{background:var(--muted-bg);color:var(--muted-fg);}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+.field input[type=text],.field input[type=number],.field input[type=date],.field select,.field textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:9px;font-size:13.5px;background:var(--surface);color:var(--ink);
+}
+.field textarea{resize:vertical;min-height:70px;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px;}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+@media (max-width:820px){
+  #admin-shell{grid-template-columns:1fr !important;}
+  #admin-shell > div:first-child{
+    border-right:none !important;border-bottom:1px solid var(--border);min-height:0 !important;
+    display:flex !important;flex-direction:row !important;overflow-x:auto;gap:6px;padding:12px 16px !important;
+  }
+  #admin-shell > div:first-child > div{white-space:nowrap;}
+  #admin-grid-3col{grid-template-columns:1fr !important;}
+  .admin-grid-2col{grid-template-columns:1fr !important;}
+  #admin-main{padding:20px 18px !important;}
+}
+@media (max-width:480px){
+  body{font-size:14.5px;}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   FPT Avatar Frame Platform — self-contained demo build
+   Vanilla JS, no external framework. Real file upload via
+   FileReader. State lives in memory only (refresh resets it).
+   ============================================================ */
+
+const T = {
+  vi: {
+    loginTitle: 'Avatar Frame Platform',
+    loginSubtitle: 'Đăng nhập bằng tài khoản FPT để tạo avatar sự kiện.',
+    loginButton: 'Đăng nhập với tài khoản FPT',
+    loginFooter: 'Chỉ dành cho nhân viên FPT · Xác thực qua Azure AD',
+    heroTitle: 'Chọn chiến dịch đang diễn ra',
+    heroSubtitle: 'Các chiến dịch avatar đang mở — chọn một chiến dịch để bắt đầu.',
+    statusActive: 'Đang diễn ra', statusClosed: 'Đã kết thúc', statusUpcoming: 'Sắp mở',
+    goAdmin: 'Trang quản trị', signedInAs: 'Đã đăng nhập',
+    backHome: '← Trang chủ',
+    stepUpload: '1. Tải ảnh của bạn', stepUploadHint: 'Chọn một ảnh chân dung rõ mặt, định dạng JPG hoặc PNG, tối đa 10MB.',
+    dropTitle: 'Kéo & thả ảnh vào đây', dropSub: 'hoặc bấm để chọn tệp từ máy tính', changePhoto: 'Đổi ảnh khác',
+    stepTemplate: '2. Chọn khung', stepOverlay: '3. Điền thông tin',
+    previewTitle: 'Xem trước', previewNote: 'Bản xem trước dựng trực tiếp trên trình duyệt của bạn. Ảnh chính thức được máy chủ ghép lại từ ảnh gốc trước khi tải xuống.',
+    downloadButton: 'Tải ảnh về máy', shareTitle: 'Chia sẻ lên',
+    downloadCount: 'lượt tải trong chiến dịch này',
+    closedNotice: 'Chiến dịch này đã kết thúc. Hẹn gặp lại ở chiến dịch tiếp theo!',
+    countdownLabel: 'Đóng chiến dịch sau', days:'Ngày', hours:'Giờ', mins:'Phút', secs:'Giây',
+    needPhoto: 'Vui lòng tải ảnh lên trước khi tiếp tục.',
+    adminExit: '← Về trang công khai', adminCampaigns:'Campaigns', adminTemplates:'Templates & khung ảnh', adminAnalytics:'Số liệu tải ảnh',
+    adminNewCampaign: '+ Tạo Campaign mới', adminEdit:'Sửa', adminDelete:'Xoá', adminSave:'Lưu', adminCancel:'Huỷ',
+    colSlug:'Slug', colTitle:'Tên hiển thị', colLang:'Ngôn ngữ', colTime:'Thời gian', colStatus:'Trạng thái', colTemplates:'Template',
+    campaignFormTitle:'Thông tin Campaign', fSlug:'Slug (URL: /c/[slug])', fLang:'Ngôn ngữ', fStart:'Ngày bắt đầu', fEnd:'Ngày kết thúc',
+    fStatus:'Trạng thái', fBadge:'Badge (VD: 38)', fTitle:'Tiêu đề hiển thị (VI)', fTitleEn:'Tiêu đề hiển thị (EN)',
+    fDesc:'Mô tả ngắn (VI)', fDescEn:'Mô tả ngắn (EN)', fCta:'Nhãn nút CTA (VI)', fCtaEn:'Nhãn nút CTA (EN)',
+    bilingualNote:'Mỗi Campaign hỗ trợ song ngữ đầy đủ — điền cả 2 cột VI/EN, người dùng chuyển ngôn ngữ ở góc trên sẽ thấy đúng nội dung tương ứng.',
+    statusOptDraft:'Bản nháp', statusOptActive:'Đang chạy', statusOptArchived:'Lưu trữ',
+    adminNewTemplate:'+ Thêm Template', templateFormTitle:'Cấu hình Template', fTplName:'Tên Template',
+    fFrameUpload:'Khung ảnh (frame PNG)', fPhotoArea:'Vùng đặt ảnh cá nhân (đơn vị %)',
+    fOverlayKey:'Key overlay', fOverlayLabel:'Nhãn hiển thị (VI)', fOverlayLabelEn:'Nhãn hiển thị (EN)', fOverlayOptions:'Danh sách lựa chọn (phân tách bằng dấu phẩy)',
+    kpiTotal:'Tổng lượt tải', kpiActive:'Campaign đang chạy', kpiTop:'Campaign nhiều lượt tải nhất',
+    byCampaign:'Lượt tải theo Campaign', byUnit:'Lượt tải theo đơn vị', byDay:'Lượt tải theo ngày (7 ngày gần nhất)',
+    gaNote:'Nguồn: Google Analytics 4 (event ', gaNote2:', tham số campaign_slug & unit). Cần rà soát với chính sách bảo mật dữ liệu nội bộ FPT trước khi bật ở production.',
+    componentsTitle:'Thành phần giao diện chiến dịch', componentsSub:'Bật/tắt từng thành phần — không cần sửa code.',
+    compFrames:'Khung ảnh (Frames)', compBadge:'Badge / nhãn năm gia nhập', compText:'Text / Label trang chủ', compLang:'Chuyển đổi VI/EN',
+    savedToast:'Đã lưu thay đổi.', selectYear:'— Chọn —',
+  },
+  en: {
+    loginTitle: 'Avatar Frame Platform',
+    loginSubtitle: 'Sign in with your FPT account to create an event avatar.',
+    loginButton: 'Sign in with FPT account',
+    loginFooter: 'FPT employees only · Authenticated via Azure AD',
+    heroTitle: 'Choose a running campaign',
+    heroSubtitle: 'These avatar campaigns are open now — pick one to get started.',
+    statusActive: 'Live now', statusClosed: 'Ended', statusUpcoming: 'Upcoming',
+    goAdmin: 'Admin panel', signedInAs: 'Signed in',
+    backHome: '← Home',
+    stepUpload: '1. Upload your photo', stepUploadHint: 'Choose a clear portrait photo, JPG or PNG, up to 10MB.',
+    dropTitle: 'Drag & drop your photo', dropSub: 'or click to browse your computer', changePhoto: 'Change photo',
+    stepTemplate: '2. Choose a frame', stepOverlay: '3. Fill in your info',
+    previewTitle: 'Preview', previewNote: 'This preview is rendered locally in your browser. The final image is composited server-side from your original photo before download.',
+    downloadButton: 'Download image', shareTitle: 'Share to',
+    downloadCount: 'downloads on this campaign',
+    closedNotice: 'This campaign has ended. See you at the next one!',
+    countdownLabel: 'Campaign closes in', days:'Days', hours:'Hrs', mins:'Min', secs:'Sec',
+    needPhoto: 'Please upload a photo before continuing.',
+    adminExit: '← Back to public site', adminCampaigns:'Campaigns', adminTemplates:'Templates & frames', adminAnalytics:'Download analytics',
+    adminNewCampaign: '+ New campaign', adminEdit:'Edit', adminDelete:'Delete', adminSave:'Save', adminCancel:'Cancel',
+    colSlug:'Slug', colTitle:'Display name', colLang:'Language', colTime:'Schedule', colStatus:'Status', colTemplates:'Templates',
+    campaignFormTitle:'Campaign details', fSlug:'Slug (URL: /c/[slug])', fLang:'Language', fStart:'Start date', fEnd:'End date',
+    fStatus:'Status', fBadge:'Badge (e.g. 38)', fTitle:'Display title (VI)', fTitleEn:'Display title (EN)',
+    fDesc:'Short description (VI)', fDescEn:'Short description (EN)', fCta:'CTA label (VI)', fCtaEn:'CTA label (EN)',
+    bilingualNote:'Every campaign is fully bilingual — fill both VI/EN columns; visitors switching language in the top bar see the matching copy.',
+    statusOptDraft:'Draft', statusOptActive:'Active', statusOptArchived:'Archived',
+    adminNewTemplate:'+ Add template', templateFormTitle:'Template configuration', fTplName:'Template name',
+    fFrameUpload:'Frame image (PNG)', fPhotoArea:'Photo placement area (%)',
+    fOverlayKey:'Overlay key', fOverlayLabel:'Display label (VI)', fOverlayLabelEn:'Display label (EN)', fOverlayOptions:'Choices (comma-separated)',
+    kpiTotal:'Total downloads', kpiActive:'Active campaigns', kpiTop:'Top campaign',
+    byCampaign:'Downloads by campaign', byUnit:'Downloads by business unit', byDay:'Downloads by day (last 7 days)',
+    gaNote:'Source: Google Analytics 4 (event ', gaNote2:', params campaign_slug & unit). Requires review against FPT internal data policy before enabling in production.',
+    componentsTitle:'Campaign UI components', componentsSub:'Toggle each component on or off — no code changes needed.',
+    compFrames:'Frames', compBadge:'Join-year badge', compText:'Homepage text / labels', compLang:'VI/EN switcher',
+    savedToast:'Changes saved.', selectYear:'— Select —',
+  },
+};
+
+const state = {
+  view: 'login',
+  lang: 'vi',
+  activeSlug: null,
+  templateSelections: {},
+  overlayValues: {},
+  uploadedPhoto: {},
+  adminTab: 'campaigns',
+  templateFilterSlug: 'fpt38',
+  campaignFormOpen: false, editingCampaignSlug: null, draftCampaign: {},
+  templateFormOpen: false, editingTemplateId: null, draftTemplate: {},
+  downloadCounts: { fpt38: 12482, 'techweek-2026': 3190 },
+  toast: null,
+};
+
+const FRAME_COLORS = { 'fpt38-orange':'#F5760A', 'fpt38-mono':'#101E2E', 'tw-blue':'#0068B4', 'tw-dynamic':'#00A651' };
+
+const campaigns = [
+  {
+    slug: 'fpt38', status: 'active', startDate: '2026-08-13', endDate: '2026-09-13',
+    title: 'FPT tròn 38 tuổi', titleEn: 'FPT Turns 38',
+    description: 'Tạo avatar kỷ niệm hành trình 38 năm và chia sẻ lên mạng xã hội của bạn.',
+    descriptionEn: 'Create your anniversary avatar and share it on social media.',
+    cta: 'Tạo avatar ngay', ctaEn: 'Create your avatar', badge: '38', language: 'vi',
+    templates: [
+      { id: 'fpt38-orange', name: 'Khung cam chuẩn', photoArea: { x: 18, y: 14, w: 64, h: 64 },
+        overlayKey: 'joinYear', overlayLabel: 'Năm gia nhập FPT', overlayLabelEn: 'Year you joined FPT',
+        overlayOptions: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(2026 - i)) },
+      { id: 'fpt38-mono', name: 'Khung tối giản đen', photoArea: { x: 20, y: 16, w: 60, h: 60 },
+        overlayKey: 'joinYear', overlayLabel: 'Năm gia nhập FPT', overlayLabelEn: 'Year you joined FPT',
+        overlayOptions: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(2026 - i)) },
+    ],
+  },
+  {
+    slug: 'techweek-2026', status: 'active', startDate: '2026-08-20', endDate: '2026-08-28',
+    title: 'Ngày hội Công nghệ FPT 2026', titleEn: 'FPT Tech Week 2026',
+    description: 'Ghép avatar cùng khung Tech Week và cho biết đơn vị bạn đang công tác.',
+    descriptionEn: 'Make your Tech Week avatar and show which unit you belong to.',
+    cta: 'Tạo avatar ngay', ctaEn: 'Create your avatar', badge: 'Tech Week', language: 'vi',
+    templates: [
+      { id: 'tw-blue', name: 'Khung công nghệ xanh dương', photoArea: { x: 16, y: 18, w: 68, h: 68 },
+        overlayKey: 'unit', overlayLabel: 'Đơn vị công tác', overlayLabelEn: 'Business unit',
+        overlayOptions: ['FPT Software', 'FPT Telecom', 'FPT IS', 'FPT Education', 'FPT Retail', 'Khác'] },
+      { id: 'tw-dynamic', name: 'Khung năng động xanh lá', photoArea: { x: 18, y: 18, w: 64, h: 64 },
+        overlayKey: 'unit', overlayLabel: 'Đơn vị công tác', overlayLabelEn: 'Business unit',
+        overlayOptions: ['FPT Software', 'FPT Telecom', 'FPT IS', 'FPT Education', 'FPT Retail', 'Khác'] },
+    ],
+  },
+];
+
+const statusMeta = { active: 'pill-live', draft: 'pill-draft', archived: 'pill-archived' };
+
+const analytics = {
+  byCampaign: [ { name: 'FPT tròn 38 tuổi', value: 18420 }, { name: 'Ngày hội Công nghệ FPT 2026', value: 6310 } ],
+  byUnit: [
+    { name: 'FPT Software', value: 9100 }, { name: 'FPT Telecom', value: 4200 }, { name: 'FPT IS', value: 3800 },
+    { name: 'FPT Education', value: 2600 }, { name: 'FPT Retail', value: 1900 }, { name: 'Khác', value: 2130 },
+  ],
+  byDay: [
+    { day: 'T2', value: 1180 }, { day: 'T3', value: 1540 }, { day: 'T4', value: 2010 }, { day: 'T5', value: 2960 },
+    { day: 'T6', value: 4120 }, { day: 'T7', value: 3870 }, { day: 'CN', value: 3040 },
+  ],
+};
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function t(key){ return T[state.lang][key] ?? key; }
+function fmtNum(n){ return n.toLocaleString(state.lang === 'vi' ? 'vi-VN' : 'en-US'); }
+function campaignStatus(c){
+  const now = new Date(); const s = new Date(c.startDate); const e = new Date(c.endDate); e.setHours(23,59,59,999);
+  if (c.status !== 'active') return c.status;
+  if (now < s) return 'upcoming';
+  if (now > e) return 'closed';
+  return 'active';
+}
+function render(){ document.getElementById('app').innerHTML = renderRoot(); attachHandlers(); }
+function go(view, extra){ Object.assign(state, { view }, extra || {}); render(); window.scrollTo({top:0}); }
+
+/* ---------------- Root ---------------- */
+function renderRoot(){
+  if (state.view === 'login') return renderLogin();
+  const chrome = state.view === 'admin' ? renderAdminHeader() : renderUserHeader();
+  let body = '';
+  if (state.view === 'home') body = renderHome();
+  else if (state.view === 'campaign') body = renderCampaign();
+  else if (state.view === 'admin') body = renderAdmin();
+  return chrome + body + (state.toast ? renderToast() : '');
+}
+
+function renderToast(){
+  return `<div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);z-index:200">${esc(state.toast)}</div>`;
+}
+
+function renderLogin(){
+  return `
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;background:
+    radial-gradient(circle at 12% 15%, color-mix(in srgb, var(--orange) 10%, transparent), transparent 55%),
+    radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--blue) 10%, transparent), transparent 50%),
+    radial-gradient(circle at 80% 92%, color-mix(in srgb, var(--green) 10%, transparent), transparent 55%), var(--bg)">
+    <div style="position:absolute;top:24px;right:32px">${langToggle()}</div>
+    <div class="card" style="width:100%;max-width:420px;padding:40px 36px;text-align:center;box-shadow:var(--shadow-lg)">
+      <div class="brand-mark" style="width:56px;height:56px;border-radius:16px;font-size:20px;margin:0 auto 20px">FPT</div>
+      <div style="font-weight:800;font-size:22px;letter-spacing:-.01em;margin-bottom:8px">${esc(t('loginTitle'))}</div>
+      <div style="font-size:14.5px;color:var(--ink-soft);margin-bottom:28px">${esc(t('loginSubtitle'))}</div>
+      <button data-action="login" class="btn btn-dark" style="width:100%;justify-content:center;padding:14px 18px;font-size:15px">
+        <span style="width:18px;height:18px;background:#fff;border-radius:3px;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px">
+          <span style="background:#F25022"></span><span style="background:#7FBA00"></span><span style="background:#00A4EF"></span><span style="background:#FFB900"></span>
+        </span>
+        ${esc(t('loginButton'))}
+      </button>
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-top:18px">${esc(t('loginFooter'))}</div>
+    </div>
+  </div>`;
+}
+
+function langToggle(){
+  return `<div class="lang-toggle" role="group" aria-label="VI/EN">
+    <button data-action="lang" data-lang="vi" class="${state.lang==='vi'?'active':''}">VI</button>
+    <button data-action="lang" data-lang="en" class="${state.lang==='en'?'active':''}">EN</button>
+  </div>`;
+}
+
+function renderUserHeader(){
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px;cursor:pointer" data-action="home">
+      <div class="brand-mark" style="width:34px;height:34px;border-radius:10px;font-size:13px">FPT</div>
+      <div style="font-weight:700;font-size:15.5px">Avatar Frame Platform</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      ${langToggle()}
+      <a href="#" data-action="admin">${esc(t('goAdmin'))}</a>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:999px;background:#FDE6D2;color:var(--orange-deep);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">VĐ</div>
+        <span style="font-size:13.5px;font-weight:600;color:var(--ink-soft)">Việt Đức</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderAdminHeader(){
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--surface)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="brand-mark" style="width:32px;height:32px;border-radius:9px;font-size:12.5px">FPT</div>
+      <div style="font-weight:700;font-size:15px">Avatar Frame Platform <span style="color:var(--ink-soft);font-weight:500">· Admin</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <a href="#" data-action="home">${esc(t('adminExit'))}</a>
+      <div style="width:30px;height:30px;border-radius:999px;background:#FDE6D2;color:var(--orange-deep);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">VĐ</div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- Home ---------------- */
+function renderHome(){
+  const cards = campaigns.map(c => {
+    const st = campaignStatus(c);
+    const statusLabel = st === 'active' ? t('statusActive') : st === 'closed' ? t('statusClosed') : t('statusUpcoming');
+    const pillClass = st === 'active' ? 'pill-live' : st === 'closed' ? 'pill-archived' : 'pill-draft';
+    const title = state.lang === 'vi' ? c.title : c.titleEn;
+    const desc = state.lang === 'vi' ? c.description : c.descriptionEn;
+    const cta = state.lang === 'vi' ? c.cta : c.ctaEn;
+    return `
+    <div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+      <div style="aspect-ratio:16/9;position:relative;background:linear-gradient(155deg, color-mix(in srgb, ${esc(FRAME_COLORS[c.templates[0].id]||'#F5760A')} 22%, #eef1f5), #dfe6ee)">
+        <div style="position:absolute;top:12px;left:12px;background:#fff" class="pill ${pillClass}">${esc(statusLabel)}</div>
+        <div style="position:absolute;top:12px;right:12px;background:var(--orange);color:#fff;font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px">${esc(c.badge)}</div>
+      </div>
+      <div style="padding:22px;display:flex;flex-direction:column;gap:6px;flex:1">
+        <div style="font-size:18px;font-weight:700">${esc(title)}</div>
+        <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.55;flex:1">${esc(desc)}</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin:4px 0 12px;font-variant-numeric:tabular-nums">${esc(c.startDate)} – ${esc(c.endDate)}</div>
+        <button data-action="open-campaign" data-slug="${esc(c.slug)}" class="btn btn-primary" ${st==='closed'?'disabled':''}>${esc(cta)}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div style="max-width:1080px;margin:0 auto;padding:56px 32px 80px">
+    <div style="margin-bottom:36px">
+      <div style="font-size:28px;font-weight:800;letter-spacing:-.01em;margin-bottom:8px;text-wrap:balance">${esc(t('heroTitle'))}</div>
+      <div style="font-size:15px;color:var(--ink-soft)">${esc(t('heroSubtitle'))}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px">${cards}</div>
+  </div>`;
+}
+
+/* ---------------- Campaign detail ---------------- */
+function ensureCampaignDefaults(slug){
+  const c = campaigns.find(x => x.slug === slug); if (!c) return;
+  if (!state.templateSelections[slug]) state.templateSelections[slug] = c.templates[0].id;
+  const tpl = c.templates.find(x => x.id === state.templateSelections[slug]);
+  if (!state.overlayValues[slug]) state.overlayValues[slug] = tpl.overlayOptions[0];
+}
+
+function renderCampaign(){
+  const c = campaigns.find(x => x.slug === state.activeSlug);
+  if (!c) return '';
+  const st = campaignStatus(c);
+  const lang = state.lang;
+  const sel = state.templateSelections[c.slug] || c.templates[0].id;
+  const tpl = c.templates.find(x => x.id === sel) || c.templates[0];
+  const overlayVal = state.overlayValues[c.slug] || tpl.overlayOptions[0];
+  const overlayLabel = lang === 'vi' ? tpl.overlayLabel : tpl.overlayLabelEn;
+  const photo = state.uploadedPhoto[c.slug];
+  const title = lang === 'vi' ? c.title : c.titleEn;
+  const frameColor = FRAME_COLORS[tpl.id] || '#F5760A';
+
+  if (st === 'closed') {
+    return `<div style="max-width:640px;margin:0 auto;padding:80px 32px;text-align:center">
+      <a href="#" data-action="home">${esc(t('backHome'))}</a>
+      <div class="card" style="margin-top:24px;padding:40px;">
+        <div style="font-size:19px;font-weight:800;margin-bottom:8px">${esc(title)}</div>
+        <div style="color:var(--ink-soft)">${esc(t('closedNotice'))}</div>
+      </div>
+    </div>`;
+  }
+
+  const templateOpts = c.templates.map(tp => `
+    <div data-action="select-template" data-tpl="${esc(tp.id)}" style="border:2px solid ${tp.id===sel?'var(--orange)':'var(--border)'};border-radius:12px;cursor:pointer;overflow:hidden;aspect-ratio:1/1;background:linear-gradient(155deg, color-mix(in srgb, ${esc(FRAME_COLORS[tp.id]||'#F5760A')} 24%, #eef1f5), #dfe6ee);position:relative;${tp.id===sel?'box-shadow:0 0 0 3px color-mix(in srgb, var(--orange) 18%, transparent)':''}">
+      <div style="position:absolute;inset:10%;border-radius:8px;border:6px solid ${esc(FRAME_COLORS[tp.id]||'#F5760A')};box-shadow:inset 0 0 0 2px #fff"></div>
+      <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-soft)">${esc(tp.name)}</div>
+    </div>`).join('');
+
+  const overlayOpts = tpl.overlayOptions.map(o => `<option value="${esc(o)}" ${o===overlayVal?'selected':''}>${esc(o)}</option>`).join('');
+
+  const dlCount = state.downloadCounts[c.slug] || 0;
+
+  return `
+  <div style="max-width:1080px;margin:0 auto;padding:32px 32px 80px">
+    <a href="#" data-action="home">${esc(t('backHome'))}</a>
+    <div style="display:flex;align-items:center;gap:12px;margin:14px 0 32px;flex-wrap:wrap">
+      <div style="background:var(--orange);color:#fff;font-size:12px;font-weight:800;padding:5px 13px;border-radius:999px">${esc(c.badge)}</div>
+      <div style="font-size:24px;font-weight:800;letter-spacing:-.01em">${esc(title)}</div>
+      <div style="font-size:12.5px;color:var(--ink-soft)">${esc(c.startDate)} – ${esc(c.endDate)}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start" id="campaign-grid">
+      <div style="display:flex;flex-direction:column;gap:32px;min-width:0">
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">${esc(t('stepUpload'))}</div>
+          <div style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">${esc(t('stepUploadHint'))}</div>
+          ${photo ? `
+            <div style="display:flex;align-items:center;gap:14px">
+              <img src="${photo}" alt="" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:1px solid var(--border)" />
+              <button data-action="pick-photo" class="btn btn-ghost btn-sm">${esc(t('changePhoto'))}</button>
+            </div>` : `
+            <div data-action="pick-photo" style="border:2px dashed var(--border-strong);border-radius:14px;padding:30px 18px;text-align:center;cursor:pointer;background:var(--bg)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.8" width="30" height="30" style="margin:0 auto 8px"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+              <div style="font-weight:700;font-size:13.5px;margin-bottom:2px">${esc(t('dropTitle'))}</div>
+              <div style="font-size:12px;color:var(--ink-soft)">${esc(t('dropSub'))}</div>
+            </div>`}
+          <input type="file" id="photo-input" accept="image/png,image/jpeg" class="hidden" />
+        </div>
+
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:14px">${esc(t('stepTemplate'))}</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:320px">${templateOpts}</div>
+        </div>
+
+        <div class="field" style="max-width:320px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:14px">${esc(t('stepOverlay'))}</div>
+          <label for="overlay-select">${esc(overlayLabel)}</label>
+          <select id="overlay-select">${overlayOpts}</select>
+        </div>
+      </div>
+
+      <div class="card" style="padding:24px;position:sticky;top:24px;min-width:0">
+        <div style="font-size:15px;font-weight:700;margin-bottom:14px">${esc(t('previewTitle'))}</div>
+        <div style="position:relative;aspect-ratio:1/1;margin-bottom:14px;border-radius:14px;overflow:hidden;background:${photo?`center/cover no-repeat url('${photo}')`:'linear-gradient(155deg,#eef1f5,#dfe6ee)'}">
+          <div style="position:absolute;inset:6%;border-radius:12px;border:9px solid ${esc(frameColor)};box-shadow:inset 0 0 0 2px #fff;pointer-events:none"></div>
+          <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:${esc(frameColor)};color:#fff;font-family:inherit;font-weight:800;font-size:12.5px;padding:6px 15px;border-radius:999px;white-space:nowrap">FPT · ${esc(overlayVal)}</div>
+        </div>
+        <div style="font-size:12px;line-height:1.5;color:var(--ink-soft);margin-bottom:18px">${esc(t('previewNote'))}</div>
+        <button data-action="download" data-slug="${esc(c.slug)}" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px">${esc(t('downloadButton'))}</button>
+        <div id="download-count" style="font-size:12px;color:var(--ink-soft);text-align:center;margin-bottom:16px;font-variant-numeric:tabular-nums">${fmtNum(dlCount)} ${esc(t('downloadCount'))}</div>
+        <div style="font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:10px">${esc(t('shareTitle'))}</div>
+        <div style="display:flex;gap:10px">
+          <div style="width:36px;height:36px;border-radius:9px;background:var(--muted-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue)">FB</div>
+          <div style="width:36px;height:36px;border-radius:9px;background:var(--muted-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--green)">Zalo</div>
+          <div style="width:36px;height:36px;border-radius:9px;background:var(--muted-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink-soft)">in</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>@media (max-width:760px){#campaign-grid{grid-template-columns:1fr !important}}</style>`;
+}
+
+/* ---------------- Admin ---------------- */
+function navItem(id, label){
+  const active = state.adminTab === id;
+  return `<div data-action="admin-tab" data-tab="${id}" style="display:flex;align-items:center;padding:10px 14px;border-radius:10px;font-weight:${active?700:600};font-size:13.5px;cursor:pointer;background:${active?'#FDE9D6':'transparent'};color:${active?'var(--orange-deep)':'var(--ink-soft)'}">${esc(label)}</div>`;
+}
+
+function renderAdmin(){
+  return `
+  <div id="admin-shell" style="display:grid;grid-template-columns:220px 1fr;max-width:1240px;margin:0 auto">
+    <div style="padding:24px 16px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--border);min-height:calc(100vh - 65px)">
+      ${navItem('campaigns', t('adminCampaigns'))}
+      ${navItem('templates', t('adminTemplates'))}
+      ${navItem('analytics', t('adminAnalytics'))}
+    </div>
+    <div id="admin-main" style="padding:28px 32px;min-width:0">
+      ${state.adminTab === 'campaigns' ? renderAdminCampaigns() : ''}
+      ${state.adminTab === 'templates' ? renderAdminTemplates() : ''}
+      ${state.adminTab === 'analytics' ? renderAdminAnalytics() : ''}
+    </div>
+  </div>`;
+}
+
+function renderAdminCampaigns(){
+  const rows = campaigns.map(c => `
+    <tr style="border-top:1px solid var(--border)">
+      <td style="padding:12px 16px;font-family:ui-monospace,monospace;font-size:12.5px;color:var(--ink-soft)">/c/${esc(c.slug)}</td>
+      <td style="padding:12px 16px;font-weight:600">${esc(c.title)}</td>
+      <td style="padding:12px 16px">${esc(c.language.toUpperCase())}</td>
+      <td style="padding:12px 16px;color:var(--ink-soft);font-variant-numeric:tabular-nums">${esc(c.startDate)} – ${esc(c.endDate)}</td>
+      <td style="padding:12px 16px"><span data-action="cycle-status" data-slug="${esc(c.slug)}" class="pill ${statusMeta[c.status]}" style="cursor:pointer">${esc(t('statusOpt'+c.status[0].toUpperCase()+c.status.slice(1)))}</span></td>
+      <td style="padding:12px 16px;color:var(--ink-soft)">${c.templates.length}</td>
+      <td style="padding:12px 16px;text-align:right"><button data-action="edit-campaign" data-slug="${esc(c.slug)}" class="btn btn-ghost btn-sm">${esc(t('adminEdit'))}</button></td>
+    </tr>`).join('');
+
+  const d = state.draftCampaign || {};
+  const form = state.campaignFormOpen ? `
+    <div class="card" style="padding:24px;max-width:680px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:18px">${esc(t('campaignFormTitle'))}</div>
+      <div class="admin-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="field"><label>${esc(t('fSlug'))}</label><input id="cf-slug" type="text" value="${esc(d.slug||'')}" /></div>
+        <div class="field"><label>${esc(t('fLang'))}</label>
+          <select id="cf-language"><option value="vi" ${d.language!=='en'?'selected':''}>Tiếng Việt</option><option value="en" ${d.language==='en'?'selected':''}>English</option></select>
+        </div>
+        <div class="field"><label>${esc(t('fStart'))}</label><input id="cf-start" type="date" value="${esc(d.startDate||'')}" /></div>
+        <div class="field"><label>${esc(t('fEnd'))}</label><input id="cf-end" type="date" value="${esc(d.endDate||'')}" /></div>
+        <div class="field"><label>${esc(t('fStatus'))}</label>
+          <select id="cf-status">
+            <option value="draft" ${d.status==='draft'?'selected':''}>${esc(t('statusOptDraft'))}</option>
+            <option value="active" ${d.status==='active'?'selected':''}>${esc(t('statusOptActive'))}</option>
+            <option value="archived" ${d.status==='archived'?'selected':''}>${esc(t('statusOptArchived'))}</option>
+          </select>
+        </div>
+        <div class="field"><label>${esc(t('fBadge'))}</label><input id="cf-badge" type="text" value="${esc(d.badge||'')}" /></div>
+      </div>
+      <div class="admin-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="field"><label>${esc(t('fTitle'))}</label><input id="cf-title" type="text" value="${esc(d.title||'')}" /></div>
+        <div class="field"><label>${esc(t('fTitleEn'))}</label><input id="cf-titleEn" type="text" value="${esc(d.titleEn||'')}" /></div>
+        <div class="field"><label>${esc(t('fDesc'))}</label><textarea id="cf-description">${esc(d.description||'')}</textarea></div>
+        <div class="field"><label>${esc(t('fDescEn'))}</label><textarea id="cf-descriptionEn">${esc(d.descriptionEn||'')}</textarea></div>
+        <div class="field"><label>${esc(t('fCta'))}</label><input id="cf-cta" type="text" value="${esc(d.cta||'')}" /></div>
+        <div class="field"><label>${esc(t('fCtaEn'))}</label><input id="cf-ctaEn" type="text" value="${esc(d.ctaEn||'')}" /></div>
+      </div>
+      <div style="background:#EAF2FB;border:1px solid #CFE2F4;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.5;color:var(--blue-deep);margin-bottom:18px">${esc(t('bilingualNote'))}</div>
+      <div style="display:flex;gap:10px">
+        <button data-action="save-campaign" class="btn btn-primary">${esc(t('adminSave'))}</button>
+        <button data-action="cancel-campaign-form" class="btn btn-ghost">${esc(t('adminCancel'))}</button>
+      </div>
+    </div>` : '';
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div style="font-size:20px;font-weight:800">${esc(t('adminCampaigns'))}</div>
+    <button data-action="new-campaign" class="btn btn-primary btn-sm">${esc(t('adminNewCampaign'))}</button>
+  </div>
+  <div class="card" style="overflow:auto;margin-bottom:24px">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px;min-width:720px">
+      <thead><tr style="background:var(--muted-bg);text-align:left">
+        <th style="padding:12px 16px;font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em">${esc(t('colSlug'))}</th>
+        <th style="padding:12px 16px;font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em">${esc(t('colTitle'))}</th>
+        <th style="padding:12px 16px;font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em">${esc(t('colLang'))}</th>
+        <th style="padding:12px 16px;font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em">${esc(t('colTime'))}</th>
+        <th style="padding:12px 16px;font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em">${esc(t('colStatus'))}</th>
+        <th style="padding:12px 16px;font-weight:700;color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em">${esc(t('colTemplates'))}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+  ${form}`;
+}
+
+function renderAdminTemplates(){
+  const filterSlug = state.templateFilterSlug || campaigns[0].slug;
+  const filterCampaign = campaigns.find(c => c.slug === filterSlug) || campaigns[0];
+  const filterOpts = campaigns.map(c => `<option value="${esc(c.slug)}" ${c.slug===filterSlug?'selected':''}>${esc(c.title)}</option>`).join('');
+
+  const cards = filterCampaign.templates.map(tp => `
+    <div class="card" style="overflow:hidden">
+      <div style="aspect-ratio:1/1;background:linear-gradient(155deg, color-mix(in srgb, ${esc(FRAME_COLORS[tp.id]||'#F5760A')} 24%, #eef1f5), #dfe6ee);position:relative">
+        <div style="position:absolute;inset:8%;border-radius:10px;border:7px solid ${esc(FRAME_COLORS[tp.id]||'#F5760A')};box-shadow:inset 0 0 0 2px #fff"></div>
+      </div>
+      <div style="padding:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">${esc(tp.name)}</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:2px">Overlay: ${esc(tp.overlayLabel)} (${tp.overlayOptions.length})</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;font-family:ui-monospace,monospace">x:${tp.photoArea.x}% y:${tp.photoArea.y}% ${tp.photoArea.w}×${tp.photoArea.h}%</div>
+        <div style="display:flex;gap:8px">
+          <button data-action="edit-template" data-tpl="${esc(tp.id)}" class="btn btn-ghost btn-sm" style="flex:1">${esc(t('adminEdit'))}</button>
+          <button data-action="delete-template" data-tpl="${esc(tp.id)}" class="btn btn-danger-ghost btn-sm">${esc(t('adminDelete'))}</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const d = state.draftTemplate || {};
+  const area = d.photoArea || { x:20, y:20, w:60, h:60 };
+  const form = state.templateFormOpen ? `
+    <div class="card" style="padding:24px;max-width:640px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:18px">${esc(t('templateFormTitle'))}</div>
+      <div class="field" style="margin-bottom:14px"><label>${esc(t('fTplName'))}</label><input id="tf-name" type="text" value="${esc(d.name||'')}" /></div>
+      <div class="field" style="margin-bottom:14px">
+        <label>${esc(t('fPhotoArea'))}</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          <input id="tf-x" type="number" placeholder="x" value="${area.x}" />
+          <input id="tf-y" type="number" placeholder="y" value="${area.y}" />
+          <input id="tf-w" type="number" placeholder="w" value="${area.w}" />
+          <input id="tf-h" type="number" placeholder="h" value="${area.h}" />
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin:18px 0;padding-top:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">Overlay</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:10px">
+          <div class="field"><label>${esc(t('fOverlayLabel'))}</label><input id="tf-overlayLabel" type="text" value="${esc(d.overlayLabel||'')}" /></div>
+          <div class="field"><label>${esc(t('fOverlayLabelEn'))}</label><input id="tf-overlayLabelEn" type="text" value="${esc(d.overlayLabelEn||'')}" /></div>
+        </div>
+        <div class="field"><label>${esc(t('fOverlayOptions'))}</label><input id="tf-overlayOptions" type="text" value="${esc((d.overlayOptions||[]).join(', '))}" /></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button data-action="save-template" class="btn btn-primary">${esc(t('adminSave'))}</button>
+        <button data-action="cancel-template-form" class="btn btn-ghost">${esc(t('adminCancel'))}</button>
+      </div>
+    </div>` : '';
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div style="font-size:20px;font-weight:800">${esc(t('adminTemplates'))}</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <select id="template-filter">${filterOpts}</select>
+      <button data-action="new-template" class="btn btn-primary btn-sm">${esc(t('adminNewTemplate'))}</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px">${cards}</div>
+  ${form}`;
+}
+
+function bar(name, value, max, color){
+  const pct = Math.round(value/max*100);
+  return `<div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="font-weight:600">${esc(name)}</span><span style="color:var(--ink-soft);font-variant-numeric:tabular-nums">${fmtNum(value)}</span></div>
+    <div style="background:var(--muted-bg);border-radius:6px;height:10px;overflow:hidden"><div style="height:100%;background:${color};border-radius:6px;width:${pct}%"></div></div>
+  </div>`;
+}
+
+function renderAdminAnalytics(){
+  const maxC = Math.max(...analytics.byCampaign.map(x=>x.value));
+  const maxU = Math.max(...analytics.byUnit.map(x=>x.value));
+  const maxD = Math.max(...analytics.byDay.map(x=>x.value));
+  const total = analytics.byCampaign.reduce((a,x)=>a+x.value,0);
+  const activeCount = campaigns.filter(c=>campaignStatus(c)==='active').length;
+
+  return `
+  <div style="font-size:20px;font-weight:800;margin-bottom:20px">${esc(t('adminAnalytics'))}</div>
+  <div id="admin-grid-3col" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px">
+    <div class="card" style="padding:20px"><div style="font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:6px">${esc(t('kpiTotal'))}</div><div style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums">${fmtNum(total)}</div></div>
+    <div class="card" style="padding:20px"><div style="font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:6px">${esc(t('kpiActive'))}</div><div style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums">${activeCount}</div></div>
+    <div class="card" style="padding:20px"><div style="font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:6px">${esc(t('kpiTop'))}</div><div style="font-size:17px;font-weight:700;margin-top:6px">${esc(analytics.byCampaign[0].name)}</div></div>
+  </div>
+  <div class="card" style="padding:22px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;margin-bottom:16px">${esc(t('byCampaign'))}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">${analytics.byCampaign.map(x=>bar(x.name,x.value,maxC,'var(--orange)')).join('')}</div></div>
+  <div class="card" style="padding:22px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;margin-bottom:16px">${esc(t('byUnit'))}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">${analytics.byUnit.map(x=>bar(x.name,x.value,maxU,'var(--blue)')).join('')}</div></div>
+  <div class="card" style="padding:22px;margin-bottom:20px"><div style="font-size:14px;font-weight:700;margin-bottom:16px">${esc(t('byDay'))}</div>
+    <div style="display:flex;align-items:flex-end;gap:10px;height:120px">
+      ${analytics.byDay.map(x=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+        <div style="width:100%;background:var(--green);border-radius:6px 6px 0 0;height:${Math.round(x.value/maxD*100)}%"></div>
+        <div style="font-size:11px;color:var(--ink-soft)">${esc(x.day)}</div>
+      </div>`).join('')}
+    </div></div>
+  <div style="background:var(--warn-bg);border:1px solid #F5D9A8;border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.5;color:var(--warn-fg)">
+    ${esc(t('gaNote'))}<span style="font-family:ui-monospace,monospace">avatar_download</span>${esc(t('gaNote2'))}
+  </div>`;
+}
+
+/* ---------------- Event handlers ---------------- */
+function attachHandlers(){
+  document.querySelectorAll('[data-action]').forEach(el => {
+    el.addEventListener('click', onAction);
+  });
+  const overlaySelect = document.getElementById('overlay-select');
+  if (overlaySelect) overlaySelect.addEventListener('change', e => {
+    state.overlayValues[state.activeSlug] = e.target.value;
+    render();
+  });
+  const photoInput = document.getElementById('photo-input');
+  if (photoInput) photoInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => { state.uploadedPhoto[state.activeSlug] = ev.target.result; render(); };
+    reader.readAsDataURL(file);
+  });
+  const templateFilter = document.getElementById('template-filter');
+  if (templateFilter) templateFilter.addEventListener('change', e => { state.templateFilterSlug = e.target.value; render(); });
+}
+
+function readCampaignForm(){
+  return {
+    slug: val('cf-slug'), language: val('cf-language'), startDate: val('cf-start'), endDate: val('cf-end'),
+    status: val('cf-status'), badge: val('cf-badge'), title: val('cf-title'), titleEn: val('cf-titleEn'),
+    description: val('cf-description'), descriptionEn: val('cf-descriptionEn'), cta: val('cf-cta'), ctaEn: val('cf-ctaEn'),
+  };
+}
+function readTemplateForm(){
+  return {
+    name: val('tf-name'),
+    photoArea: { x: numVal('tf-x'), y: numVal('tf-y'), w: numVal('tf-w'), h: numVal('tf-h') },
+    overlayLabel: val('tf-overlayLabel'), overlayLabelEn: val('tf-overlayLabelEn'),
+    overlayOptions: val('tf-overlayOptions').split(',').map(s=>s.trim()).filter(Boolean),
+  };
+}
+function val(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+function numVal(id){ return Number(val(id)) || 0; }
+
+function onAction(e){
+  const el = e.currentTarget;
+  const action = el.dataset.action;
+
+  if (state.campaignFormOpen && ['admin-tab','new-campaign','edit-campaign','cycle-status'].includes(action)) {
+    state.draftCampaign = readCampaignForm();
+  }
+  if (state.templateFormOpen && ['admin-tab','new-template','edit-template','delete-template','template-filter'].includes(action)) {
+    state.draftTemplate = readTemplateForm();
+  }
+
+  switch(action){
+    case 'lang': state.lang = el.dataset.lang; render(); break;
+    case 'login': go('home'); break;
+    case 'home': go('home'); break;
+    case 'admin': go('admin'); break;
+    case 'open-campaign': {
+      const slug = el.dataset.slug;
+      ensureCampaignDefaults(slug);
+      go('campaign', { activeSlug: slug });
+      break;
+    }
+    case 'pick-photo': document.getElementById('photo-input')?.click(); break;
+    case 'select-template': {
+      const slug = state.activeSlug;
+      const c = campaigns.find(x => x.slug === slug);
+      const tpl = c.templates.find(x => x.id === el.dataset.tpl);
+      state.templateSelections[slug] = tpl.id;
+      state.overlayValues[slug] = tpl.overlayOptions[0];
+      render();
+      break;
+    }
+    case 'download': {
+      const slug = el.dataset.slug;
+      if (!state.uploadedPhoto[slug]) { showToast(t('needPhoto')); break; }
+      state.downloadCounts[slug] = (state.downloadCounts[slug]||0) + 1;
+      showToast(t('savedToast'));
+      render();
+      break;
+    }
+    case 'admin-tab': state.adminTab = el.dataset.tab; state.campaignFormOpen = false; state.templateFormOpen = false; render(); break;
+    case 'new-campaign': state.campaignFormOpen = true; state.editingCampaignSlug = null; state.draftCampaign = { language:'vi', status:'draft' }; render(); break;
+    case 'edit-campaign': {
+      const c = campaigns.find(x => x.slug === el.dataset.slug);
+      state.campaignFormOpen = true; state.editingCampaignSlug = c.slug; state.draftCampaign = { ...c }; render();
+      break;
+    }
+    case 'cancel-campaign-form': state.campaignFormOpen = false; render(); break;
+    case 'save-campaign': {
+      const d = readCampaignForm();
+      if (state.editingCampaignSlug) {
+        const idx = campaigns.findIndex(x => x.slug === state.editingCampaignSlug);
+        campaigns[idx] = { ...campaigns[idx], ...d };
+      } else {
+        campaigns.push({
+          slug: d.slug || 'campaign-' + (campaigns.length+1), status: d.status || 'draft',
+          startDate: d.startDate || '2026-01-01', endDate: d.endDate || '2026-12-31',
+          title: d.title || 'Campaign mới', titleEn: d.titleEn || d.title || 'New campaign',
+          description: d.description || '', descriptionEn: d.descriptionEn || '',
+          cta: d.cta || 'Tạo avatar ngay', ctaEn: d.ctaEn || 'Create your avatar', badge: d.badge || 'NEW',
+          language: d.language || 'vi', templates: [],
+        });
+      }
+      state.campaignFormOpen = false; showToast(t('savedToast')); render();
+      break;
+    }
+    case 'cycle-status': {
+      const order = ['draft','active','archived'];
+      const c = campaigns.find(x => x.slug === el.dataset.slug);
+      c.status = order[(order.indexOf(c.status)+1) % order.length];
+      render();
+      break;
+    }
+    case 'new-template': state.templateFormOpen = true; state.editingTemplateId = null; state.draftTemplate = { photoArea:{x:20,y:20,w:60,h:60}, overlayOptions:[] }; render(); break;
+    case 'edit-template': {
+      const filterCampaign = campaigns.find(c => c.slug === state.templateFilterSlug) || campaigns[0];
+      const tpl = filterCampaign.templates.find(x => x.id === el.dataset.tpl);
+      state.templateFormOpen = true; state.editingTemplateId = tpl.id; state.draftTemplate = { ...tpl }; render();
+      break;
+    }
+    case 'delete-template': {
+      const filterCampaign = campaigns.find(c => c.slug === state.templateFilterSlug) || campaigns[0];
+      filterCampaign.templates = filterCampaign.templates.filter(x => x.id !== el.dataset.tpl);
+      render();
+      break;
+    }
+    case 'cancel-template-form': state.templateFormOpen = false; render(); break;
+    case 'save-template': {
+      const filterCampaign = campaigns.find(c => c.slug === state.templateFilterSlug) || campaigns[0];
+      const d = readTemplateForm();
+      const newTpl = {
+        id: state.editingTemplateId || (filterCampaign.slug + '-' + Date.now()),
+        name: d.name || 'Template mới', photoArea: d.photoArea,
+        overlayKey: 'field1', overlayLabel: d.overlayLabel || '', overlayLabelEn: d.overlayLabelEn || '',
+        overlayOptions: d.overlayOptions.length ? d.overlayOptions : ['—'],
+      };
+      const idx = filterCampaign.templates.findIndex(x => x.id === state.editingTemplateId);
+      if (idx >= 0) filterCampaign.templates[idx] = newTpl; else filterCampaign.templates.push(newTpl);
+      state.templateFormOpen = false; showToast(t('savedToast')); render();
+      break;
+    }
+  }
+}
+
+function showToast(msg){
+  state.toast = msg;
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => { state.toast = null; render(); }, 2600);
+}
+
+render();
+</script>
+</body>
+</html>

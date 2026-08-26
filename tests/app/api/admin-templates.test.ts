@@ -1,22 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Prisma } from "@prisma/client";
 
-vi.mock("../../../src/lib/require-admin", () => ({
+vi.mock("../../../src/lib/server/require-admin", () => ({
   requireAdmin: vi.fn().mockResolvedValue({ ok: true, userId: "admin1" }),
 }));
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: {
     campaign: { findUniqueOrThrow: vi.fn().mockResolvedValue({ id: "c1" }) },
     template: { create: vi.fn(), updateMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), delete: vi.fn() },
   },
 }));
-vi.mock("../../../src/lib/storage", () => ({
+vi.mock("../../../src/lib/server/storage", () => ({
   getStorage: () => ({ upload: vi.fn().mockResolvedValue(undefined), getPublicUrl: (k: string) => `http://s/${k}`, delete: vi.fn() }),
 }));
 
 import { POST } from "../../../src/app/api/admin/campaigns/[slug]/templates/route";
 import { PATCH, DELETE } from "../../../src/app/api/admin/campaigns/[slug]/templates/[id]/route";
-import { prisma } from "../../../src/lib/prisma";
+import { prisma } from "../../../src/lib/server/prisma";
 
 function prismaError(code: string) {
   return new Prisma.PrismaClientKnownRequestError("mock", { code, clientVersion: "5.22.0" });

@@ -19,7 +19,7 @@ export const COMPONENT_PRESETS: ComponentPreset[] = [
     key: "joinYear",
     type: "select",
     label: "Năm gia nhập FPT",
-    labelEn: "Year joined FPT",
+    labelEn: "YEAR YOU JOINED FPT",
     options: joinYearOptions(),
   },
   {

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { Prisma } from "@prisma/client";
 
-vi.mock("../../../src/lib/require-admin", () => ({
+vi.mock("../../../src/lib/server/require-admin", () => ({
   requireAdmin: vi.fn().mockResolvedValue({ ok: true, userId: "admin1" }),
 }));
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/server/prisma", () => ({
   prisma: {
     notification: { findMany: vi.fn(), deleteMany: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
   },
@@ -13,8 +13,8 @@ vi.mock("../../../src/lib/prisma", () => ({
 import { GET, DELETE as DELETE_ALL } from "../../../src/app/api/admin/notifications/route";
 import { PATCH } from "../../../src/app/api/admin/notifications/mark-all-read/route";
 import { DELETE as DELETE_ONE } from "../../../src/app/api/admin/notifications/[id]/route";
-import { prisma } from "../../../src/lib/prisma";
-import { requireAdmin } from "../../../src/lib/require-admin";
+import { prisma } from "../../../src/lib/server/prisma";
+import { requireAdmin } from "../../../src/lib/server/require-admin";
 
 function prismaError(code: string) {
   return new Prisma.PrismaClientKnownRequestError("mock", { code, clientVersion: "5.22.0" });

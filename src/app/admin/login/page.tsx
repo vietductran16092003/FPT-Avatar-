@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Suspense, useState, FormEvent } from "react";
-import { signIn } from "next-auth/react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { signInAsMockAdmin } from "@/lib/mock-fpt-auth";
 
 function MicrosoftLogo() {
   return (
@@ -16,36 +16,6 @@ function MicrosoftLogo() {
   );
 }
 
-function DevLoginForm({ callbackUrl }: { callbackUrl: string }) {
-  const [email, setEmail] = useState("");
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!email) return;
-    signIn("dev-login", { email, callbackUrl });
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
-      <p className="text-[12.5px] text-muted-foreground">Dev login (chỉ có ở local, bỏ qua Azure AD)</p>
-      <input
-        type="email"
-        required
-        placeholder="ban@fpt.com.vn"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-      />
-      <button
-        type="submit"
-        className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-muted"
-      >
-        Đăng nhập dev
-      </button>
-    </form>
-  );
-}
-
 export default function AdminLoginPage() {
   return (
     <Suspense>
@@ -55,7 +25,6 @@ export default function AdminLoginPage() {
 }
 
 function AdminLoginPageInner() {
-  const devLoginEnabled = process.env.NEXT_PUBLIC_DEV_LOGIN_ENABLED === "true";
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/admin/campaigns";
 
@@ -79,7 +48,7 @@ function AdminLoginPageInner() {
         </p>
         <button
           type="button"
-          onClick={() => signIn("azure-ad", { callbackUrl })}
+          onClick={() => signInAsMockAdmin(callbackUrl)}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-foreground px-5 py-3.5 text-[15px] font-bold text-background transition-opacity hover:opacity-90"
         >
           <MicrosoftLogo />
@@ -88,7 +57,6 @@ function AdminLoginPageInner() {
         <p className="mt-4 text-[12.5px] text-muted-foreground">
           Chỉ dành cho nhân viên FPT · Xác thực qua Azure AD
         </p>
-        {devLoginEnabled && <DevLoginForm callbackUrl={callbackUrl} />}
       </div>
     </div>
   );

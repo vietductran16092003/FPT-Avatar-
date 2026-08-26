@@ -75,6 +75,28 @@ describe("CampaignForm", () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ slug: "fpt38", status: "active" }));
   });
 
+  it("pre-fills the date inputs when initial.startDate/endDate are full ISO datetime strings from the API", () => {
+    // Prisma serializes Date fields to full ISO datetime JSON
+    // ("2026-08-13T00:00:00.000Z"), but <input type="date"> only accepts
+    // "yyyy-MM-dd" and silently renders empty on anything else.
+    render(
+      <CampaignForm
+        onSubmit={vi.fn()}
+        initial={{
+          slug: "fpt38",
+          status: "active",
+          startDate: "2026-08-13T00:00:00.000Z",
+          endDate: "2026-09-13T00:00:00.000Z",
+          language: "vi",
+          displayConfig: { title: "FPT tròn 38 tuổi", description: "", ctaLabel: "Tạo avatar ngay" },
+        }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Ngày bắt đầu") as HTMLInputElement).value).toBe("2026-08-13");
+    expect((screen.getByLabelText("Ngày kết thúc") as HTMLInputElement).value).toBe("2026-09-13");
+  });
+
   it("submits Badge, Mô tả and Nhãn CTA entered by the admin", async () => {
     const onSubmit = vi.fn();
     render(<CampaignForm onSubmit={onSubmit} />);

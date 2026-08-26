@@ -16,10 +16,18 @@ interface DayCount {
   count: number;
 }
 
+interface FieldRow {
+  name: string;
+  value: number;
+}
+
 export default function AdminAnalyticsPage() {
   const { t } = useAdminLang();
   const [rows, setRows] = useState<AnalyticsRow[] | null>(null);
   const [byDay, setByDay] = useState<DayCount[]>([]);
+  // null means "GA4 not configured yet" (server-side fetchDownloadsByField
+  // returned null) — falls back to the illustrative placeholder below.
+  const [byField, setByField] = useState<FieldRow[] | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -31,6 +39,7 @@ export default function AdminAnalyticsPage() {
       .then(data => {
         setRows(Array.isArray(data.campaigns) ? data.campaigns : []);
         setByDay(Array.isArray(data.byDay) ? data.byDay : []);
+        setByField(Array.isArray(data.byField) ? data.byField : null);
       })
       .catch(() => setError(true));
   }, []);
@@ -40,7 +49,8 @@ export default function AdminAnalyticsPage() {
   const activeCampaigns = (rows ?? []).filter(r => r.status === "active").length;
   const topCampaign = rows && rows.length > 0 ? rows[0].title : "—";
   const maxDay = Math.max(1, ...byDay.map(d => d.count));
-  const maxUnit = Math.max(1, ...BY_UNIT_PLACEHOLDER.map(u => u.value));
+  const unitRows = byField ?? BY_UNIT_PLACEHOLDER;
+  const maxUnit = Math.max(1, ...unitRows.map(u => u.value));
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
@@ -108,10 +118,11 @@ export default function AdminAnalyticsPage() {
       {rows !== null && rows.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 text-sm font-bold text-foreground">
-            {t("byUnit")} <span className="ml-1 text-xs font-normal text-muted-foreground">{t("liveDataNote")}</span>
+            {t("byUnit")}
+            {byField === null && <span className="ml-1 text-xs font-normal text-muted-foreground">{t("liveDataNote")}</span>}
           </div>
           <div className="flex flex-col gap-3">
-            {BY_UNIT_PLACEHOLDER.map(u => {
+            {unitRows.map(u => {
               const pct = Math.round((u.value / maxUnit) * 100);
               return (
                 <div key={u.name}>

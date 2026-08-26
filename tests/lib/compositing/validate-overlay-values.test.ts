@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { validateOverlayValues } from "../../../src/lib/compositing/validate-overlay-values";
+import { validateOverlayValues } from "../../../src/lib/server/compositing/validate-overlay-values";
 import type { TextOverlay } from "../../../src/lib/compositing/overlay-layout";
 
 const overlays: TextOverlay[] = [
   { key: "joinYear", label: "Năm gia nhập", labelEn: "Join year", type: "select", options: ["2020", "2021"], x: 50, y: 80, fontSize: 24, color: "#fff" },
   { key: "slogan", label: "Khẩu hiệu", labelEn: "Slogan", type: "text", x: 10, y: 90, fontSize: 16, color: "#000" },
+  { key: "tenureYear", label: "NĂM GIA NHẬP FPT", labelEn: "YEAR YOU JOINED FPT", type: "yearsSince", options: ["1988", "2025", "2026"], x: 50, y: 85, fontSize: 24, color: "#fff" },
 ];
 
 describe("validateOverlayValues", () => {
@@ -24,5 +25,14 @@ describe("validateOverlayValues", () => {
 
   it("accepts any string for a free-text overlay", () => {
     expect(validateOverlayValues(overlays, { slogan: "Dream Big, Move Fast" })).toEqual({ valid: true });
+  });
+
+  it("accepts a yearsSince value that is in its own options", () => {
+    expect(validateOverlayValues(overlays, { tenureYear: "1988" })).toEqual({ valid: true });
+  });
+
+  it("rejects a yearsSince value not in its own options", () => {
+    const result = validateOverlayValues(overlays, { tenureYear: "1975" });
+    expect(result.valid).toBe(false);
   });
 });

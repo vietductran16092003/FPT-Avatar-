@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/require-admin";
-import { getStorage } from "@/lib/storage";
-import { createNotification } from "@/lib/notifications";
+import { prisma } from "@/lib/server/prisma";
+import { requireAdmin } from "@/lib/server/require-admin";
+import { getStorage } from "@/lib/server/storage";
+import { createNotification } from "@/lib/server/notifications";
 
 export async function GET(_req: Request, { params }: { params: { slug: string } }) {
   const auth = await requireAdmin();

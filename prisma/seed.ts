@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { getStorage } from "../src/lib/storage";
-import type { ImageStorage } from "../src/lib/storage/types";
+import { getStorage } from "../src/lib/server/storage";
+import type { ImageStorage } from "../src/lib/server/storage/types";
 
 const SEED_ASSETS_DIR = join(__dirname, "seed-assets");
 
@@ -26,15 +26,37 @@ export async function seedDatabase(client: PrismaClient, storage: ImageStorage =
       startDate: new Date("2026-08-13"),
       endDate: new Date("2026-09-13"),
       language: "vi",
-      displayConfig: { title: "FPT tròn 38 tuổi", description: "Tạo avatar kỷ niệm 38 năm", ctaLabel: "Tạo avatar ngay" },
+      displayConfig: {
+        title: "Khung Avatar Chào mừng sinh nhật FPT lần thứ 38",
+        titleEn: "FPT 38th Anniversary Avatar Frame",
+        description: "Tạo avatar kỷ niệm 38 năm",
+        descriptionEn: "Create your avatar for FPT's 38th anniversary",
+        ctaLabel: "Tạo avatar ngay",
+        ctaEn: "Create avatar now",
+      },
       templates: {
         create: [{
           name: "Khung cam chuẩn",
           frameImageKey: "frames/fpt38-orange.png",
           overlayConfig: {
-            photoArea: { x: 18, y: 14, w: 64, h: 64 },
+            // Matches the transparent photo-hole in the Frame 29 artwork
+            // (roughly x:22-442, y:22-398 of its 464x464 source).
+            photoArea: { x: 5, y: 5, w: 90, h: 81 },
             textOverlays: [
-              { key: "joinYear", label: "Năm gia nhập FPT", labelEn: "Year joined FPT", type: "select", options: ["2020", "2021", "2022"], x: 50, y: 85, fontSize: 24, color: "#ffffff" },
+              {
+                key: "joinYear",
+                label: "NĂM GIA NHẬP FPT",
+                labelEn: "YEAR YOU JOINED FPT",
+                type: "yearsSince",
+                options: Array.from({ length: 2026 - 1988 + 1 }, (_, i) => String(1988 + i)),
+                // Sits on the diagonal ribbon baked into the frame's top-left
+                // corner; rotation matches the ribbon's own angle.
+                x: 21,
+                y: 19,
+                fontSize: 45,
+                color: "#ffffff",
+                rotation: -44,
+              },
             ],
           },
         }],

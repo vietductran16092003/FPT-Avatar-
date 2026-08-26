@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/require-admin";
-import { createNotification } from "@/lib/notifications";
+import { prisma } from "@/lib/server/prisma";
+import { requireAdmin } from "@/lib/server/require-admin";
+import { createNotification } from "@/lib/server/notifications";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../../src/lib/prisma", () => ({
+vi.mock("../../src/lib/server/prisma", () => ({
   prisma: {
     notification: { create: vi.fn(), findMany: vi.fn(), deleteMany: vi.fn() },
   },
 }));
 
-import { createNotification } from "../../src/lib/notifications";
-import { prisma } from "../../src/lib/prisma";
+import { createNotification } from "../../src/lib/server/notifications";
+import { prisma } from "../../src/lib/server/prisma";
 
 beforeEach(() => {
   vi.clearAllMocks();

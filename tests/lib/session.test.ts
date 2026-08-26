@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
-vi.mock("../../src/lib/auth-options", () => ({ authOptions: {} }));
-vi.mock("../../src/lib/prisma", () => ({ prisma: { user: { findUnique: vi.fn() } } }));
+vi.mock("../../src/lib/server/auth-options", () => ({ authOptions: {} }));
+vi.mock("../../src/lib/server/prisma", () => ({ prisma: { user: { findUnique: vi.fn() } } }));
 
-import { getCurrentUser } from "../../src/lib/session";
+import { getCurrentUser } from "../../src/lib/server/session";
 import { getServerSession } from "next-auth";
-import { prisma } from "../../src/lib/prisma";
+import { prisma } from "../../src/lib/server/prisma";
 
 describe("getCurrentUser", () => {
   it("returns id and role from the DB user matching the session email", async () => {

@@ -1,4 +1,4 @@
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl } from "@/lib/server/base-url";
 
 export interface Campaign {
   slug: string;

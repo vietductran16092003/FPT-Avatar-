@@ -7,9 +7,9 @@ vi.mock("next-auth/middleware", () => ({
 import { config } from "../src/middleware";
 
 describe("middleware config", () => {
-  it("gates the public home and campaign pages", () => {
-    expect(config.matcher).toContain("/");
-    expect(config.matcher).toContain("/c/:path*");
+  it("does not gate the public home and campaign pages (they check session themselves)", () => {
+    expect(config.matcher).not.toContain("/");
+    expect(config.matcher).not.toContain("/c/:path*");
   });
 
   it("still gates admin pages except /admin/login", () => {

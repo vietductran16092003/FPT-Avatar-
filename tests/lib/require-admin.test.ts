@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("../../src/lib/session", () => ({ getCurrentUser: vi.fn() }));
+vi.mock("../../src/lib/server/session", () => ({ getCurrentUser: vi.fn() }));
 
-import { requireAdmin } from "../../src/lib/require-admin";
-import { getCurrentUser } from "../../src/lib/session";
+import { requireAdmin } from "../../src/lib/server/require-admin";
+import { getCurrentUser } from "../../src/lib/server/session";
 
 describe("requireAdmin", () => {
   it("allows a user whose role is admin", async () => {

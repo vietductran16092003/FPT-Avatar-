@@ -33,8 +33,12 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
   const [descriptionEn, setDescriptionEn] = useState(initial?.displayConfig.descriptionEn ?? "");
   const [ctaLabel, setCtaLabel] = useState(initial?.displayConfig.ctaLabel ?? "Tạo avatar ngay");
   const [ctaEn, setCtaEn] = useState(initial?.displayConfig.ctaEn ?? "");
-  const [startDate, setStartDate] = useState(initial?.startDate ?? "");
-  const [endDate, setEndDate] = useState(initial?.endDate ?? "");
+  // initial.startDate/endDate come straight from the API as a full ISO
+  // datetime string (Prisma's Date serialized to JSON) — <input type="date">
+  // only accepts "yyyy-MM-dd" and silently renders empty on anything else,
+  // so slice down to that prefix. Already-short values pass through unchanged.
+  const [startDate, setStartDate] = useState((initial?.startDate ?? "").slice(0, 10));
+  const [endDate, setEndDate] = useState((initial?.endDate ?? "").slice(0, 10));
   const [language, setLanguage] = useState<"vi" | "en">(initial?.language ?? "vi");
   const [error, setError] = useState<string | null>(null);
 
@@ -103,11 +107,11 @@ export function CampaignForm({ onSubmit, initial }: { onSubmit: (draft: Campaign
           <Label htmlFor="campaign-status">Trạng thái</Label>
           <Select value={status} onValueChange={v => setStatus(v as "draft" | "active" | "archived")}>
             <SelectTrigger id="campaign-status">
-              <SelectValue>{(v: string) => ({ draft: "Nháp", active: "Hoạt động", archived: "Lưu trữ" }[v] ?? v)}</SelectValue>
+              <SelectValue>{(v: string) => ({ draft: "Bản nháp", active: "Đang chạy", archived: "Lưu trữ" }[v] ?? v)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="draft">Nháp</SelectItem>
-              <SelectItem value="active">Hoạt động</SelectItem>
+              <SelectItem value="draft">Bản nháp</SelectItem>
+              <SelectItem value="active">Đang chạy</SelectItem>
               <SelectItem value="archived">Lưu trữ</SelectItem>
             </SelectContent>
           </Select>
