@@ -122,4 +122,74 @@ describe("compositeAvatar", () => {
     expect(decoded.width).toBe(200);
     expect(decoded.height).toBe(200);
   });
+
+  it("sets center/middle text alignment when fillText draws a curved character (matching the client preview's center-origin glyphs)", async () => {
+    const frame = solidPng(200, 200, "rgba(0,0,0,0)");
+    const photo = solidPng(50, 50, "#0000ff");
+
+    const CanvasCtx = Object.getPrototypeOf(createCanvas(1, 1).getContext("2d")).constructor;
+    const seenAlignments: Array<{ textAlign: string; textBaseline: string }> = [];
+    const originalFillText = CanvasCtx.prototype.fillText;
+    CanvasCtx.prototype.fillText = function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+      seenAlignments.push({ textAlign: this.textAlign, textBaseline: this.textBaseline });
+      return originalFillText.apply(this, args as never);
+    };
+
+    try {
+      await compositeAvatar(
+        frame, photo, { x: 0, y: 0, w: 50, h: 50 },
+        [
+          {
+            key: "ribbon",
+            label: "R",
+            labelEn: "R",
+            type: "text",
+            x: 50,
+            y: 50,
+            fontSize: 20,
+            color: "#ffffff",
+            curve: { centerX: 50, centerY: 50, radius: 30, angle: -90, direction: "cw" },
+          },
+        ],
+        { ribbon: "AB" },
+      );
+    } finally {
+      CanvasCtx.prototype.fillText = originalFillText;
+    }
+
+    expect(seenAlignments.length).toBeGreaterThan(0);
+    for (const seen of seenAlignments) {
+      expect(seen.textAlign).toBe("center");
+      expect(seen.textBaseline).toBe("middle");
+    }
+  });
+
+  it("leaves default start/alphabetic text alignment untouched for straight (non-curved) overlays", async () => {
+    const frame = solidPng(200, 200, "rgba(0,0,0,0)");
+    const photo = solidPng(50, 50, "#0000ff");
+
+    const CanvasCtx = Object.getPrototypeOf(createCanvas(1, 1).getContext("2d")).constructor;
+    const seenAlignments: Array<{ textAlign: string; textBaseline: string }> = [];
+    const originalFillText = CanvasCtx.prototype.fillText;
+    CanvasCtx.prototype.fillText = function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+      seenAlignments.push({ textAlign: this.textAlign, textBaseline: this.textBaseline });
+      return originalFillText.apply(this, args as never);
+    };
+
+    try {
+      await compositeAvatar(
+        frame, photo, { x: 0, y: 0, w: 50, h: 50 },
+        [{ key: "slogan", label: "S", labelEn: "S", type: "text", x: 50, y: 90, fontSize: 20, color: "#ffffff" }],
+        { slogan: "Dream Big" },
+      );
+    } finally {
+      CanvasCtx.prototype.fillText = originalFillText;
+    }
+
+    expect(seenAlignments.length).toBeGreaterThan(0);
+    for (const seen of seenAlignments) {
+      expect(seen.textAlign).toBe("start");
+      expect(seen.textBaseline).toBe("alphabetic");
+    }
+  });
 });

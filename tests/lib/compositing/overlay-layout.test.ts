@@ -140,6 +140,14 @@ describe("resolveOverlayDraws — curved text", () => {
     expect(Number.isFinite(draws[0].rotation)).toBe(true);
   });
 
+  it("marks every curved character draw as centered, so renderers anchor at the glyph's center", () => {
+    const draws = resolveOverlayDraws([overlay], { ribbon: "AB" }, 1000, 1000, "vi", fixedWidthMeasure);
+    expect(draws).toHaveLength(2);
+    for (const d of draws) {
+      expect(d.centered).toBe(true);
+    }
+  });
+
   it("leaves non-curved overlays completely unaffected by the measureChar parameter", () => {
     const straight: TextOverlay = { key: "slogan", label: "S", labelEn: "S", type: "text", x: 10, y: 90, fontSize: 16, color: "#000" };
     const draws = resolveOverlayDraws([straight], { slogan: "Dream Big" }, 1000, 800, "vi", fixedWidthMeasure);

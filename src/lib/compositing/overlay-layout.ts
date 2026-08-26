@@ -37,6 +37,12 @@ export interface ResolvedDraw {
   fontSize: number;
   color: string;
   rotation: number;
+  // Set only on curved-arc character draws (see resolveCurvedDraws), whose
+  // anchor point is meant to be the glyph's visual CENTER, not its default
+  // start/baseline origin. Left absent for straight/rotated draws so their
+  // ResolvedDraw shape — and rendering — stays exactly as before this field
+  // existed.
+  centered?: boolean;
 }
 
 // Measures a single character's rendered width in px at a given font size.
@@ -96,7 +102,7 @@ function resolveCurvedDraws(
     const x = centerX + radiusPx * Math.cos(angleRad);
     const y = centerY + radiusPx * Math.sin(angleRad);
     const rotation = angleDeg + 90 + (curve.direction === "ccw" ? 180 : 0);
-    draws.push({ text: chars[i], x, y, fontSize, color, rotation });
+    draws.push({ text: chars[i], x, y, fontSize, color, rotation, centered: true });
     cursor += sign * charAngles[i];
   }
   return draws;

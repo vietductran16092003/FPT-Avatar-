@@ -49,6 +49,15 @@ export async function compositeAvatar(
     // 0, so every pre-existing overlay renders exactly as before.
     ctx.translate(draw.x, draw.y);
     ctx.rotate((draw.rotation * Math.PI) / 180);
+    // Curved-arc characters are anchored by the client preview at their
+    // visual center (FabricText originX/originY: "center") — match that
+    // here so the download's glyphs land on the arc the same way. Straight
+    // text is intentionally left on node-canvas's default start/alphabetic
+    // origin: that's a separate, pre-existing mismatch that's out of scope.
+    if (draw.centered) {
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+    }
     // node-canvas's fillText draws literal characters, not markup — no
     // separate XML escaping step is needed here (unlike an SVG-string
     // compositor), but values still pass through resolveOverlayDraws
